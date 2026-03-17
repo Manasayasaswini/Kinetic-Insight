@@ -41,6 +41,25 @@
                 <h4 class="font-bold text-[#2D3436] mb-2 text-sm">💡 Quick Fact</h4>
                 <p class="text-xs leading-relaxed opacity-80">Light travels at a staggering speed of 300,000 kilometers per second! It takes about 8 minutes for light from the Sun to reach us here on Earth [02:10].</p>
             </div>
+
+            <div class="bg-white p-6 rounded-xl border border-slate-200 mt-6">
+                <h3 class="font-bold mb-4 flex items-center">
+                    <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                    Experiment 2: Sun & Shadows
+                </h3>
+                <p class="text-sm mb-4 opacity-70">Drag the slider to move the Sun from Morning to Evening.</p>
+                
+                <div class="space-y-4">
+                    <div class="flex justify-between text-[11px] font-mono text-slate-400">
+                        <span>MORNING</span>
+                        <span>NOON</span>
+                        <span>EVENING</span>
+                    </div>
+                    <input type="range" id="sunSlider" min="10" max="170" value="45" 
+                           class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                           oninput="updateSun(this.value)">
+                </div>
+            </div>
         </aside>
 
         <div class="lg:col-span-2 space-y-4">
