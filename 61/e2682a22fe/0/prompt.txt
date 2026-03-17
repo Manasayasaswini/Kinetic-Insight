@@ -1,0 +1,104 @@
+read the files and understand the project. and just 1. Updating the UI (index.html)
+We’ll add a new control card in the sidebar for Experiment 2. This allows the student to switch "modes" and play with the sun's position.
+
+HTML
+<div class="bg-white p-6 rounded-xl border border-slate-200 mt-6">
+    <h3 class="font-bold mb-4 flex items-center">
+        <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+        Experiment 2: Sun & Shadows
+    </h3>
+    <p class="text-sm mb-4 opacity-70">Drag the slider to move the Sun from Morning to Evening.</p>
+    
+    <div class="space-y-4">
+        <div class="flex justify-between text-[11px] font-mono text-slate-400">
+            <span>MORNING</span>
+            <span>NOON</span>
+            <span>EVENING</span>
+        </div>
+        <input type="range" id="sunSlider" min="10" max="170" value="45" 
+               class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+               oninput="updateSun(this.value)">
+    </div>
+</div>
+2. The Shadow Engine (script.js)
+We need to add a "Mode" system so the canvas knows whether to show the Transparency Lab or the Shadow Lab.
+
+JavaScript
+// --- Add these to your state object in script.js ---
+state.mode = 'transparency'; // default
+state.sunAngle = 45; // in degrees
+
+function updateSun(val) {
+    state.mode = 'shadow';
+    state.sunAngle = val;
+    obsText.innerHTML = getShadowObservation(val);
+}
+
+function getShadowObservation(angle) {
+    if (angle > 80 && angle < 100) return "<strong>Noon:</strong> The sun is overhead. The shadow is at its shortest! [01:58]";
+    if (angle < 40 || angle > 140) return "<strong>Morning/Evening:</strong> The sun is low in the sky. Shadows become very long.";
+    return "As the sun moves in a straight line, notice how the shadow always stays on the opposite side.";
+}
+
+// --- Update your draw loop to handle modes ---
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (state.mode === 'transparency') {
+        drawTransparencyExperiment();
+    } else {
+        drawShadowExperiment();
+    }
+
+    requestAnimationFrame(draw);
+}
+
+function drawShadowExperiment() {
+    const groundY = canvas.height - 100;
+    const centerX = canvas.width / 2;
+    const objectHeight = 100;
+    
+    // 1. Draw Ground
+    ctx.strokeStyle = '#D1D1C7';
+    ctx.beginPath();
+    ctx.moveTo(50, groundY);
+    ctx.lineTo(canvas.width - 50, groundY);
+    ctx.stroke();
+
+    // 2. Calculate Sun Position (Semi-circle)
+    const radius = 200;
+    const rad = (state.sunAngle * Math.PI) / 180;
+    const sunX = centerX + radius * Math.cos(Math.PI - rad);
+    const sunY = groundY - radius * Math.sin(Math.PI - rad);
+
+    // 3. Draw Shadow
+    // The "Physics": Shadow length increases as sun angle decreases
+    const shadowLen = objectHeight / Math.tan(rad);
+    
+    ctx.fillStyle = 'rgba(45, 52, 54, 0.2)'; // Soft Charcoal Shadow
+    ctx.beginPath();
+    ctx.ellipse(centerX + shadowLen/2, groundY, Math.abs(shadowLen/2), 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4. Draw Stick Figure (The Opaque Object)
+    ctx.strokeStyle = '#2D3436';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    // Body
+    ctx.moveTo(centerX, groundY); ctx.lineTo(centerX, groundY - 60);
+    // Head
+    ctx.arc(centerX, groundY - 75, 15, 0, Math.PI * 2);
+    // Arms & Legs
+    ctx.moveTo(centerX, groundY - 50); ctx.lineTo(centerX - 20, groundY - 30);
+    ctx.moveTo(centerX, groundY - 50); ctx.lineTo(centerX + 20, groundY - 30);
+    ctx.stroke();
+
+    // 5. Draw Sun
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#FAD390';
+    ctx.fillStyle = '#F1C40F';
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}  do these nothing else
