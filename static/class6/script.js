@@ -11,13 +11,11 @@ function resize() {
 window.onresize = resize;
 resize();
 
-const state = {
-    torchPos: { x: 100, y: 250 },
-    objectPos: { x: 350, y: 250 },
-    lightColor: 'rgba(255, 255, 200, 0.6)',
-    mode: 'transparency',
-    sunAngle: 45
-};
+canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    state.mouse.x = e.clientX - rect.left;
+    state.mouse.y = e.clientY - rect.top;
+});
 
 const MATERIALS = {
     glass: { 
@@ -58,13 +56,22 @@ function getShadowObservation(angle) {
     return "As the sun moves in a straight line, notice how the shadow always stays on the opposite side.";
 }
 
+function setMode(m) {
+    state.mode = m;
+    if (m === 'pinhole') {
+        obsText.innerHTML = "<strong>Inversion:</strong> Because light travels in straight lines, the top of the candle goes through the hole and hits the bottom of the screen! [03:02]";
+    }
+}
+
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (state.mode === 'transparency') {
         drawTransparencyExperiment();
-    } else {
+    } else if (state.mode === 'shadow') {
         drawShadowExperiment();
+    } else if (state.mode === 'pinhole') {
+        drawPinholeCamera();
     }
 
     requestAnimationFrame(draw);
@@ -168,6 +175,71 @@ function drawShadowExperiment() {
     ctx.arc(sunX, sunY, 20, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
+}
+
+function drawPinholeCamera() {
+    const boxX = 400, boxY = 150, boxW = 250, boxH = 200;
+    const pinholeY = boxY + boxH/2;
+    
+    // 1. Draw the Candle (The Object)
+    // We use the mouse Y position to let the student "move" the candle
+    const candleX = 150;
+    const candleY = Math.max(100, Math.min(400, state.mouse.y));
+    
+    // Candle Body
+    ctx.fillStyle = "#E0E0D5";
+    ctx.fillRect(candleX - 10, candleY, 20, 60);
+    // Flame
+    ctx.fillStyle = "#F1C40F";
+    ctx.beginPath();
+    ctx.moveTo(candleX, candleY - 20);
+    ctx.quadraticCurveTo(candleX + 10, candleY, candleX, candleY + 5);
+    ctx.quadraticCurveTo(candleX - 10, candleY, candleX, candleY - 20);
+    ctx.fill();
+
+    // 2. Draw the Camera Box
+    ctx.strokeStyle = "#2D3436";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+    // Draw the Pinhole
+    ctx.fillStyle = "#F5F5F0";
+    ctx.beginPath();
+    ctx.arc(boxX, pinholeY, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // 3. Draw Light Rays (The "Proof")
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = "rgba(241, 196, 15, 0.4)";
+    
+    // Ray from Top of Flame
+    ctx.beginPath();
+    ctx.moveTo(candleX, candleY - 20);
+    ctx.lineTo(boxX, pinholeY);
+    // Calculate inversion point on the back screen
+    const ratio = boxW / (boxX - candleX);
+    const invertedY = pinholeY + (pinholeY - (candleY - 20)) * ratio;
+    ctx.lineTo(boxX + boxW, invertedY);
+    ctx.stroke();
+    
+    // 4. Draw the Inverted Image
+    // The "Fascinating" part: A smaller, upside-down flame
+    const imgY = pinholeY + (pinholeY - candleY) * ratio;
+    ctx.setLineDash([]);
+    ctx.save();
+    ctx.translate(boxX + boxW, imgY);
+    ctx.scale(1, -1); // Flip vertically!
+    ctx.globalAlpha = 0.6;
+    // Drawing the same candle but smaller
+    ctx.fillStyle = "#E0E0D5";
+    ctx.fillRect(-5, 0, 10, 30);
+    ctx.fillStyle = "#F1C40F";
+    ctx.beginPath();
+    ctx.moveTo(0, -10);
+    ctx.quadraticCurveTo(5, 0, 0, 2);
+    ctx.quadraticCurveTo(-5, 0, 0, -10);
+    ctx.fill();
+    ctx.restore();
 }
 
 draw();
