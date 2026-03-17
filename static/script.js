@@ -14,7 +14,7 @@ const state = {
     n1: 1.0,      // Air
     n2: 1.5,      // Glass
     boundaryY: canvas.height / 2,
-    origin: { x: 100, y: 100 },
+    origin: { x: 50, y: canvas.height / 2 - 150 }, // Moved down and left
     mouse: { x: 300, y: 300 }
 };
 
@@ -51,44 +51,26 @@ function draw() {
 
     drawBeam(state.origin.x, state.origin.y, state.mouse.x, state.boundaryY, "#ff3e3e");
 
-    // 4. Refraction Calculation
-    // Snell's Law: n1 * sin(theta1) = n2 * sin(theta2)
-    const sinTheta2 = (state.n1 / state.n2) * Math.sin(theta1);
-  
-// Calculate relative speed (c is 1.0 in our simulation)
-    const speed = (1.0 / state.n2).toFixed(2);
-
-// Draw the Speedometer Tag
-    const tagX = state.mouse.x + 50 * Math.sin(theta2);
-    const tagY = state.boundaryY + 50 * Math.cos(theta2);
-
-    ctx.fillStyle = "rgba(0, 242, 255, 0.8)";
-    ctx.font = "bold 14px monospace";
-    ctx.fillText(`Speed: ${speed}c`, tagX + 10, tagY);
-
-// Optional: Add a small arrow to show direction
-    ctx.beginPath();
-    ctx.arc(tagX, tagY, 3, 0, Math.PI * 2);
-    ctx.fill();
-
     if (Math.abs(sinTheta2) <= 1) {
-        // SUCCESSFUL REFRACTION
         const theta2 = Math.asin(sinTheta2);
-        const length = 1000; // Just to draw off-screen
+        const length = 2000; 
         const endX = state.mouse.x + length * Math.sin(theta2);
         const endY = state.boundaryY + length * Math.cos(theta2);
-        
+
         drawBeam(state.mouse.x, state.boundaryY, endX, endY, "#00f2ff");
-    } else {
-        // TOTAL INTERNAL REFLECTION (TIR)
-        // This happens when going from High n to Low n, but we'll show it for "cool factor"
-        const endX = state.mouse.x + (state.mouse.x - state.origin.x);
-        const endY = state.origin.y; // Simplified bounce
-        drawBeam(state.mouse.x, state.boundaryY, endX, endY, "#ff3e3e");
+
+        // --- SPEEDOMETER TAG ---
+        const speed = (1.0 / state.n2).toFixed(2);
+        ctx.fillStyle = "#00f2ff";
+        ctx.font = "bold 16px monospace";
+        // Place text 100px down the refracted beam
+        const textX = state.mouse.x + 100 * Math.sin(theta2);
+        const textY = state.boundaryY + 100 * Math.cos(theta2);
+        ctx.fillText(`v ≈ ${speed}c`, textX + 20, textY);
     }
 
     requestAnimationFrame(draw);
-}
+    }
 
 // Helper for "Fascinating" Neon Glow
 function drawBeam(x1, y1, x2, y2, color) {
