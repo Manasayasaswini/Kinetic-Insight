@@ -1,0 +1,220 @@
+read the files and understand the project. and just 1. Updating the UI (index.html)
+We’ll add a new control card in the sidebar for Experiment 2. This allows the student to switch "modes" and play with the sun's position.
+
+HTML
+<div class="bg-white p-6 rounded-xl border border-slate-200 mt-6">
+    <h3 class="font-bold mb-4 flex items-center">
+        <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+        Experiment 2: Sun & Shadows
+    </h3>
+    <p class="text-sm mb-4 opacity-70">Drag the slider to move the Sun from Morning to Evening.</p>
+    
+    <div class="space-y-4">
+        <div class="flex justify-between text-[11px] font-mono text-slate-400">
+            <span>MORNING</span>
+            <span>NOON</span>
+            <span>EVENING</span>
+        </div>
+        <input type="range" id="sunSlider" min="10" max="170" value="45" 
+               class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+               oninput="updateSun(this.value)">
+    </div>
+</div>
+2. The Shadow Engine (script.js)
+We need to add a "Mode" system so the canvas knows whether to show the Transparency Lab or the Shadow Lab.
+
+JavaScript
+// --- Add these to your state object in script.js ---
+state.mode = 'transparency'; // default
+state.sunAngle = 45; // in degrees
+
+function updateSun(val) {
+    state.mode = 'shadow';
+    state.sunAngle = val;
+    obsText.innerHTML = getShadowObservation(val);
+}
+
+function getShadowObservation(angle) {
+    if (angle > 80 && angle < 100) return "<strong>Noon:</strong> The sun is overhead. The shadow is at its shortest! [01:58]";
+    if (angle < 40 || angle > 140) return "<strong>Morning/Evening:</strong> The sun is low in the sky. Shadows become very long.";
+    return "As the sun moves in a straight line, notice how the shadow always stays on the opposite side.";
+}
+
+// --- Update your draw loop to handle modes ---
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (state.mode === 'transparency') {
+        drawTransparencyExperiment();
+    } else {
+        drawShadowExperiment();
+    }
+
+    requestAnimationFrame(draw);
+}
+
+function drawShadowExperiment() {
+    const groundY = canvas.height - 100;
+    const centerX = canvas.width / 2;
+    const objectHeight = 100;
+    
+    // 1. Draw Ground
+    ctx.strokeStyle = '#D1D1C7';
+    ctx.beginPath();
+    ctx.moveTo(50, groundY);
+    ctx.lineTo(canvas.width - 50, groundY);
+    ctx.stroke();
+
+    // 2. Calculate Sun Position (Semi-circle)
+    const radius = 200;
+    const rad = (state.sunAngle * Math.PI) / 180;
+    const sunX = centerX + radius * Math.cos(Math.PI - rad);
+    const sunY = groundY - radius * Math.sin(Math.PI - rad);
+
+    // 3. Draw Shadow
+    // The "Physics": Shadow length increases as sun angle decreases
+    const shadowLen = objectHeight / Math.tan(rad);
+    
+    ctx.fillStyle = 'rgba(45, 52, 54, 0.2)'; // Soft Charcoal Shadow
+    ctx.beginPath();
+    ctx.ellipse(centerX + shadowLen/2, groundY, Math.abs(shadowLen/2), 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4. Draw Stick Figure (The Opaque Object)
+    ctx.strokeStyle = '#2D3436';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    // Body
+    ctx.moveTo(centerX, groundY); ctx.lineTo(centerX, groundY - 60);
+    // Head
+    ctx.arc(centerX, groundY - 75, 15, 0, Math.PI * 2);
+    // Arms & Legs
+    ctx.moveTo(centerX, groundY - 50); ctx.lineTo(centerX - 20, groundY - 30);
+    ctx.moveTo(centerX, groundY - 50); ctx.lineTo(centerX + 20, groundY - 30);
+    ctx.stroke();
+
+    // 5. Draw Sun
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#FAD390';
+    ctx.fillStyle = '#F1C40F';
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}  do these nothing else
+
+---
+
+commit till now changes of each file and now Let's bring in the Pinhole Camera. This is often the most "magical" moment for a Class 6 student because it proves a fundamental rule of the universe: Light travels in straight lines. When they see that the image of a candle is flipped upside down simply because of a tiny hole, the concept of "Rectilinear Propagation of Light" clicks instantly.
+
+1. Updating the UI (index.html)
+We’ll add the third experiment card to your sidebar. Notice how we are building a "Gallery" of experiments.
+
+HTML
+<div class="bg-white p-6 rounded-xl border border-slate-200 mt-6">
+    <h3 class="font-bold mb-4 flex items-center">
+        <span class="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
+        Experiment 3: Pinhole Camera
+    </h3>
+    <p class="text-sm mb-4 opacity-70">Move the candle to see how the image flips inside the camera.</p>
+    
+    <button onclick="setMode('pinhole')" class="interactive-btn w-full p-3 rounded-lg text-sm font-medium active-tab">
+        Launch Camera Lab
+    </button>
+</div>
+2. The Pinhole Logic (script.js)
+We will add a function that draws the "Camera" (the box), the candle, and most importantly, the inverted image.
+
+JavaScript
+// --- Update your draw loop to include the new mode ---
+function setMode(m) {
+    state.mode = m;
+    if (m === 'pinhole') {
+        obsText.innerHTML = "<strong>Inversion:</strong> Because light travels in straight lines, the top of the candle goes through the hole and hits the bottom of the screen! [03:02]";
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (state.mode === 'transparency') {
+        drawTransparencyExperiment();
+    } else if (state.mode === 'shadow') {
+        drawShadowExperiment();
+    } else if (state.mode === 'pinhole') {
+        drawPinholeCamera();
+    }
+
+    requestAnimationFrame(draw);
+}
+
+function drawPinholeCamera() {
+    const boxX = 400, boxY = 150, boxW = 250, boxH = 200;
+    const pinholeY = boxY + boxH/2;
+    
+    // 1. Draw the Candle (The Object)
+    // We use the mouse Y position to let the student "move" the candle
+    const candleX = 150;
+    const candleY = Math.max(100, Math.min(400, state.mouse.y));
+    
+    // Candle Body
+    ctx.fillStyle = "#E0E0D5";
+    ctx.fillRect(candleX - 10, candleY, 20, 60);
+    // Flame
+    ctx.fillStyle = "#F1C40F";
+    ctx.beginPath();
+    ctx.moveTo(candleX, candleY - 20);
+    ctx.quadraticCurveTo(candleX + 10, candleY, candleX, candleY + 5);
+    ctx.quadraticCurveTo(candleX - 10, candleY, candleX, candleY - 20);
+    ctx.fill();
+
+    // 2. Draw the Camera Box
+    ctx.strokeStyle = "#2D3436";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+    // Draw the Pinhole
+    ctx.fillStyle = "#F5F5F0";
+    ctx.beginPath();
+    ctx.arc(boxX, pinholeY, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // 3. Draw Light Rays (The "Proof")
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = "rgba(241, 196, 15, 0.4)";
+    
+    // Ray from Top of Flame
+    ctx.beginPath();
+    ctx.moveTo(candleX, candleY - 20);
+    ctx.lineTo(boxX, pinholeY);
+    // Calculate inversion point on the back screen
+    const ratio = boxW / (boxX - candleX);
+    const invertedY = pinholeY + (pinholeY - (candleY - 20)) * ratio;
+    ctx.lineTo(boxX + boxW, invertedY);
+    ctx.stroke();
+    
+    // 4. Draw the Inverted Image
+    // The "Fascinating" part: A smaller, upside-down flame
+    const imgY = pinholeY + (pinholeY - candleY) * ratio;
+    ctx.setLineDash([]);
+    ctx.save();
+    ctx.translate(boxX + boxW, imgY);
+    ctx.scale(1, -1); // Flip vertically!
+    ctx.globalAlpha = 0.6;
+    // Drawing the same candle but smaller
+    ctx.fillStyle = "#E0E0D5";
+    ctx.fillRect(-5, 0, 10, 30);
+    ctx.fillStyle = "#F1C40F";
+    ctx.beginPath();
+    ctx.moveTo(0, -10);
+    ctx.quadraticCurveTo(5, 0, 0, 2);
+    ctx.quadraticCurveTo(-5, 0, 0, -10);
+    ctx.fill();
+    ctx.restore();
+}
+3. Why this works for the AP Syllabus
+In the Andhra Pradesh Class 6 science textbook, the Pinhole Camera is used to introduce the concept that light doesn't curve around corners.
+
+Linear Propagation: By drawing the "Dashed Rays," we show the path light takes. The student can see that the ray must go through the hole in a straight line, which naturally causes the flip.
+
+Real-World Connection: We can add a tooltip that says: "Did you know your eye works exactly like this? The image on your retina is actually upside down!" . just that nothing else
