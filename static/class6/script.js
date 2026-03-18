@@ -353,53 +353,132 @@ function drawTransparencyExperiment() {
 }
 
 function drawShadowExperiment() {
-    const groundY = canvas.height - 100;
     const centerX = canvas.width / 2;
-    const objectHeight = 100;
-    
-    // 1. Draw Ground
-    ctx.strokeStyle = '#D1D1C7';
-    ctx.beginPath();
-    ctx.moveTo(50, groundY);
-    ctx.lineTo(canvas.width - 50, groundY);
-    ctx.stroke();
+    const groundY = canvas.height - 120;
+    const pillarHeight = 132;
+    const pillarWidth = 34;
+    const pillarX = centerX - pillarWidth / 2;
 
-    // 2. Calculate Sun Position (Semi-circle)
-    const radius = 200;
+    const sky = ctx.createLinearGradient(0, 0, 0, groundY);
+    sky.addColorStop(0, '#EEF7FF');
+    sky.addColorStop(0.55, '#FFF8DA');
+    sky.addColorStop(1, '#F5F0DB');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, canvas.width, groundY);
+
+    const fieldGlow = ctx.createRadialGradient(centerX, groundY - 10, 40, centerX, groundY + 10, canvas.width * 0.45);
+    fieldGlow.addColorStop(0, 'rgba(255, 236, 166, 0.24)');
+    fieldGlow.addColorStop(1, 'rgba(255, 236, 166, 0)');
+    ctx.fillStyle = fieldGlow;
+    ctx.fillRect(0, groundY - 100, canvas.width, 180);
+
+    const groundGrad = ctx.createLinearGradient(0, groundY, 0, canvas.height);
+    groundGrad.addColorStop(0, '#D8D2B8');
+    groundGrad.addColorStop(0.55, '#B6C98C');
+    groundGrad.addColorStop(1, '#89A663');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+
+    ctx.strokeStyle = 'rgba(118, 145, 82, 0.4)';
+    ctx.lineWidth = 1;
+    for (let x = 40; x < canvas.width; x += 28) {
+        ctx.beginPath();
+        ctx.moveTo(x, groundY + 8);
+        ctx.lineTo(x - 8, groundY + 26);
+        ctx.moveTo(x + 4, groundY + 12);
+        ctx.lineTo(x + 10, groundY + 30);
+        ctx.stroke();
+    }
+
+    const radius = Math.min(280, canvas.width * 0.28);
     const rad = (state.sunAngle * Math.PI) / 180;
     const sunX = centerX + radius * Math.cos(Math.PI - rad);
     const sunY = groundY - radius * Math.sin(Math.PI - rad);
 
-    // 3. Draw Shadow
-    // The "Physics": Shadow length increases as sun angle decreases
-    const shadowLen = objectHeight / Math.tan(rad);
-    
-    ctx.fillStyle = 'rgba(45, 52, 54, 0.2)'; // Soft Charcoal Shadow
+    const shadowLen = pillarHeight / Math.tan(rad);
+    const shadowOpacity = Math.max(0.06, 0.24 - Math.min(Math.abs(shadowLen) / 1200, 0.14));
+    const shadowWidth = Math.max(18, Math.abs(shadowLen) * 0.42);
+    const shadowCenterX = centerX + shadowLen / 2;
+
+    const shadowGrad = ctx.createLinearGradient(centerX, groundY + 4, centerX + shadowLen, groundY + 18);
+    shadowGrad.addColorStop(0, `rgba(45, 52, 54, ${shadowOpacity + 0.1})`);
+    shadowGrad.addColorStop(1, `rgba(45, 52, 54, ${shadowOpacity * 0.35})`);
+    ctx.fillStyle = shadowGrad;
     ctx.beginPath();
-    ctx.ellipse(centerX + shadowLen/2, groundY, Math.abs(shadowLen/2), 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(shadowCenterX, groundY + 8, shadowWidth, 14, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 4. Draw Stick Figure (The Opaque Object)
-    ctx.strokeStyle = '#2D3436';
-    ctx.lineWidth = 3;
+    ctx.fillStyle = '#B19163';
     ctx.beginPath();
-    // Body
-    ctx.moveTo(centerX, groundY); ctx.lineTo(centerX, groundY - 60);
-    // Head
-    ctx.arc(centerX, groundY - 75, 15, 0, Math.PI * 2);
-    // Arms & Legs
-    ctx.moveTo(centerX, groundY - 50); ctx.lineTo(centerX - 20, groundY - 30);
-    ctx.moveTo(centerX, groundY - 50); ctx.lineTo(centerX + 20, groundY - 30);
-    ctx.stroke();
-
-    // 5. Draw Sun
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = '#FAD390';
-    ctx.fillStyle = '#F1C40F';
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, 20, 0, Math.PI * 2);
+    ctx.moveTo(pillarX - 12, groundY + 1);
+    ctx.lineTo(pillarX + pillarWidth + 12, groundY + 1);
+    ctx.lineTo(pillarX + pillarWidth + 22, groundY + 18);
+    ctx.lineTo(pillarX - 20, groundY + 18);
+    ctx.closePath();
     ctx.fill();
-    ctx.shadowBlur = 0;
+
+    const pillarFront = ctx.createLinearGradient(pillarX, groundY - pillarHeight, pillarX + pillarWidth, groundY);
+    pillarFront.addColorStop(0, '#9A8A76');
+    pillarFront.addColorStop(0.55, '#7F7364');
+    pillarFront.addColorStop(1, '#665C50');
+    ctx.fillStyle = pillarFront;
+    roundedRect(pillarX, groundY - pillarHeight, pillarWidth, pillarHeight, 7);
+    ctx.fill();
+
+    const sunOnRight = sunX > centerX;
+    ctx.fillStyle = sunOnRight ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)';
+    ctx.fillRect(sunOnRight ? pillarX : pillarX + pillarWidth * 0.62, groundY - pillarHeight + 6, pillarWidth * 0.38, pillarHeight - 12);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+    ctx.lineWidth = 1;
+    for (let y = groundY - pillarHeight + 14; y < groundY - 12; y += 18) {
+        ctx.beginPath();
+        ctx.moveTo(pillarX + 6, y);
+        ctx.lineTo(pillarX + pillarWidth - 6, y + 2);
+        ctx.stroke();
+    }
+
+    const sideFace = sunOnRight
+        ? [
+            [pillarX + pillarWidth, groundY - pillarHeight],
+            [pillarX + pillarWidth + 12, groundY - pillarHeight + 8],
+            [pillarX + pillarWidth + 12, groundY + 8],
+            [pillarX + pillarWidth, groundY]
+        ]
+        : [
+            [pillarX, groundY - pillarHeight],
+            [pillarX - 12, groundY - pillarHeight + 8],
+            [pillarX - 12, groundY + 8],
+            [pillarX, groundY]
+        ];
+    ctx.fillStyle = sunOnRight ? '#5E5449' : '#A39584';
+    ctx.beginPath();
+    ctx.moveTo(sideFace[0][0], sideFace[0][1]);
+    for (let i = 1; i < sideFace.length; i++) {
+        ctx.lineTo(sideFace[i][0], sideFace[i][1]);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    const sunGrad = ctx.createRadialGradient(sunX, sunY, 3, sunX, sunY, 44);
+    sunGrad.addColorStop(0, '#FFFFFF');
+    sunGrad.addColorStop(0.18, '#FFF4B3');
+    sunGrad.addColorStop(0.45, '#F1C40F');
+    sunGrad.addColorStop(1, 'rgba(241, 196, 15, 0)');
+    ctx.fillStyle = sunGrad;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 44, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255, 220, 107, 0.4)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 8; i++) {
+        const angle = (Math.PI * 2 * i) / 8;
+        ctx.beginPath();
+        ctx.moveTo(sunX + Math.cos(angle) * 34, sunY + Math.sin(angle) * 34);
+        ctx.lineTo(sunX + Math.cos(angle) * 54, sunY + Math.sin(angle) * 54);
+        ctx.stroke();
+    }
 }
 
 function drawPinholeCamera() {
