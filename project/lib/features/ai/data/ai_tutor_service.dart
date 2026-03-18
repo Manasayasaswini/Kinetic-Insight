@@ -5,14 +5,9 @@ import 'package:http/http.dart' as http;
 import 'ai_tutor_models.dart';
 
 class AiTutorService {
-  AiTutorService({http.Client? client, String? baseUrl})
+  AiTutorService({http.Client? client})
     : _client = client ?? http.Client(),
-      _baseUrl =
-          baseUrl ??
-          const String.fromEnvironment(
-            'AI_BASE_URL',
-            defaultValue: 'http://localhost:8000',
-          );
+      _baseUrl = const String.fromEnvironment('AI_BASE_URL');
 
   final http.Client _client;
   final String _baseUrl;
