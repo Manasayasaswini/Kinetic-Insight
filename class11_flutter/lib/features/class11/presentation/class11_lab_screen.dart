@@ -531,50 +531,63 @@ class _ExperimentPainter extends CustomPainter {
     final cx = size.width * 0.35;
     final cy = size.height * 0.5;
     final pSize = math.min(size.width, size.height) * 0.32;
-    final aRad = prismAngleA * math.pi / 180;
+    final apexAngleRad = prismAngleA * math.pi / 180;
 
     final path = Path()..moveTo(cx, cy - pSize)..lineTo(cx + pSize * 0.866, cy + pSize * 0.5)..lineTo(cx - pSize * 0.866, cy + pSize * 0.5)..close();
-    canvas.drawPath(path, Paint()..color = const Color(0xFF0EA5E9).withValues(alpha: 0.08));
-    canvas.drawPath(path, Paint()..color = const Color(0xFF0EA5E9).withValues(alpha: 0.4)..style = PaintingStyle.stroke..strokeWidth = 2);
-    _drawText(canvas, 'A=${prismAngleA.toStringAsFixed(0)}°', Offset(cx - 40, cy + pSize * 0.6), const Color(0xFF60A5FA));
+    canvas.drawPath(path, Paint()..color = const Color(0xFF0EA5E9).withValues(alpha: 0.12));
+    canvas.drawPath(path, Paint()..color = const Color(0xFF0EA5E9)..style = PaintingStyle.stroke..strokeWidth = 3);
+    
+    _drawText(canvas, 'A=${prismAngleA.toStringAsFixed(0)}°', Offset(cx - 45, cy + pSize * 0.65), const Color(0xFF60A5FA));
+    _drawText(canvas, 'PRISM', Offset(cx - 25, cy - pSize - 20), const Color(0xFF0EA5E9));
 
     final entryY = size.height * incidentHeight;
     final entryX = size.width * 0.08;
-    final hitX = cx - pSize * 0.4;
-    final hitY = cy + (entryY - size.height / 2) * 0.4;
+    final hitX1 = cx - pSize * 0.45;
+    final hitY1 = cy + (entryY - size.height / 2) * 0.5;
 
-    canvas.drawLine(Offset(entryX, entryY), Offset(hitX, hitY), Paint()..color = Colors.white..strokeWidth = 8..strokeCap = StrokeCap.round);
-    canvas.drawCircle(Offset(entryX, entryY), 8, Paint()..color = Colors.white);
+    canvas.drawLine(Offset(entryX, entryY), Offset(hitX1, hitY1), Paint()..color = Colors.white..strokeWidth = 8..strokeCap = StrokeCap.round);
+    canvas.drawCircle(Offset(entryX, entryY), 10, Paint()..color = Colors.white);
+    _drawText(canvas, 'WHITE LIGHT', Offset(entryX - 50, entryY - 30), Colors.white70);
+    _drawText(canvas, 'Incident Ray', Offset(entryX + 20, entryY + 15), Colors.white54);
+
+    final normalAngle1 = math.pi - apexAngleRad / 2;
+    final incidentAngle1 = (entryY - hitY1).abs() / 200;
+    final refractedAngle1 = math.asin(math.sin(incidentAngle1) / prismRefractiveIndex);
+    
+    final hitX2 = cx + pSize * 0.45;
+    final hitY2 = hitY1 + (hitX2 - hitX1) * math.tan(apexAngleRad / 2 - refractedAngle1 + incidentAngle1 * 0.5);
+    
+    canvas.drawLine(Offset(hitX1, hitY1), Offset(hitX2, hitY2.clamp(cy - pSize * 0.3, cy + pSize * 0.3)), Paint()..color = Colors.white70..strokeWidth = 4..strokeCap = StrokeCap.round);
+    _drawText(canvas, 'Internal Ray', Offset(cx - 30, cy - 10), Colors.white54);
 
     final colors = [const Color(0xFFFF0000), const Color(0xFFFF7F00), const Color(0xFFFFFF00), const Color(0xFF00FF00), const Color(0xFF0000FF), const Color(0xFF4B0082), const Color(0xFF9400D3)];
 
     for (int i = 0; i < 7; i++) {
-      final colorN = prismRefractiveIndex + (i * 0.025);
-      final deviation = (colorN - 1.0) * 60 * (math.pi / 180);
-      final baseExitAngle = 0.4;
-      final finalAngle = baseExitAngle + (deviation * 0.5);
+      final n = prismRefractiveIndex + (i * 0.025);
+      final deviation = (n - 1.0) * 1.2;
+      final exitAngle = apexAngleRad / 2 + deviation * 0.8;
       
-      final exitPoint = Offset(cx + pSize * 0.4, cy - pSize * 0.1 + i * 1.5);
-      final rayEnd = Offset(
-        exitPoint.dx + math.cos(finalAngle) * 600,
-        exitPoint.dy + math.sin(finalAngle) * 600,
-      );
+      final exitX = hitX2 + 50.0;
+      final exitY = hitY2.clamp(cy - pSize * 0.3, cy + pSize * 0.3);
+      final endX = exitX + math.cos(exitAngle) * 400;
+      final endY = exitY + math.sin(exitAngle) * 400;
 
-      canvas.drawLine(exitPoint, rayEnd, Paint()..color = colors[i].withValues(alpha: 0.8)..strokeWidth = 4..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+      canvas.drawLine(Offset(exitX, exitY), Offset(endX, endY), Paint()..color = colors[i].withValues(alpha: 0.85)..strokeWidth = 4..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
     }
 
-    canvas.drawLine(Offset(entryX, entryY), Offset(size.width * 0.85, entryY - deviationAngle * 2), Paint()..color = Colors.white.withValues(alpha: 0.15)..strokeWidth = 1);
-    _drawText(canvas, 'δ=${deviationAngle.toStringAsFixed(0)}°', Offset(size.width * 0.5, entryY - deviationAngle * 2 - 20), const Color(0xFFFFD700));
-    _drawText(canvas, 'WHITE LIGHT', Offset(entryX - 60, entryY - 40), Colors.white70);
-    _drawText(canvas, 'PRISM', Offset(cx - 25, cy - pSize - 25), const Color(0xFF0EA5E9));
-    _drawText(canvas, 'Violet (short λ) bends MOST ↓', Offset(size.width * 0.08, size.height * 0.92), const Color(0xFFDDD6FE));
-    _drawText(canvas, 'Red (long λ) bends LEAST ↑', Offset(size.width * 0.08, size.height * 0.97), const Color(0xFFFCA5A5));
+    final devX = entryX + (hitX2 - entryX) * 0.5 + 50;
+    final devY = entryY - deviationAngle * 1.5;
+    canvas.drawLine(Offset(entryX, entryY), Offset(devX + 100, devY), Paint()..color = Colors.white.withValues(alpha: 0.12)..strokeWidth = 1);
+    _drawText(canvas, 'δ = ${deviationAngle.toStringAsFixed(0)}° (Deviation)', Offset(devX, devY - 18), const Color(0xFFFFD700));
 
-    final ly = size.height * 0.75;
+    _drawText(canvas, 'Air → Glass: bends TOWARD normal', Offset(size.width * 0.52, size.height * 0.92), const Color(0xFFDDD6FE));
+    _drawText(canvas, 'Glass → Air: bends AWAY from normal', Offset(size.width * 0.52, size.height * 0.97), const Color(0xFFFCA5A5));
+
+    final legendY = size.height * 0.85;
     final names = ['R', 'O', 'Y', 'G', 'B', 'I', 'V'];
     for (int i = 0; i < 7; i++) {
-      canvas.drawCircle(Offset(size.width * 0.4 + i * 35.0, ly), 8, Paint()..color = colors[i]);
-      _drawText(canvas, names[i], Offset(size.width * 0.4 + i * 35.0 - 4, ly + 15), colors[i]);
+      canvas.drawCircle(Offset(size.width * 0.08 + i * 45.0, legendY), 10, Paint()..color = colors[i]);
+      _drawText(canvas, names[i], Offset(size.width * 0.08 + i * 45.0 - 4, legendY + 18), colors[i]);
     }
   }
 
