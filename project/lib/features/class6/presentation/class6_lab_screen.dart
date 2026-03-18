@@ -84,18 +84,22 @@ class _Class6LabScreenState extends State<Class6LabScreen> {
           child: compact
               ? Column(
                   children: [
-                    _ControlRail(
-                      experiments: _experiments,
-                      activeExperiment: _activeExperiment,
-                      selectedMaterial: _selectedMaterial,
-                      sunAngle: _sunAngle,
-                      onExperimentSelected: _setExperiment,
-                      onMaterialSelected: _setMaterial,
-                      onSunAngleChanged: (value) {
-                        setState(() => _sunAngle = value);
-                      },
+                    Expanded(
+                      flex: 6,
+                      child: _ControlRail(
+                        experiments: _experiments,
+                        activeExperiment: _activeExperiment,
+                        selectedMaterial: _selectedMaterial,
+                        sunAngle: _sunAngle,
+                        onExperimentSelected: _setExperiment,
+                        onMaterialSelected: _setMaterial,
+                        onSunAngleChanged: (value) {
+                          setState(() => _sunAngle = value);
+                        },
+                      ),
                     ),
                     Expanded(
+                      flex: 5,
                       child: _StageArea(
                         experiment: _activeExperiment,
                         selectedMaterial: _selectedMaterial,

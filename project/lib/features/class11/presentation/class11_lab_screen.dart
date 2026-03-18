@@ -189,32 +189,36 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
           child: compact
               ? Column(
                   children: [
-                    _ControlRail(
-                      experiments: _experiments,
-                      activeExperiment: _activeExperiment,
-                      inputError: _inputError,
-                      tirIndexController: _tirIndexController,
-                      tirIncidentController: _tirIncidentController,
-                      prismAController: _prismAController,
-                      prismDeviationController: _prismDeviationController,
-                      lensObjectDistanceController:
-                          _lensObjectDistanceController,
-                      lensFocalLengthController: _lensFocalLengthController,
-                      lensType: _lensType,
-                      tirResult: _tirResult,
-                      prismResult: _prismResult,
-                      lensResult: _lensResult,
-                      onExperimentSelected: _setExperiment,
-                      onLensTypeChanged: (value) =>
-                          setState(() => _lensType = value),
-                      onCalculateTir: _calculateTir,
-                      onResetTir: _resetTir,
-                      onCalculatePrism: _calculatePrism,
-                      onResetPrism: _resetPrism,
-                      onCalculateLens: _calculateLens,
-                      onResetLens: _resetLens,
+                    Expanded(
+                      flex: 6,
+                      child: _ControlRail(
+                        experiments: _experiments,
+                        activeExperiment: _activeExperiment,
+                        inputError: _inputError,
+                        tirIndexController: _tirIndexController,
+                        tirIncidentController: _tirIncidentController,
+                        prismAController: _prismAController,
+                        prismDeviationController: _prismDeviationController,
+                        lensObjectDistanceController:
+                            _lensObjectDistanceController,
+                        lensFocalLengthController: _lensFocalLengthController,
+                        lensType: _lensType,
+                        tirResult: _tirResult,
+                        prismResult: _prismResult,
+                        lensResult: _lensResult,
+                        onExperimentSelected: _setExperiment,
+                        onLensTypeChanged: (value) =>
+                            setState(() => _lensType = value),
+                        onCalculateTir: _calculateTir,
+                        onResetTir: _resetTir,
+                        onCalculatePrism: _calculatePrism,
+                        onResetPrism: _resetPrism,
+                        onCalculateLens: _calculateLens,
+                        onResetLens: _resetLens,
+                      ),
                     ),
                     Expanded(
+                      flex: 5,
                       child: _StageArea(
                         experiment: _activeExperiment,
                         tirResult: _tirResult,
@@ -430,19 +434,22 @@ class _ControlRail extends StatelessWidget {
               const SizedBox(height: 20),
               Text('Lens type', style: theme.textTheme.titleSmall),
               const SizedBox(height: 8),
-              SegmentedButton<LensType>(
-                segments: const [
-                  ButtonSegment<LensType>(
-                    value: LensType.convex,
-                    label: Text('Convex'),
-                  ),
-                  ButtonSegment<LensType>(
-                    value: LensType.concave,
-                    label: Text('Concave'),
-                  ),
-                ],
-                selected: <LensType>{lensType},
-                onSelectionChanged: (value) => onLensTypeChanged(value.first),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SegmentedButton<LensType>(
+                  segments: const [
+                    ButtonSegment<LensType>(
+                      value: LensType.convex,
+                      label: Text('Convex'),
+                    ),
+                    ButtonSegment<LensType>(
+                      value: LensType.concave,
+                      label: Text('Concave'),
+                    ),
+                  ],
+                  selected: <LensType>{lensType},
+                  onSelectionChanged: (value) => onLensTypeChanged(value.first),
+                ),
               ),
               const SizedBox(height: 12),
               _NumberInput(
@@ -722,54 +729,61 @@ class _StageArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: CustomPaint(
-            painter: _ExperimentPainter(
-              experimentId: experiment.id,
-              tirResult: tirResult,
-              prismResult: prismResult,
-              lensResult: lensResult,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 860;
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _ExperimentPainter(
+                  experimentId: experiment.id,
+                  tirResult: tirResult,
+                  prismResult: prismResult,
+                  lensResult: lensResult,
+                ),
+                child: const SizedBox.expand(),
+              ),
             ),
-            child: const SizedBox.expand(),
-          ),
-        ),
-        Positioned(
-          top: 24,
-          left: 24,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
-            child: _OverlayCard(
-              title: 'Physics',
-              accent: experiment.accent,
-              body: _equationText(),
+            Positioned(
+              top: 24,
+              left: 24,
+              right: compact ? 24 : null,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: compact ? 420 : 360),
+                child: _OverlayCard(
+                  title: 'Physics',
+                  accent: experiment.accent,
+                  body: _equationText(),
+                ),
+              ),
             ),
-          ),
-        ),
-        Positioned(
-          top: 24,
-          right: 24,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 340),
-            child: _OverlayCard(
-              title: 'Readout',
-              accent: experiment.accent,
-              body: _readoutText(),
+            Positioned(
+              top: compact ? 144 : 24,
+              right: 24,
+              left: compact ? 24 : null,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: compact ? 420 : 340),
+                child: _OverlayCard(
+                  title: 'Readout',
+                  accent: experiment.accent,
+                  body: _readoutText(),
+                ),
+              ),
             ),
-          ),
-        ),
-        Positioned(
-          bottom: 24,
-          left: 24,
-          right: 24,
-          child: _OverlayCard(
-            title: 'Observation',
-            accent: experiment.accent,
-            body: _observationText(),
-          ),
-        ),
-      ],
+            Positioned(
+              bottom: 24,
+              left: 24,
+              right: 24,
+              child: _OverlayCard(
+                title: 'Observation',
+                accent: experiment.accent,
+                body: _observationText(),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
