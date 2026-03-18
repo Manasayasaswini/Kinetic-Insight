@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "8cf53f676efe",
+  "session_id": "ses_30049eb5fffeC55PT8Uc2lUHwD",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-18T07:10:02.722573313Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "class11_flutter/lib/app/kinetic_insight_app.dart",
+    "class11_flutter/lib/features/class11/presentation/class11_lab_screen.dart",
+    "class11_flutter/lib/features/main/presentation/main_screen.dart"
+  ],
+  "agent": "OpenCode",
+  "turn_id": "37999e090a6b",
+  "token_usage": {
+    "input_tokens": 17125,
+    "cache_creation_tokens": 44628,
+    "cache_read_tokens": 853996,
+    "output_tokens": 9844,
+    "api_call_count": 33
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-18T07:09:58.715033316Z",
+    "agent_lines": 4,
+    "human_added": 136,
+    "human_modified": 5,
+    "human_removed": 0,
+    "total_committed": 145,
+    "agent_percentage": 2.7586206896551726
+  }
+}

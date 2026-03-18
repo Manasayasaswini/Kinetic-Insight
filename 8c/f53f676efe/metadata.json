@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "8cf53f676efe",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "class11_flutter/lib/app/kinetic_insight_app.dart",
+    "class11_flutter/lib/features/class11/presentation/class11_lab_screen.dart",
+    "class11_flutter/lib/features/main/presentation/main_screen.dart"
+  ],
+  "sessions": [
+    {
+      "metadata": "/8c/f53f676efe/0/metadata.json",
+      "transcript": "/8c/f53f676efe/0/full.jsonl",
+      "context": "/8c/f53f676efe/0/context.md",
+      "content_hash": "/8c/f53f676efe/0/content_hash.txt",
+      "prompt": "/8c/f53f676efe/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 17125,
+    "cache_creation_tokens": 44628,
+    "cache_read_tokens": 853996,
+    "output_tokens": 9844,
+    "api_call_count": 33
+  }
+}
