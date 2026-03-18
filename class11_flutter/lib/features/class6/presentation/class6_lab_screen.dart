@@ -553,20 +553,20 @@ class _Class6ExperimentPainter extends CustomPainter {
     final objectX = size.width * 0.42;
 
     canvas.drawRect(
-      Rect.fromLTWH(torchX - 40, torchY - 15, 60, 30),
+      Rect.fromLTWH(torchX - 40.0, torchY - 15.0, 60.0, 30.0),
       Paint()..color = const Color(0xFF2D3436),
     );
     canvas.drawCircle(
-      Offset(torchX + 20, torchY),
-      15,
+      Offset(torchX + 20.0, torchY),
+      15.0,
       Paint()..color = const Color(0xFF2D3436),
     );
 
     final lightColor = const Color(0xFFFFF8B8).withValues(alpha: 0.75);
     final lightPath = Path()
-      ..moveTo(torchX + 20, torchY)
-      ..lineTo(objectX, torchY - 60)
-      ..lineTo(objectX, torchY + 60)
+      ..moveTo(torchX + 20.0, torchY)
+      ..lineTo(objectX, torchY - 60.0)
+      ..lineTo(objectX, torchY + 60.0)
       ..close();
     canvas.drawPath(lightPath, Paint()..color = lightColor);
 
@@ -580,7 +580,7 @@ class _Class6ExperimentPainter extends CustomPainter {
       passThrough = 0.0;
     }
 
-    final objectRect = Rect.fromLTWH(objectX - 20, torchY - 60, 40, 120);
+    final objectRect = Rect.fromLTWH(objectX - 20.0, torchY - 60.0, 40.0, 120.0);
     canvas.drawRect(
       objectRect,
       Paint()..color = const Color(0xFF646464).withValues(alpha: opacity),
@@ -595,10 +595,10 @@ class _Class6ExperimentPainter extends CustomPainter {
 
     if (passThrough > 0) {
       final passPath = Path()
-        ..moveTo(objectX + 20, torchY - 60)
-        ..lineTo(size.width, torchY - 100)
-        ..lineTo(size.width, torchY + 100)
-        ..lineTo(objectX + 20, torchY + 60)
+        ..moveTo(objectX + 20.0, torchY - 60.0)
+        ..lineTo(size.width, torchY - 100.0)
+        ..lineTo(size.width, torchY + 100.0)
+        ..lineTo(objectX + 20.0, torchY + 60.0)
         ..close();
       canvas.drawPath(
         passPath,
@@ -608,10 +608,10 @@ class _Class6ExperimentPainter extends CustomPainter {
 
     if (passThrough < 0.5) {
       final shadowPath = Path()
-        ..moveTo(objectX + 20, torchY - 60)
-        ..lineTo(size.width, torchY - 80)
-        ..lineTo(size.width, torchY + 80)
-        ..lineTo(objectX + 20, torchY + 60)
+        ..moveTo(objectX + 20.0, torchY - 60.0)
+        ..lineTo(size.width, torchY - 80.0)
+        ..lineTo(size.width, torchY + 80.0)
+        ..lineTo(objectX + 20.0, torchY + 60.0)
         ..close();
       canvas.drawPath(
         shadowPath,
@@ -625,7 +625,7 @@ class _Class6ExperimentPainter extends CustomPainter {
       style: TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600),
     );
     labelStyle.layout();
-    labelStyle.paint(canvas, Offset(torchX - 32, torchY + 25));
+    labelStyle.paint(canvas, Offset(torchX - 32.0, torchY + 25.0));
 
     labelStyle.text = TextSpan(
       text: selectedMaterial == 'glass' 
@@ -636,12 +636,12 @@ class _Class6ExperimentPainter extends CustomPainter {
       style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600),
     );
     labelStyle.layout();
-    labelStyle.paint(canvas, Offset(objectX - 25, torchY + 75));
+    labelStyle.paint(canvas, Offset(objectX - 25.0, torchY + 75.0));
   }
 
   void _drawShadowExperiment(Canvas canvas, Size size) {
     final centerX = size.width / 2;
-    final groundY = size.height - 120;
+    final groundY = size.height - 120.0;
     final pillarHeight = 132.0;
     final pillarWidth = 34.0;
     final pillarX = centerX - pillarWidth / 2;
@@ -660,23 +660,23 @@ class _Class6ExperimentPainter extends CustomPainter {
     ).createShader(Rect.fromLTWH(0, groundY, size.width, size.height - groundY));
     canvas.drawRect(Rect.fromLTWH(0, groundY, size.width, size.height - groundY), Paint()..shader = groundGrad);
 
-    final rad = sunAngle * math.pi / 180;
-    final sunRadius = math.min(280, size.width * 0.28);
+    final rad = sunAngle * math.pi / 180.0;
+    final sunRadius = math.min(280.0, size.width * 0.28);
     final sunX = centerX + sunRadius * math.cos(math.pi - rad);
     final sunY = groundY - sunRadius * math.sin(math.pi - rad);
 
     final shadowLen = pillarHeight / math.tan(rad);
-    final shadowOpacity = math.max(0.06, 0.24 - math.min(shadowLen.abs() / 1200, 0.14));
+    final shadowOpacity = math.max(0.06, 0.24 - math.min(shadowLen.abs() / 1200.0, 0.14));
     final shadowWidth = math.max(18.0, shadowLen.abs() * 0.42);
     final shadowCenterX = centerX + shadowLen / 2;
 
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(shadowCenterX, groundY + 8), width: shadowWidth * 2, height: 28),
+      Rect.fromCenter(center: Offset(shadowCenterX, groundY + 8.0), width: shadowWidth * 2.0, height: 28.0),
       Paint()..color = Color.fromRGBO(45, 52, 54, shadowOpacity),
     );
 
     canvas.drawRect(
-      Rect.fromLTWH(pillarX - 12, groundY - pillarHeight - 2, pillarWidth + 24, pillarHeight + 4),
+      Rect.fromLTWH(pillarX - 12.0, groundY - pillarHeight - 2.0, pillarWidth + 24.0, pillarHeight + 4.0),
       Paint()..color = const Color(0xFF9A8A76),
     );
     canvas.drawRect(
@@ -686,14 +686,14 @@ class _Class6ExperimentPainter extends CustomPainter {
 
     final sunGrad = RadialGradient(
       colors: const [Color(0xFFFFFFFF), Color(0xFFFFF4B3), Color(0xFFF1C40F), Color(0x00F1C40F)],
-    ).createShader(Rect.fromCircle(center: Offset(sunX, sunY), radius: 44));
-    canvas.drawCircle(Offset(sunX, sunY), 44, Paint()..shader = sunGrad);
+    ).createShader(Rect.fromCircle(center: Offset(sunX, sunY), radius: 44.0));
+    canvas.drawCircle(Offset(sunX, sunY), 44.0, Paint()..shader = sunGrad);
 
     for (int i = 0; i < 8; i++) {
-      final angle = (math.pi * 2 * i) / 8;
+      final angle = (math.pi * 2.0 * i) / 8.0;
       canvas.drawLine(
-        Offset(sunX + math.cos(angle) * 34, sunY + math.sin(angle) * 34),
-        Offset(sunX + math.cos(angle) * 54, sunY + math.sin(angle) * 54),
+        Offset(sunX + math.cos(angle) * 34.0, sunY + math.sin(angle) * 34.0),
+        Offset(sunX + math.cos(angle) * 54.0, sunY + math.sin(angle) * 54.0),
         Paint()
           ..color = const Color(0xFFFFDC6B).withValues(alpha: 0.4)
           ..strokeWidth = 2,
@@ -710,8 +710,8 @@ class _Class6ExperimentPainter extends CustomPainter {
   }
 
   void _drawPinholeExperiment(Canvas canvas, Size size) {
-    final boxW = math.min(300, size.width * 0.38);
-    final boxH = math.min(250, size.height * 0.52);
+    final boxW = math.min(300.0, size.width * 0.38);
+    final boxH = math.min(250.0, size.height * 0.52);
     final boxX = size.width * 0.54;
     final boxY = (size.height - boxH) / 2;
     final pinholeY = boxY + boxH / 2;
@@ -722,9 +722,9 @@ class _Class6ExperimentPainter extends CustomPainter {
       Paint()..color = const Color(0xFFFCFAF4),
     );
 
-    final candleX = mousePosition.dx.clamp(size.width * 0.12, boxX - 95);
-    final candleBaseY = (mousePosition.dy + 36).clamp(boxY + 70, boxY + boxH + 70);
-    final scale = 0.95 + ((boxX - candleX) / math.max(160, boxX - size.width * 0.12)) * 0.35;
+    final candleX = mousePosition.dx.clamp(size.width * 0.12, boxX - 95.0);
+    final candleBaseY = (mousePosition.dy + 36.0).clamp(boxY + 70.0, boxY + boxH + 70.0);
+    final scale = 0.95 + ((boxX - candleX) / math.max(160.0, boxX - size.width * 0.12)) * 0.35;
     final bodyTopY = candleBaseY - 62 * scale;
     final flameTopY = candleBaseY - 88 * scale;
     final flameBottomY = candleBaseY - 54 * scale;
@@ -736,7 +736,7 @@ class _Class6ExperimentPainter extends CustomPainter {
     final projectedFlameBottom = pinholeY + (pinholeY - flameBottomY) * ratio;
 
     canvas.drawRect(
-      Rect.fromLTWH(boxX - 12, boxY - 10, boxW + 24, boxH + 20),
+      Rect.fromLTWH(boxX - 12.0, boxY - 10.0, boxW + 24.0, boxH + 20.0),
       Paint()..color = const Color(0xFFE6C898),
     );
     canvas.drawRect(
@@ -755,12 +755,12 @@ class _Class6ExperimentPainter extends CustomPainter {
 
     _drawCandle(canvas, candleX, candleBaseY, scale);
 
-    final projectedBodyWidth = math.max(6.0, math.abs(projectedBodyBottom - projectedBodyTop) * 0.32);
+    final projectedBodyWidth = math.max(6.0, (projectedBodyBottom - projectedBodyTop).abs() * 0.32);
     final projX = screenX - projectedBodyWidth / 2;
     final projY = math.min(projectedBodyTop, projectedBodyBottom);
 
     canvas.save();
-    canvas.clipRect(Rect.fromLTWH(boxX + 8, boxY + 10, boxW - 18, boxH - 20));
+    canvas.clipRect(Rect.fromLTWH(boxX + 8.0, boxY + 10.0, boxW - 18.0, boxH - 20.0));
     _drawProjectedCandle(canvas, screenX, projectedBodyTop, projectedBodyBottom, projectedFlameTop, projectedFlameBottom);
     canvas.restore();
 
@@ -770,14 +770,14 @@ class _Class6ExperimentPainter extends CustomPainter {
       style: TextStyle(color: Color(0xFF6B4B24), fontSize: 11, fontWeight: FontWeight.w700),
     );
     labelStyle.layout();
-    labelStyle.paint(canvas, Offset(boxX + 18, boxY - 22));
+    labelStyle.paint(canvas, Offset(boxX + 18.0, boxY - 22.0));
 
     labelStyle.text = const TextSpan(
       text: 'Move the candle with your mouse',
       style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
     );
     labelStyle.layout();
-    labelStyle.paint(canvas, Offset(36, boxY - 22));
+    labelStyle.paint(canvas, Offset(36.0, boxY - 22.0));
   }
 
   void _drawGlowRay(Canvas canvas, Offset from, Offset via, Offset to) {
@@ -865,7 +865,7 @@ class _Class6ExperimentPainter extends CustomPainter {
   }
 
   void _drawProjectedCandle(Canvas canvas, double cx, double bodyTop, double bodyBottom, double flameTop, double flameBottom) {
-    final bodyHeight = math.max(10.0, math.abs(bodyBottom - bodyTop));
+    final bodyHeight = math.max(10.0, (bodyBottom - bodyTop).abs());
     final bodyWidth = math.max(6.0, bodyHeight * 0.32);
     final bodyX = cx - bodyWidth / 2;
     final bodyY = math.min(bodyTop, bodyBottom);
@@ -880,7 +880,7 @@ class _Class6ExperimentPainter extends CustomPainter {
       Paint()..shader = waxGrad,
     );
 
-    final flameHalfW = math.max(4.0, math.abs(flameBottom - flameTop) * 0.28);
+    final flameHalfW = math.max(4.0, (flameBottom - flameTop).abs() * 0.28);
     final flamePath = Path()
       ..moveTo(cx, flameTop)
       ..quadraticBezierTo(cx + flameHalfW, (flameTop + flameBottom) / 2, cx, flameBottom)
@@ -896,10 +896,10 @@ class _Class6ExperimentPainter extends CustomPainter {
   void _drawRefractionExperiment(Canvas canvas, Size size) {
     final centerX = size.width / 2;
     final centerY = size.height / 2;
-    final glassW = math.min(170, size.width * 0.2);
-    final glassH = math.min(260, size.height * 0.42);
+    final glassW = math.min(170.0, size.width * 0.2);
+    final glassH = math.min(260.0, size.height * 0.42);
     final glassX = centerX - glassW / 2;
-    final glassY = centerY - glassH / 2 - 10;
+    final glassY = centerY - glassH / 2 - 10.0;
     final waterLevel = glassY + glassH * 0.48;
 
     canvas.drawRect(
@@ -908,7 +908,7 @@ class _Class6ExperimentPainter extends CustomPainter {
     );
 
     canvas.drawRect(
-      Rect.fromLTWH(0, glassY + glassH - 15, size.width, size.height - glassY - glassH + 15),
+      Rect.fromLTWH(0.0, glassY + glassH - 15.0, size.width, size.height - glassY - glassH + 15.0),
       Paint()..color = const Color(0xFFE4D8C4),
     );
 
@@ -924,10 +924,10 @@ class _Class6ExperimentPainter extends CustomPainter {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: const [Color(0xFF48CEC8), Color(0xFF2DD4BF)],
-    ).createShader(Rect.fromLTWH(glassX + 6, waterLevel, glassW - 12, glassY + glassH - waterLevel - 6));
+    ).createShader(Rect.fromLTWH(glassX + 6.0, waterLevel, glassW - 12.0, glassY + glassH - waterLevel - 6.0));
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(glassX + 6, waterLevel, glassW - 12, glassY + glassH - waterLevel - 6),
+        Rect.fromLTWH(glassX + 6.0, waterLevel, glassW - 12.0, glassY + glassH - waterLevel - 6.0),
         const Radius.circular(16),
       ),
       Paint()..shader = waterGrad,
@@ -941,8 +941,8 @@ class _Class6ExperimentPainter extends CustomPainter {
         ..strokeWidth = 2,
     );
 
-    final pivotX = mousePosition.dx.clamp(glassX - 150, glassX + glassW - 10);
-    final pivotY = mousePosition.dy.clamp(glassY - 110, waterLevel - 8);
+    final pivotX = mousePosition.dx.clamp(glassX - 150.0, glassX + glassW - 10.0);
+    final pivotY = mousePosition.dy.clamp(glassY - 110.0, waterLevel - 8.0);
     const pencilAngle = 0.92;
     const topLength = 145.0;
     const bottomLength = 128.0;
@@ -951,7 +951,7 @@ class _Class6ExperimentPainter extends CustomPainter {
     final rawBottomX = pivotX + math.cos(pencilAngle) * bottomLength;
     final rawBottomY = pivotY + math.sin(pencilAngle) * bottomLength;
 
-    final entersWater = pivotX > glassX + 16 && pivotX < glassX + glassW - 16 && pivotY > glassY + 20;
+    final entersWater = pivotX > glassX + 16.0 && pivotX < glassX + glassW - 16.0 && pivotY > glassY + 20.0;
     final visibleUnderwater = entersWater && rawBottomY > waterLevel;
     const refractShift = 24.0;
 
@@ -966,7 +966,7 @@ class _Class6ExperimentPainter extends CustomPainter {
 
     if (visibleUnderwater) {
       canvas.drawLine(
-        Offset(pivotX + refractShift, pivotY + 2),
+        Offset(pivotX + refractShift, pivotY + 2.0),
         Offset(rawBottomX + refractShift, rawBottomY),
         Paint()
           ..color = const Color(0xFFF4C542).withValues(alpha: 0.72)
@@ -996,14 +996,14 @@ class _Class6ExperimentPainter extends CustomPainter {
       style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
     );
     labelStyle.layout();
-    labelStyle.paint(canvas, Offset(glassX + glassW + 18, waterLevel + 4));
+    labelStyle.paint(canvas, Offset(glassX + glassW + 18.0, waterLevel + 4.0));
 
     labelStyle.text = const TextSpan(
       text: 'move the pencil into the glass',
       style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
     );
     labelStyle.layout();
-    labelStyle.paint(canvas, Offset(glassX - 148, glassY - 18));
+    labelStyle.paint(canvas, Offset(glassX - 148.0, glassY - 18.0));
 
     if (visibleUnderwater) {
       labelStyle.text = const TextSpan(
@@ -1011,7 +1011,7 @@ class _Class6ExperimentPainter extends CustomPainter {
         style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
       );
       labelStyle.layout();
-      labelStyle.paint(canvas, Offset(glassX + glassW + 18, waterLevel + 24));
+      labelStyle.paint(canvas, Offset(glassX + glassW + 18.0, waterLevel + 24.0));
     }
   }
 
