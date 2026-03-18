@@ -6,6 +6,10 @@ from pydantic import BaseModel, Field
 
 app = FastAPI(title='Kinetic Insight AI Backend', version='0.1.0')
 
+@app.get("/")
+def root():
+    return {"message": "Backend is running"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
