@@ -390,7 +390,7 @@ class _StageArea extends StatelessWidget {
               title: 'Live Readout',
               accent: experiment.accent,
               body:
-                  'theta1: ${incidentAngle.toStringAsFixed(1)}°\nCritical angle: ${state.criticalAngle.toStringAsFixed(1)}°\nState: ${state.label}',
+                  'Angle of incidence (i): ${incidentAngle.toStringAsFixed(1)}°\nCritical angle (ic): ${state.criticalAngle.toStringAsFixed(1)}°\nState: ${state.label}',
             ),
           ),
         ),
@@ -575,7 +575,7 @@ class _TirExperimentPainter extends CustomPainter {
       canvas,
       text: 'Incident Ray',
       position: Offset(
-        (source.dx + hitPoint.dx) / 2 - 26,
+        (source.dx + hitPoint.dx) / 2 - 52,
         (source.dy + hitPoint.dy) / 2 + 12,
       ),
       color: const Color(0xFFF97316),
@@ -612,7 +612,7 @@ class _TirExperimentPainter extends CustomPainter {
         start: -math.pi / 2,
         sweep: state.incidentRadians,
         color: const Color(0xFFF97316),
-        label: 'theta1',
+        label: 'i',
       );
       _drawAngleArc(
         canvas,
@@ -621,11 +621,11 @@ class _TirExperimentPainter extends CustomPainter {
         start: -math.pi / 2,
         sweep: -state.refractedRadians!,
         color: const Color(0xFF2563EB),
-        label: 'theta2',
+        label: 'r',
       );
     } else {
       final reflectedEnd = Offset(
-        hitPoint.dx - math.sin(state.incidentRadians) * 260,
+        hitPoint.dx + math.sin(state.incidentRadians) * 260,
         hitPoint.dy + math.cos(state.incidentRadians) * 260,
       );
       final reflectedPaint = Paint()
@@ -642,7 +642,7 @@ class _TirExperimentPainter extends CustomPainter {
         canvas,
         text: 'Reflected Ray',
         position: Offset(
-          (hitPoint.dx + reflectedEnd.dx) / 2 - 2,
+          (hitPoint.dx + reflectedEnd.dx) / 2 + 12,
           (hitPoint.dy + reflectedEnd.dy) / 2 + 14,
         ),
         color: const Color(0xFFFDE047),
@@ -654,7 +654,7 @@ class _TirExperimentPainter extends CustomPainter {
         start: -math.pi / 2,
         sweep: state.incidentRadians,
         color: const Color(0xFFF97316),
-        label: 'theta1',
+        label: 'i',
       );
       _drawAngleArc(
         canvas,
@@ -663,7 +663,7 @@ class _TirExperimentPainter extends CustomPainter {
         start: math.pi / 2,
         sweep: -state.incidentRadians,
         color: const Color(0xFFFDE047),
-        label: 'theta2',
+        label: "i'",
       );
 
       if (state.mode == _RayMode.critical) {
@@ -678,9 +678,18 @@ class _TirExperimentPainter extends CustomPainter {
         );
         _drawRayLabel(
           canvas,
-          text: 'Critical Refraction (r = 90°)',
+          text: 'Critical Ray (r = 90°)',
           position: Offset(hitPoint.dx + 18, boundaryY - 18),
           color: const Color(0xFF2563EB),
+        );
+        _drawAngleArc(
+          canvas,
+          center: hitPoint,
+          radius: 56,
+          start: -math.pi / 2,
+          sweep: state.incidentRadians,
+          color: const Color(0xFFF97316),
+          label: 'i = ic',
         );
       }
     }
@@ -800,7 +809,7 @@ class _RayState {
         mode: _RayMode.critical,
         label: 'Critical Angle',
         observation:
-            'The incident angle is almost equal to the critical angle, so the refracted ray grazes along the boundary instead of entering air cleanly.',
+            'At the critical angle (${criticalAngle.toStringAsFixed(1)}°), the refracted ray travels along the boundary (90°). This is the limit of refraction.',
       );
     }
 
@@ -811,12 +820,12 @@ class _RayState {
         mode: _RayMode.tir,
         label: 'Total Internal Reflection',
         observation:
-            'The angle is greater than the critical angle. No light escapes into air, so the entire ray reflects back inside the water.',
+            'The angle of incidence (${incidentAngle.toStringAsFixed(1)}°) is greater than the critical angle (${criticalAngle.toStringAsFixed(1)}°). Complete reflection occurs - no light escapes into air.',
       );
     }
 
     final refractedRadians = math.asin(
-      refractiveIndex * math.sin(incidentRadians),
+      (1 / refractiveIndex) * math.sin(incidentRadians),
     );
     return _RayState(
       incidentRadians: incidentRadians,
@@ -825,7 +834,7 @@ class _RayState {
       label: 'Refraction',
       refractedRadians: refractedRadians,
       observation:
-          'The incident angle is below the critical angle, so part of the light refracts into air and bends away from the normal.',
+          'Light bends away from the normal. Angle of incidence (${incidentAngle.toStringAsFixed(1)}°) > Angle of refraction (${(refractedRadians * 180 / math.pi).toStringAsFixed(1)}°)',
     );
   }
 }
