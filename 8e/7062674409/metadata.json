@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "8e7062674409",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "class11_flutter/lib/features/class9/domain/class9_kaleidoscope_calculator.dart",
+    "class11_flutter/lib/features/class9/presentation/class9_lab_screen.dart",
+    "class11_flutter/lib/features/main/presentation/main_screen.dart"
+  ],
+  "sessions": [
+    {
+      "metadata": "/8e/7062674409/0/metadata.json",
+      "transcript": "/8e/7062674409/0/full.jsonl",
+      "context": "/8e/7062674409/0/context.md",
+      "content_hash": "/8e/7062674409/0/content_hash.txt",
+      "prompt": "/8e/7062674409/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 25019,
+    "cache_creation_tokens": 105658,
+    "cache_read_tokens": 1066956,
+    "output_tokens": 17241,
+    "api_call_count": 37
+  }
+}
