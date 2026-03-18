@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "ae037daa1e68",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "class11_flutter/lib/features/class9/presentation/class9_lab_screen.dart"
+  ],
+  "sessions": [
+    {
+      "metadata": "/ae/037daa1e68/0/metadata.json",
+      "transcript": "/ae/037daa1e68/0/full.jsonl",
+      "context": "/ae/037daa1e68/0/context.md",
+      "content_hash": "/ae/037daa1e68/0/content_hash.txt",
+      "prompt": "/ae/037daa1e68/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 14383,
+    "cache_creation_tokens": 77957,
+    "cache_read_tokens": 1163125,
+    "output_tokens": 7532,
+    "api_call_count": 21
+  }
+}
