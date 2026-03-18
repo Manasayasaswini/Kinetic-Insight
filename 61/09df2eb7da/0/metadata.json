@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "6109df2eb7da",
+  "session_id": "ses_30049eb5fffeC55PT8Uc2lUHwD",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-18T07:37:06.438307655Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "class11_flutter/lib/features/class11/presentation/class11_lab_screen.dart"
+  ],
+  "agent": "OpenCode",
+  "turn_id": "d181414d3baf",
+  "token_usage": {
+    "input_tokens": 32974,
+    "cache_creation_tokens": 113026,
+    "cache_read_tokens": 1440682,
+    "output_tokens": 21522,
+    "api_call_count": 47
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-18T07:37:05.56505272Z",
+    "agent_lines": 543,
+    "human_added": 53,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 596,
+    "agent_percentage": 91.10738255033557
+  }
+}
