@@ -710,12 +710,12 @@ class _Class6ExperimentPainter extends CustomPainter {
   }
 
   void _drawPinholeExperiment(Canvas canvas, Size size) {
-    final boxW = math.min(300.0, size.width * 0.38);
-    final boxH = math.min(250.0, size.height * 0.52);
-    final boxX = size.width * 0.54;
-    final boxY = (size.height - boxH) / 2;
+    final boxW = math.min(300.0, size.width * 0.38).toDouble();
+    final boxH = math.min(250.0, size.height * 0.52).toDouble();
+    final boxX = (size.width * 0.54).toDouble();
+    final boxY = ((size.height - boxH) / 2).toDouble();
     final pinholeY = boxY + boxH / 2;
-    final screenX = boxX + boxW - 20;
+    final screenX = boxX + boxW - 20.0;
 
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
@@ -865,8 +865,8 @@ class _Class6ExperimentPainter extends CustomPainter {
   }
 
   void _drawProjectedCandle(Canvas canvas, double cx, double bodyTop, double bodyBottom, double flameTop, double flameBottom) {
-    final bodyHeight = math.max(10.0, (bodyBottom - bodyTop).abs());
-    final bodyWidth = math.max(6.0, bodyHeight * 0.32);
+    final bodyHeight = math.max(10.0, (bodyBottom - bodyTop).abs()).toDouble();
+    final bodyWidth = math.max(6.0, bodyHeight * 0.32).toDouble();
     final bodyX = cx - bodyWidth / 2;
     final bodyY = math.min(bodyTop, bodyBottom);
 
@@ -880,7 +880,7 @@ class _Class6ExperimentPainter extends CustomPainter {
       Paint()..shader = waxGrad,
     );
 
-    final flameHalfW = math.max(4.0, (flameBottom - flameTop).abs() * 0.28);
+    final flameHalfW = math.max(4.0, (flameBottom - flameTop).abs() * 0.28).toDouble();
     final flamePath = Path()
       ..moveTo(cx, flameTop)
       ..quadraticBezierTo(cx + flameHalfW, (flameTop + flameBottom) / 2, cx, flameBottom)
@@ -896,8 +896,8 @@ class _Class6ExperimentPainter extends CustomPainter {
   void _drawRefractionExperiment(Canvas canvas, Size size) {
     final centerX = size.width / 2;
     final centerY = size.height / 2;
-    final glassW = math.min(170.0, size.width * 0.2);
-    final glassH = math.min(260.0, size.height * 0.42);
+    final glassW = math.min(170.0, size.width * 0.2).toDouble();
+    final glassH = math.min(260.0, size.height * 0.42).toDouble();
     final glassX = centerX - glassW / 2;
     final glassY = centerY - glassH / 2 - 10.0;
     final waterLevel = glassY + glassH * 0.48;

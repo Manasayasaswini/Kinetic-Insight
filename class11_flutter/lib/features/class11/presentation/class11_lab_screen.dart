@@ -76,22 +76,14 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                       incidentAngle: _incidentAngle,
                       refractiveIndex: _refractiveIndex,
                       prismRefractiveIndex: _prismRefractiveIndex,
+                      prismAngleA: _prismAngleA,
+                      deviationAngle: _deviationAngle,
                       onExperimentSelected: _setExperiment,
-                      onIncidentAngleChanged: (value) {
-                        setState(() => _incidentAngle = value);
-                      },
-                      onRefractiveIndexChanged: (value) {
-                        setState(() => _refractiveIndex = value);
-                      },
-                      onPrismRefractiveIndexChanged: (value) {
-                        setState(() => _prismRefractiveIndex = value);
-                      },
-                      onPrismAngleChanged: (value) {
-                        setState(() => _prismAngleA = value);
-                      },
-                      onDeviationAngleChanged: (value) {
-                        setState(() => _deviationAngle = value);
-                      },
+                      onIncidentAngleChanged: (value) => setState(() => _incidentAngle = value),
+                      onRefractiveIndexChanged: (value) => setState(() => _refractiveIndex = value),
+                      onPrismRefractiveIndexChanged: (value) => setState(() => _prismRefractiveIndex = value),
+                      onPrismAngleChanged: (value) => setState(() => _prismAngleA = value),
+                      onDeviationAngleChanged: (value) => setState(() => _deviationAngle = value),
                     ),
                     Expanded(
                       child: _StageArea(
@@ -103,12 +95,10 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                         deviationAngle: _deviationAngle,
                         incidentHeight: _incidentHeight,
                         pointer: _pointer,
-                        onPointerChanged: (value) {
-                          setState(() {
-                            _pointer = value;
-                            _incidentHeight = value.dy.clamp(0.2, 0.8);
-                          });
-                        },
+                        onPointerChanged: (value) => setState(() {
+                          _pointer = value;
+                          _incidentHeight = value.dy.clamp(0.2, 0.8);
+                        }),
                       ),
                     ),
                   ],
@@ -123,22 +113,14 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                         incidentAngle: _incidentAngle,
                         refractiveIndex: _refractiveIndex,
                         prismRefractiveIndex: _prismRefractiveIndex,
+                        prismAngleA: _prismAngleA,
+                        deviationAngle: _deviationAngle,
                         onExperimentSelected: _setExperiment,
-                        onIncidentAngleChanged: (value) {
-                          setState(() => _incidentAngle = value);
-                        },
-                        onRefractiveIndexChanged: (value) {
-                          setState(() => _refractiveIndex = value);
-                        },
-                        onPrismRefractiveIndexChanged: (value) {
-                          setState(() => _prismRefractiveIndex = value);
-                        },
-                        onPrismAngleChanged: (value) {
-                          setState(() => _prismAngleA = value);
-                        },
-                        onDeviationAngleChanged: (value) {
-                          setState(() => _deviationAngle = value);
-                        },
+                        onIncidentAngleChanged: (value) => setState(() => _incidentAngle = value),
+                        onRefractiveIndexChanged: (value) => setState(() => _refractiveIndex = value),
+                        onPrismRefractiveIndexChanged: (value) => setState(() => _prismRefractiveIndex = value),
+                        onPrismAngleChanged: (value) => setState(() => _prismAngleA = value),
+                        onDeviationAngleChanged: (value) => setState(() => _deviationAngle = value),
                       ),
                     ),
                     Expanded(
@@ -151,12 +133,10 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                         deviationAngle: _deviationAngle,
                         incidentHeight: _incidentHeight,
                         pointer: _pointer,
-                        onPointerChanged: (value) {
-                          setState(() {
-                            _pointer = value;
-                            _incidentHeight = value.dy.clamp(0.2, 0.8);
-                          });
-                        },
+                        onPointerChanged: (value) => setState(() {
+                          _pointer = value;
+                          _incidentHeight = value.dy.clamp(0.2, 0.8);
+                        }),
                       ),
                     ),
                   ],
@@ -198,6 +178,12 @@ class _ControlRail extends StatelessWidget {
   final ValueChanged<double> onPrismAngleChanged;
   final ValueChanged<double> onDeviationAngleChanged;
 
+  double _calcRefractiveIndex(double a, double d) {
+    final ar = a * math.pi / 180;
+    final dr = d * math.pi / 180;
+    return math.sin((ar + dr) / 2) / math.sin(ar / 2);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -215,17 +201,10 @@ class _ControlRail extends StatelessWidget {
           children: [
             Text('Class 11 Optics Lab', style: theme.textTheme.headlineSmall),
             const SizedBox(height: 8),
-            Text(
-              'Start with ray optics. Build intuition for critical angle, prisms, and lenses.',
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text('Start with ray optics. Build intuition for critical angle, prisms, and lenses.', style: theme.textTheme.bodyMedium),
             const SizedBox(height: 24),
-            for (final experiment in experiments) ...[
-              _ExperimentTile(
-                experiment: experiment,
-                active: activeExperiment.id == experiment.id,
-                onTap: () => onExperimentSelected(experiment),
-              ),
+            for (final exp in experiments) ...[
+              _ExperimentTile(experiment: exp, active: activeExperiment.id == exp.id, onTap: () => onExperimentSelected(exp)),
               const SizedBox(height: 12),
             ],
             if (activeExperiment.id == 'tir') ...[
@@ -233,105 +212,38 @@ class _ControlRail extends StatelessWidget {
               Text('Live Controls', style: theme.textTheme.titleLarge),
               const SizedBox(height: 14),
               Text('Incident Angle', style: theme.textTheme.titleMedium),
-              Slider(
-                min: 0,
-                max: 89,
-                value: incidentAngle,
-                onChanged: onIncidentAngleChanged,
-              ),
-              Text(
-                '${incidentAngle.toStringAsFixed(1)}° from the normal',
-                style: theme.textTheme.bodyMedium,
-              ),
+              Slider(min: 0, max: 89, value: incidentAngle, onChanged: onIncidentAngleChanged),
+              Text('${incidentAngle.toStringAsFixed(1)}° from the normal', style: theme.textTheme.bodyMedium),
               const SizedBox(height: 12),
               Text('Water Refractive Index', style: theme.textTheme.titleMedium),
-              Slider(
-                min: 1.20,
-                max: 1.80,
-                value: refractiveIndex,
-                onChanged: onRefractiveIndexChanged,
-              ),
-              Text(
-                'n1 (water) = ${refractiveIndex.toStringAsFixed(2)}   |   critical angle ≈ ${criticalAngle.toStringAsFixed(1)}°',
-                style: theme.textTheme.bodyMedium,
-              ),
+              Slider(min: 1.20, max: 1.80, value: refractiveIndex, onChanged: onRefractiveIndexChanged),
+              Text('n1 = ${refractiveIndex.toStringAsFixed(2)} | critical ≈ ${criticalAngle.toStringAsFixed(1)}°', style: theme.textTheme.bodyMedium),
             ],
             if (activeExperiment.id == 'prism') ...[
               const SizedBox(height: 24),
               Text('Prism Parameters', style: theme.textTheme.titleLarge),
               const SizedBox(height: 14),
               Text('Prism Angle (A)', style: theme.textTheme.titleMedium),
-              Slider(
-                min: 40,
-                max: 80,
-                value: prismAngleA,
-                onChanged: onPrismAngleChanged,
-              ),
-              Text(
-                'A = ${prismAngleA.toStringAsFixed(0)}°',
-                style: theme.textTheme.bodyMedium,
-              ),
+              Slider(min: 40, max: 80, value: prismAngleA, onChanged: onPrismAngleChanged),
+              Text('A = ${prismAngleA.toStringAsFixed(0)}°', style: theme.textTheme.bodyMedium),
               const SizedBox(height: 12),
               Text('Angle of Deviation (δ)', style: theme.textTheme.titleMedium),
-              Slider(
-                min: 20,
-                max: 60,
-                value: deviationAngle,
-                onChanged: onDeviationAngleChanged,
-              ),
-              Text(
-                'δ = ${deviationAngle.toStringAsFixed(0)}°',
-                style: theme.textTheme.bodyMedium,
-              ),
+              Slider(min: 20, max: 60, value: deviationAngle, onChanged: onDeviationAngleChanged),
+              Text('δ = ${deviationAngle.toStringAsFixed(0)}°', style: theme.textTheme.bodyMedium),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A2E),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                decoration: BoxDecoration(color: const Color(0xFF1A1A2E), borderRadius: BorderRadius.circular(12)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Prism Formula',
-                      style: theme.textTheme.titleMedium?.copyWith(color: Colors.white),
-                    ),
+                    Text('Prism Formula', style: theme.textTheme.titleMedium?.copyWith(color: Colors.white)),
                     const SizedBox(height: 8),
-                    Text(
-                      'n = sin((A + δ)/2) / sin(A/2)',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        color: Color(0xFF60A5FA),
-                        fontSize: 14,
-                      ),
-                    ),
+                    Text('n = sin((A + δ)/2) / sin(A/2)', style: const TextStyle(fontFamily: 'monospace', color: Color(0xFF60A5FA), fontSize: 14)),
                     const SizedBox(height: 8),
-                    Text(
-                      'n = sin((${prismAngleA.toStringAsFixed(0)}° + ${deviationAngle.toStringAsFixed(0)}°)/2) / sin(${prismAngleA.toStringAsFixed(0)}°/2)',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        color: Color(0xFF93C5FD),
-                        fontSize: 11,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'n = ${_calculateRefractiveIndex(prismAngleA, deviationAngle).toStringAsFixed(3)}',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        color: Color(0xFF34D399),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text('n = ${_calcRefractiveIndex(prismAngleA, deviationAngle).toStringAsFixed(3)}', style: const TextStyle(fontFamily: 'monospace', color: Color(0xFF34D399), fontSize: 16, fontWeight: FontWeight.bold)),
                   ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Move mouse vertically to change light entry point',
-                style: theme.textTheme.bodySmall,
               ),
             ],
             const SizedBox(height: 16),
@@ -340,17 +252,12 @@ class _ControlRail extends StatelessWidget {
               decoration: BoxDecoration(
                 color: activeExperiment.accent.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: activeExperiment.accent.withValues(alpha: 0.16),
-                ),
+                border: Border.all(color: activeExperiment.accent.withValues(alpha: 0.16)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Did You Know?',
-                    style: theme.textTheme.labelMedium?.copyWith(color: activeExperiment.accent),
-                  ),
+                  Text('Did You Know?', style: theme.textTheme.labelMedium?.copyWith(color: activeExperiment.accent)),
                   const SizedBox(height: 8),
                   Text(activeExperiment.fact, style: theme.textTheme.bodyMedium),
                 ],
@@ -361,21 +268,10 @@ class _ControlRail extends StatelessWidget {
       ),
     );
   }
-
-  double _calculateRefractiveIndex(double angleA, double deviation) {
-    final aRad = angleA * math.pi / 180;
-    final dRad = deviation * math.pi / 180;
-    return math.sin((aRad + dRad) / 2) / math.sin(aRad / 2);
-  }
 }
 
 class _ExperimentTile extends StatelessWidget {
-  const _ExperimentTile({
-    required this.experiment,
-    required this.active,
-    required this.onTap,
-  });
-
+  const _ExperimentTile({required this.experiment, required this.active, required this.onTap});
   final Class11Experiment experiment;
   final bool active;
   final VoidCallback onTap;
@@ -383,53 +279,20 @@ class _ExperimentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return InkWell(
       borderRadius: BorderRadius.circular(22),
       onTap: onTap,
       child: Ink(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: active
-              ? experiment.accent.withValues(alpha: 0.12)
-              : const Color(0xFFF8F5EE),
+          color: active ? experiment.accent.withValues(alpha: 0.12) : const Color(0xFFF8F5EE),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: active
-                ? experiment.accent.withValues(alpha: 0.32)
-                : const Color(0xFFE8DECF),
-          ),
+          border: Border.all(color: active ? experiment.accent.withValues(alpha: 0.32) : const Color(0xFFE8DECF)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    experiment.title,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ),
-                if (!experiment.enabled)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFECE7FB),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      'NEXT',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: const Color(0xFF7C3AED),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            Text(experiment.title, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(experiment.subtitle, style: theme.textTheme.bodyMedium),
           ],
@@ -468,16 +331,11 @@ class _StageArea extends StatelessWidget {
       children: [
         Positioned.fill(
           child: MouseRegion(
-            onHover: (event) {
+            onHover: (e) {
               final box = context.findRenderObject() as RenderBox?;
-              if (box == null || box.size.isEmpty) return;
-              final local = box.globalToLocal(event.position);
-              onPointerChanged(
-                Offset(
-                  (local.dx / box.size.width).clamp(0.0, 1.0),
-                  (local.dy / box.size.height).clamp(0.0, 1.0),
-                ),
-              );
+              if (box == null) return;
+              final local = box.globalToLocal(e.position);
+              onPointerChanged(Offset((local.dx / box.size.width).clamp(0.0, 1.0), (local.dy / box.size.height).clamp(0.0, 1.0)));
             },
             child: CustomPaint(
               painter: _ExperimentPainter(
@@ -495,38 +353,22 @@ class _StageArea extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 24,
-          left: 24,
+          top: 24, left: 24,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 360),
-            child: _OverlayCard(
-              title: 'Did You Know?',
-              accent: experiment.accent,
-              body: experiment.fact,
-            ),
+            child: _OverlayCard(title: 'Did You Know?', accent: experiment.accent, body: experiment.fact),
           ),
         ),
         Positioned(
-          right: 24,
-          top: 24,
+          right: 24, top: 24,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 320),
-            child: _OverlayCard(
-              title: 'Live Readout',
-              accent: experiment.accent,
-              body: _getReadout(),
-            ),
+            child: _OverlayCard(title: 'Live Readout', accent: experiment.accent, body: _getReadout()),
           ),
         ),
         Positioned(
-          left: 24,
-          right: 24,
-          bottom: 24,
-          child: _OverlayCard(
-            title: 'Live Observation',
-            accent: experiment.accent,
-            body: _getObservation(),
-          ),
+          left: 24, right: 24, bottom: 24,
+          child: _OverlayCard(title: 'Live Observation', accent: experiment.accent, body: _getObservation()),
         ),
       ],
     );
@@ -534,58 +376,45 @@ class _StageArea extends StatelessWidget {
 
   String _getReadout() {
     if (experiment.id == 'tir') {
-      final criticalAngle = math.asin(1 / refractiveIndex) * 180 / math.pi;
-      return 'Angle of incidence (i): ${incidentAngle.toStringAsFixed(1)}°\nCritical angle (ic): ${criticalAngle.toStringAsFixed(1)}°\nState: ${_getState()}';
+      final ca = math.asin(1 / refractiveIndex) * 180 / math.pi;
+      return 'i = ${incidentAngle.toStringAsFixed(1)}°\nCritical (ic) = ${ca.toStringAsFixed(1)}°\nState: ${_getState()}';
     } else if (experiment.id == 'prism') {
-      final calculatedN = _calculateRefractiveIndex(prismAngleA, deviationAngle);
-      return 'Prism Angle (A): ${prismAngleA.toStringAsFixed(0)}°\nDeviation (δ): ${deviationAngle.toStringAsFixed(0)}°\nn = ${calculatedN.toStringAsFixed(3)}';
-    } else if (experiment.id == 'lens') {
-      return 'Lens type: Convex (Converging)\nObject distance: adjustable\nImage: real & inverted';
+      final calcN = _calcRefractiveIndex(prismAngleA, deviationAngle);
+      return 'A = ${prismAngleA.toStringAsFixed(0)}°\nδ = ${deviationAngle.toStringAsFixed(0)}°\nn = ${calcN.toStringAsFixed(3)}';
     }
     return '';
   }
 
-  double _calculateRefractiveIndex(double angleA, double deviation) {
-    final aRad = angleA * math.pi / 180;
-    final dRad = deviation * math.pi / 180;
-    return math.sin((aRad + dRad) / 2) / math.sin(aRad / 2);
-  }
-
   String _getState() {
-    final criticalAngle = math.asin(1 / refractiveIndex) * 180 / math.pi;
-    final gap = (incidentAngle - criticalAngle).abs();
-    if (gap < 1.5) return 'Critical Angle';
-    if (incidentAngle > criticalAngle) return 'Total Internal Reflection';
+    final ca = math.asin(1 / refractiveIndex) * 180 / math.pi;
+    final gap = (incidentAngle - ca).abs();
+    if (gap < 1.5) return 'Critical';
+    if (incidentAngle > ca) return 'TIR';
     return 'Refraction';
   }
 
   String _getObservation() {
     if (experiment.id == 'tir') {
-      final criticalAngle = math.asin(1 / refractiveIndex) * 180 / math.pi;
-      final gap = (incidentAngle - criticalAngle).abs();
-      if (gap < 1.5) {
-        return 'At the critical angle (${criticalAngle.toStringAsFixed(1)}°), the refracted ray travels along the boundary (90°).';
-      }
-      if (incidentAngle > criticalAngle) {
-        return 'The angle (${incidentAngle.toStringAsFixed(1)}°) > critical (${criticalAngle.toStringAsFixed(1)}°). Complete reflection!';
-      }
-      return 'Light bends away from the normal. Angle of incidence > Angle of refraction.';
+      final ca = math.asin(1 / refractiveIndex) * 180 / math.pi;
+      final gap = (incidentAngle - ca).abs();
+      if (gap < 1.5) return 'At critical angle, refracted ray grazes along boundary (90°).';
+      if (incidentAngle > ca) return 'Complete reflection! Angle > critical angle.';
+      return 'Light bends away from normal. i > r';
     } else if (experiment.id == 'prism') {
-      return 'White light separates into VIBGYOR. Violet bends most, red bends least. This is dispersion!';
-    } else if (experiment.id == 'lens') {
-      return 'Convex lens: rays converge at focal point. Image is real and inverted when object is beyond focal length.';
+      return 'Violet bends most (short λ), Red bends least (long λ). This is dispersion!';
     }
     return experiment.observation;
+  }
+
+  double _calcRefractiveIndex(double a, double d) {
+    final ar = a * math.pi / 180;
+    final dr = d * math.pi / 180;
+    return math.sin((ar + dr) / 2) / math.sin(ar / 2);
   }
 }
 
 class _OverlayCard extends StatelessWidget {
-  const _OverlayCard({
-    required this.title,
-    required this.accent,
-    required this.body,
-  });
-
+  const _OverlayCard({required this.title, required this.accent, required this.body});
   final String title;
   final Color accent;
   final String body;
@@ -593,7 +422,6 @@ class _OverlayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.88),
@@ -605,10 +433,7 @@ class _OverlayCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: theme.textTheme.labelMedium?.copyWith(color: accent),
-            ),
+            Text(title, style: theme.textTheme.labelMedium?.copyWith(color: accent)),
             const SizedBox(height: 8),
             Text(body, style: theme.textTheme.bodyMedium),
           ],
@@ -643,558 +468,171 @@ class _ExperimentPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     switch (experimentId) {
       case 'tir':
-        _drawTirExperiment(canvas, size);
+        _drawTir(canvas, size);
         break;
       case 'prism':
-        _drawPrismExperiment(canvas, size);
+        _drawPrism(canvas, size);
         break;
       case 'lens':
-        _drawLensExperiment(canvas, size);
+        _drawLens(canvas, size);
         break;
     }
   }
 
-  void _drawTirExperiment(Canvas canvas, Size size) {
+  void _drawTir(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final background = const LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [Color(0xFFF8FBFF), Color(0xFFF7F0E6)],
-    ).createShader(rect);
-    canvas.drawRect(rect, Paint()..shader = background);
+    canvas.drawRect(rect, Paint()..shader = const LinearGradient(colors: [Color(0xFFF8FBFF), Color(0xFFF7F0E6)]).createShader(rect));
 
     final boundaryY = size.height * 0.44;
-    final hitPoint = Offset(size.width * 0.55, boundaryY);
+    final hit = Offset(size.width * 0.55, boundaryY);
 
-    final airPaint = Paint()..color = const Color(0xFFEAF3FF);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, boundaryY), airPaint);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, boundaryY), Paint()..color = const Color(0xFFEAF3FF));
+    canvas.drawRect(Rect.fromLTWH(0, boundaryY, size.width, size.height - boundaryY), Paint()..shader = const LinearGradient(colors: [Color(0xFF86D7C8), Color(0xFF0F766E)]).createShader(Rect.fromLTWH(0, boundaryY, size.width, size.height - boundaryY)));
+    canvas.drawLine(Offset(0, boundaryY), Offset(size.width, boundaryY), Paint()..color = const Color(0xFFF9FAFB)..strokeWidth = 3);
+    canvas.drawLine(Offset(hit.dx, boundaryY - 180), Offset(hit.dx, boundaryY + 220), Paint()..color = const Color(0xFFCBD5E1)..strokeWidth = 2);
 
-    final waterPaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF86D7C8), Color(0xFF0F766E)],
-      ).createShader(Rect.fromLTWH(0, boundaryY, size.width, size.height - boundaryY));
-    canvas.drawRect(
-      Rect.fromLTWH(0, boundaryY, size.width, size.height - boundaryY),
-      waterPaint,
-    );
+    _drawText(canvas, 'AIR n=1.00', Offset(28, boundaryY - 34), const Color(0xFF64748B));
+    _drawText(canvas, 'WATER n=${refractiveIndex.toStringAsFixed(2)}', Offset(28, boundaryY + 18), Colors.white);
 
-    canvas.drawLine(
-      Offset(0, boundaryY),
-      Offset(size.width, boundaryY),
-      Paint()..color = const Color(0xFFF9FAFB)..strokeWidth = 3,
-    );
+    final incRad = incidentAngle * math.pi / 180;
+    final source = Offset(hit.dx - math.sin(incRad) * 260, hit.dy + math.cos(incRad) * 260);
 
-    canvas.drawLine(
-      Offset(hitPoint.dx, boundaryY - 180),
-      Offset(hitPoint.dx, boundaryY + 220),
-      Paint()..color = const Color(0xFFCBD5E1)..strokeWidth = 2,
-    );
+    canvas.drawLine(source, hit, Paint()..color = const Color(0xFFF97316)..strokeWidth = 5..strokeCap = StrokeCap.round);
+    canvas.drawLine(source, hit, Paint()..color = const Color(0xFFF97316).withValues(alpha: 0.24)..strokeWidth = 12..strokeCap = StrokeCap.round);
+    _drawText(canvas, 'Incident', Offset((source.dx + hit.dx) / 2 - 26, (source.dy + hit.dy) / 2 + 12), const Color(0xFFF97316));
 
-    _drawLabel(canvas, 'AIR  n = 1.00', Offset(28, boundaryY - 34), const Color(0xFF64748B));
-    _drawLabel(canvas, 'WATER  n = ${refractiveIndex.toStringAsFixed(2)}', Offset(28, boundaryY + 18), Colors.white);
+    final ca = math.asin(1 / refractiveIndex) * 180 / math.pi;
+    final gap = (incidentAngle - ca).abs();
 
-    final incidentRadians = incidentAngle * math.pi / 180;
-    final source = Offset(
-      hitPoint.dx - math.sin(incidentRadians) * 260,
-      hitPoint.dy + math.cos(incidentRadians) * 260,
-    );
-
-    canvas.drawLine(
-      source,
-      hitPoint,
-      Paint()
-        ..color = const Color(0xFFF97316).withValues(alpha: 0.24)
-        ..strokeWidth = 12
-        ..strokeCap = StrokeCap.round,
-    );
-    canvas.drawLine(
-      source,
-      hitPoint,
-      Paint()
-        ..color = const Color(0xFFF97316)
-        ..strokeWidth = 5
-        ..strokeCap = StrokeCap.round,
-    );
-    _drawLabel(canvas, 'Incident Ray', Offset((source.dx + hitPoint.dx) / 2 - 52, (source.dy + hitPoint.dy) / 2 + 12), const Color(0xFFF97316));
-
-    final criticalAngle = math.asin(1 / refractiveIndex) * 180 / math.pi;
-    final gap = (incidentAngle - criticalAngle).abs();
-
-    if (gap >= 1.5 && incidentAngle <= criticalAngle) {
-      final refractedRadians = math.asin((1 / refractiveIndex) * math.sin(incidentRadians));
-      final refractedEnd = Offset(
-        hitPoint.dx + math.sin(refractedRadians) * 280,
-        hitPoint.dy - math.cos(refractedRadians) * 280,
-      );
-      canvas.drawLine(
-        hitPoint,
-        refractedEnd,
-        Paint()
-          ..color = const Color(0xFF60A5FA).withValues(alpha: 0.26)
-          ..strokeWidth = 12
-          ..strokeCap = StrokeCap.round,
-      );
-      canvas.drawLine(
-        hitPoint,
-        refractedEnd,
-        Paint()
-          ..color = const Color(0xFF2563EB)
-          ..strokeWidth = 5
-          ..strokeCap = StrokeCap.round,
-      );
-      _drawLabel(canvas, 'Refracted Ray', Offset((hitPoint.dx + refractedEnd.dx) / 2 + 12, (hitPoint.dy + refractedEnd.dy) / 2 - 10), const Color(0xFF2563EB));
-      _drawAngleArc(canvas, hitPoint, 56, -math.pi / 2, incidentRadians, const Color(0xFFF97316), 'i');
-      _drawAngleArc(canvas, hitPoint, 78, -math.pi / 2, -refractedRadians, const Color(0xFF2563EB), 'r');
+    if (gap >= 1.5 && incidentAngle <= ca) {
+      final refrRad = math.asin((1 / refractiveIndex) * math.sin(incRad));
+      final end = Offset(hit.dx + math.sin(refrRad) * 280, hit.dy - math.cos(refrRad) * 280);
+      canvas.drawLine(hit, end, Paint()..color = const Color(0xFF2563EB)..strokeWidth = 5..strokeCap = StrokeCap.round);
+      _drawText(canvas, 'Refracted', Offset((hit.dx + end.dx) / 2 + 12, (hit.dy + end.dy) / 2 - 10), const Color(0xFF2563EB));
+      _drawArc(canvas, hit, 56, -math.pi / 2, incRad, const Color(0xFFF97316), 'i');
+      _drawArc(canvas, hit, 78, -math.pi / 2, -refrRad, const Color(0xFF2563EB), 'r');
     } else {
-      final reflectedEnd = Offset(
-        hitPoint.dx + math.sin(incidentRadians) * 260,
-        hitPoint.dy + math.cos(incidentRadians) * 260,
-      );
-      canvas.drawLine(
-        hitPoint,
-        reflectedEnd,
-        Paint()
-          ..color = const Color(0xFFFDE047).withValues(alpha: 0.26)
-          ..strokeWidth = 12
-          ..strokeCap = StrokeCap.round,
-      );
-      canvas.drawLine(
-        hitPoint,
-        reflectedEnd,
-        Paint()
-          ..color = const Color(0xFFFDE047)
-          ..strokeWidth = 5
-          ..strokeCap = StrokeCap.round,
-      );
-      _drawLabel(canvas, 'Reflected Ray', Offset((hitPoint.dx + reflectedEnd.dx) / 2 + 12, (hitPoint.dy + reflectedEnd.dy) / 2 + 14), const Color(0xFFFDE047));
-      _drawAngleArc(canvas, hitPoint, 56, -math.pi / 2, incidentRadians, const Color(0xFFF97316), 'i');
-      _drawAngleArc(canvas, hitPoint, 78, math.pi / 2, -incidentRadians, const Color(0xFFFDE047), "i'");
-
+      final reflEnd = Offset(hit.dx + math.sin(incRad) * 260, hit.dy + math.cos(incRad) * 260);
+      canvas.drawLine(hit, reflEnd, Paint()..color = const Color(0xFFFDE047)..strokeWidth = 5..strokeCap = StrokeCap.round);
+      _drawText(canvas, 'Reflected', Offset((hit.dx + reflEnd.dx) / 2 + 12, (hit.dy + reflEnd.dy) / 2 + 14), const Color(0xFFFDE047));
+      _drawArc(canvas, hit, 56, -math.pi / 2, incRad, const Color(0xFFF97316), 'i');
+      _drawArc(canvas, hit, 78, math.pi / 2, -incRad, const Color(0xFFFDE047), "i'");
       if (gap < 1.5) {
-        canvas.drawLine(
-          hitPoint,
-          Offset(size.width - 70, boundaryY),
-          Paint()
-            ..color = const Color(0xFF93C5FD)
-            ..strokeWidth = 4
-            ..strokeCap = StrokeCap.round,
-        );
-        _drawLabel(canvas, 'Critical Ray (r = 90°)', Offset(hitPoint.dx + 18, boundaryY - 18), const Color(0xFF2563EB));
+        canvas.drawLine(hit, Offset(size.width - 70, boundaryY), Paint()..color = const Color(0xFF93C5FD)..strokeWidth = 4..strokeCap = StrokeCap.round);
+        _drawText(canvas, 'Critical r=90°', Offset(hit.dx + 18, boundaryY - 18), const Color(0xFF2563EB));
       }
     }
-
-    canvas.drawCircle(hitPoint, 6, Paint()..color = Colors.white);
+    canvas.drawCircle(hit, 6, Paint()..color = Colors.white);
   }
 
-  void _drawPrismExperiment(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final background = const LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
-    ).createShader(rect);
-    canvas.drawRect(rect, Paint()..shader = background);
+  void _drawPrism(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..shader = const LinearGradient(colors: [Color(0xFF1A1A2E), Color(0xFF16213E)]).createShader(Offset.zero & size));
 
     final cx = size.width * 0.35;
     final cy = size.height * 0.5;
-    final prismSize = math.min(size.width, size.height) * 0.32;
-    final prismAngleRad = prismAngleA * math.pi / 180;
+    final pSize = math.min(size.width, size.height) * 0.32;
+    final aRad = prismAngleA * math.pi / 180;
 
-    final path = Path()
-      ..moveTo(cx, cy - prismSize)
-      ..lineTo(cx + prismSize * 0.866, cy + prismSize * 0.5)
-      ..lineTo(cx - prismSize * 0.866, cy + prismSize * 0.5)
-      ..close();
-
-    canvas.drawPath(
-      path,
-      Paint()..color = const Color(0xFF0EA5E9).withValues(alpha: 0.08),
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = const Color(0xFF0EA5E9).withValues(alpha: 0.4)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-
-    _drawLabel(canvas, 'A = ${prismAngleA.toStringAsFixed(0)}°', Offset(cx - 50, cy + prismSize * 0.6), const Color(0xFF60A5FA));
+    final path = Path()..moveTo(cx, cy - pSize)..lineTo(cx + pSize * 0.866, cy + pSize * 0.5)..lineTo(cx - pSize * 0.866, cy + pSize * 0.5)..close();
+    canvas.drawPath(path, Paint()..color = const Color(0xFF0EA5E9).withValues(alpha: 0.08));
+    canvas.drawPath(path, Paint()..color = const Color(0xFF0EA5E9).withValues(alpha: 0.4)..style = PaintingStyle.stroke..strokeWidth = 2);
+    _drawText(canvas, 'A=${prismAngleA.toStringAsFixed(0)}°', Offset(cx - 40, cy + pSize * 0.6), const Color(0xFF60A5FA));
 
     final entryY = size.height * incidentHeight;
     final entryX = size.width * 0.08;
-    final hitX = cx - prismSize * 0.4;
+    final hitX = cx - pSize * 0.4;
     final hitY = cy + (entryY - size.height / 2) * 0.4;
 
-    canvas.drawLine(
-      Offset(entryX, entryY),
-      Offset(hitX, hitY),
-      Paint()
-        ..shader = LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.9),
-            Colors.white.withValues(alpha: 0.6),
-          ],
-        ).createShader(Rect.fromPoints(Offset(entryX, entryY), Offset(hitX, hitY)))
-        ..strokeWidth = 8
-        ..strokeCap = StrokeCap.round,
-    );
+    canvas.drawLine(Offset(entryX, entryY), Offset(hitX, hitY), Paint()..color = Colors.white..strokeWidth = 8..strokeCap = StrokeCap.round);
     canvas.drawCircle(Offset(entryX, entryY), 8, Paint()..color = Colors.white);
 
-    final rainbowColors = [
-      const Color(0xFFFF0000),
-      const Color(0xFFFF7F00),
-      const Color(0xFFFFFF00),
-      const Color(0xFF00FF00),
-      const Color(0xFF0000FF),
-      const Color(0xFF4B0082),
-      const Color(0xFF9400D3),
-    ];
+    final colors = [const Color(0xFFFF0000), const Color(0xFFFF7F00), const Color(0xFFFFFF00), const Color(0xFF00FF00), const Color(0xFF0000FF), const Color(0xFF4B0082), const Color(0xFF9400D3)];
+    final factors = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7];
 
-    final wavelengthFactors = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7];
-
-    for (int i = 0; i < rainbowColors.length; i++) {
-      final wavelengthFactor = wavelengthFactors[i];
-      final colorN = prismRefractiveIndex * wavelengthFactor;
-      final angleIn = (prismAngleA / 2) * math.pi / 180;
-      final angleInternal = math.asin(math.sin(angleIn) / colorN);
-
-      final internalEndX = cx + prismSize * 0.35;
-      final internalEndY = hitY + math.tan(angleInternal - prismAngleRad / 2) * (internalEndX - hitX) * 0.8;
-
-      canvas.drawLine(
-        Offset(hitX, hitY),
-        Offset(internalEndX, internalEndY.clamp(cy - prismSize * 0.6, cy + prismSize * 0.3)),
-        Paint()
-          ..color = rainbowColors[i].withValues(alpha: 0.5)
-          ..strokeWidth = 2,
-      );
-
-      final deviationFactor = deviationAngle / 50.0;
-      final angleExit = (angleInternal + (deviationFactor * (0.7 - i * 0.1))) * colorN / 1.5;
-      final exitAngle = angleExit;
-      final exitEndX = size.width * 0.85;
-      final exitEndY = internalEndY + math.tan(exitAngle) * (exitEndX - internalEndX);
-
-      canvas.drawLine(
-        Offset(internalEndX, internalEndY.clamp(cy - prismSize * 0.6, cy + prismSize * 0.3)),
-        Offset(exitEndX, exitEndY.clamp(size.height * 0.1, size.height * 0.9)),
-        Paint()
-          ..color = rainbowColors[i]
-          ..strokeWidth = 3
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-      );
-    }
-
-    canvas.drawLine(
-      Offset(entryX, entryY),
-      Offset(size.width * 0.85, entryY - deviationAngle * 2),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.15)
-        ..strokeWidth = 1,
-    );
-    _drawLabel(canvas, 'δ = ${deviationAngle.toStringAsFixed(0)}°', Offset(size.width * 0.5, entryY - deviationAngle * 2 - 20), const Color(0xFFFFD700));
-
-    _drawLabel(canvas, 'WHITE LIGHT', Offset(entryX - 60, entryY - 40), Colors.white70);
-    _drawLabel(canvas, 'PRISM', Offset(cx - 25, cy - prismSize - 25), const Color(0xFF0EA5E9));
-    _drawLabel(canvas, 'DISPERSION', Offset(size.width * 0.55, size.height * 0.08), const Color(0xFFFF6B6B));
-
-    _drawLabel(canvas, 'Since Violet (short λ) slows more → bends more', Offset(size.width * 0.08, size.height * 0.92), const Color(0xFFDDD6FE));
-    _drawLabel(canvas, 'Red (long λ) slows less → bends less', Offset(size.width * 0.08, size.height * 0.97), const Color(0xFFFCA5A5));
-
-    final legendY = size.height * 0.75;
-    final colorNames = ['R', 'O', 'Y', 'G', 'B', 'I', 'V'];
     for (int i = 0; i < 7; i++) {
-      canvas.drawCircle(
-        Offset(size.width * 0.4 + i * 35.0, legendY),
-        8,
-        Paint()..color = rainbowColors[i],
-      );
-      _drawLabel(canvas, colorNames[i], Offset(size.width * 0.4 + i * 35.0 - 4, legendY + 15), rainbowColors[i]);
+      final n = prismRefractiveIndex * factors[i];
+      final angIn = aRad / 2;
+      final angInt = math.asin(math.sin(angIn) / n);
+      final intEndX = cx + pSize * 0.35;
+      final intEndY = (hitY + math.tan(angInt - aRad / 2) * (intEndX - hitX) * 0.8).clamp(cy - pSize * 0.6, cy + pSize * 0.3);
+
+      canvas.drawLine(Offset(hitX, hitY), Offset(intEndX, intEndY), Paint()..color = colors[i].withValues(alpha: 0.5)..strokeWidth = 2);
+
+      final devF = deviationAngle / 50.0;
+      final angEx = (angInt + devF * (0.7 - i * 0.1)) * n / 1.5;
+      final exitX = size.width * 0.85;
+      final exitY = (intEndY + math.tan(angEx) * (exitX - intEndX)).clamp(size.height * 0.1, size.height * 0.9);
+
+      canvas.drawLine(Offset(intEndX, intEndY), Offset(exitX, exitY), Paint()..color = colors[i]..strokeWidth = 3..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
     }
-  }
 
-  void _drawDashedLine(Canvas canvas, Offset start, Offset end, double dashLen, Paint paint) {
-    final dx = end.dx - start.dx;
-    final dy = end.dy - start.dy;
-    final dist = math.sqrt(dx * dx + dy * dy);
-    final dirX = dx / dist;
-    final dirY = dy / dist;
-    var drawn = 0.0;
-    var drawing = true;
-    while (drawn < dist) {
-      final len = math.min(dashLen, dist - drawn);
-      if (drawing) {
-        canvas.drawLine(
-          Offset(start.dx + dirX * drawn, start.dy + dirY * drawn),
-          Offset(start.dx + dirX * (drawn + len), start.dy + dirY * (drawn + len)),
-          paint,
-        );
-      }
-      drawn += len;
-      drawing = !drawing;
-    }
-  }
+    canvas.drawLine(Offset(entryX, entryY), Offset(size.width * 0.85, entryY - deviationAngle * 2), Paint()..color = Colors.white.withValues(alpha: 0.15)..strokeWidth = 1);
+    _drawText(canvas, 'δ=${deviationAngle.toStringAsFixed(0)}°', Offset(size.width * 0.5, entryY - deviationAngle * 2 - 20), const Color(0xFFFFD700));
+    _drawText(canvas, 'WHITE LIGHT', Offset(entryX - 60, entryY - 40), Colors.white70);
+    _drawText(canvas, 'PRISM', Offset(cx - 25, cy - pSize - 25), const Color(0xFF0EA5E9));
+    _drawText(canvas, 'Since Violet (short λ) slows more → bends more', Offset(size.width * 0.08, size.height * 0.92), const Color(0xFFDDD6FE));
+    _drawText(canvas, 'Red (long λ) slows less → bends less', Offset(size.width * 0.08, size.height * 0.97), const Color(0xFFFCA5A5));
 
-    _drawLabel(canvas, 'WHITE LIGHT', Offset(entryX - 60, entryY - 40), Colors.white70);
-    _drawLabel(canvas, 'PRISM', Offset(cx - 25, cy - prismSize - 25), const Color(0xFF0EA5E9));
-    _drawLabel(canvas, 'DISPERSION', Offset(size.width * 0.55, size.height * 0.15), const Color(0xFFFF6B6B));
-
-    final legendY = size.height * 0.75;
-    final colors = ['R', 'O', 'Y', 'G', 'B', 'I', 'V'];
+    final ly = size.height * 0.75;
+    final names = ['R', 'O', 'Y', 'G', 'B', 'I', 'V'];
     for (int i = 0; i < 7; i++) {
-      canvas.drawCircle(
-        Offset(size.width * 0.4 + i * 35, legendY),
-        8,
-        Paint()..color = rainbowColors[i],
-      );
-      _drawLabel(canvas, colorNames[i], Offset(size.width * 0.4 + i * 35.0 - 4, legendY + 15), rainbowColors[i]);
+      canvas.drawCircle(Offset(size.width * 0.4 + i * 35.0, ly), 8, Paint()..color = colors[i]);
+      _drawText(canvas, names[i], Offset(size.width * 0.4 + i * 35.0 - 4, ly + 15), colors[i]);
     }
   }
 
-  void _drawDashedLine(Canvas canvas, Offset start, Offset end, double dashLen, Paint paint) {
-    final dx = end.dx - start.dx;
-    final dy = end.dy - start.dy;
-    final dist = math.sqrt(dx * dx + dy * dy);
-    final dirX = dx / dist;
-    final dirY = dy / dist;
-    var drawn = 0.0;
-    var drawing = true;
-    while (drawn < dist) {
-      final len = math.min(dashLen, dist - drawn);
-      if (drawing) {
-        canvas.drawLine(
-          Offset(start.dx + dirX * drawn, start.dy + dirY * drawn),
-          Offset(start.dx + dirX * (drawn + len), start.dy + dirY * (drawn + len)),
-          paint,
-        );
-      }
-      drawn += len;
-      drawing = !drawing;
-    }
-  }
-
-  void _drawLabel(Canvas canvas, String text, Offset position, Color color) {
-    final painter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    painter.paint(canvas, position);
-  }
-
-  void _drawAngleArc(Canvas canvas, Offset center, double radius, double start, double sweep, Color color, String label) {
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      start,
-      sweep,
-      false,
-      Paint()
-        ..color = color
-        ..strokeWidth = 2
-        ..style = PaintingStyle.stroke,
-    );
-    final midAngle = start + sweep / 2;
-    final labelPos = Offset(
-      center.dx + math.cos(midAngle) * (radius + 10),
-      center.dy + math.sin(midAngle) * (radius + 10),
-    );
-    _drawLabel(canvas, label, labelPos, color);
-  }
-
-  void _drawLensExperiment(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final background = const LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [Color(0xFFF8FBFF), Color(0xFFEEF2FF)],
-    ).createShader(rect);
-    canvas.drawRect(rect, Paint()..shader = background);
+  void _drawLens(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..shader = const LinearGradient(colors: [Color(0xFFF8FBFF), Color(0xFFEEF2FF)]).createShader(Offset.zero & size));
 
     final cx = size.width / 2;
     final cy = size.height / 2;
-    final lensHeight = size.height * 0.5;
-    final lensWidth = 20.0;
-    final focalLength = size.width * 0.2;
+    final h = size.height * 0.5;
+    final f = size.width * 0.2;
 
-    final principalAxis = Paint()
-      ..color = const Color(0xFF64748B)
-      ..strokeWidth = 2;
-    canvas.drawLine(
-      Offset(0, cy),
-      Offset(size.width, cy),
-      principalAxis,
-    );
+    canvas.drawLine(Offset(0, cy), Offset(size.width, cy), Paint()..color = const Color(0xFF64748B)..strokeWidth = 2);
 
-    final lensPath = Path()
-      ..moveTo(cx - lensWidth / 2, cy - lensHeight / 2)
-      ..quadraticBezierTo(cx + lensWidth, cy, cx - lensWidth / 2, cy + lensHeight / 2)
-      ..quadraticBezierTo(cx - lensWidth, cy, cx - lensWidth / 2, cy - lensHeight / 2);
+    final lp = Path()..moveTo(cx - 10, cy - h / 2)..quadraticBezierTo(cx + 10, cy, cx - 10, cy + h / 2)..quadraticBezierTo(cx - 10, cy, cx - 10, cy - h / 2);
+    canvas.drawPath(lp, Paint()..color = const Color(0xFF3B82F6)..style = PaintingStyle.fill);
+    canvas.drawPath(lp, Paint()..color = const Color(0xFF2563EB)..style = PaintingStyle.stroke..strokeWidth = 2);
 
-    canvas.drawPath(
-      lensPath,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF60A5FA), Color(0xFF3B82F6), Color(0xFF60A5FA)],
-        ).createShader(Rect.fromCenter(center: Offset(cx, cy), width: lensWidth, height: lensHeight))
-        ..style = PaintingStyle.fill,
-    );
-    canvas.drawPath(
-      lensPath,
-      Paint()
-        ..color = const Color(0xFF2563EB)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
+    canvas.drawCircle(Offset(cx - f, cy), 6, Paint()..color = const Color(0xFFEF4444));
+    canvas.drawCircle(Offset(cx + f, cy), 6, Paint()..color = const Color(0xFFEF4444));
 
-    final focalPointLeft = Offset(cx - focalLength, cy);
-    final focalPointRight = Offset(cx + focalLength, cy);
+    final ox = size.width * 0.18;
+    final oy = cy - h * 0.25;
+    canvas.drawLine(Offset(ox, oy + 40), Offset(ox, oy), Paint()..color = const Color(0xFF059669)..strokeWidth = 3);
+    canvas.drawLine(Offset(ox - 10, oy + 15), Offset(ox, oy), Paint()..color = const Color(0xFF059669)..strokeWidth = 3);
+    canvas.drawLine(Offset(ox + 10, oy + 15), Offset(ox, oy), Paint()..color = const Color(0xFF059669)..strokeWidth = 3);
 
-    canvas.drawCircle(focalPointLeft, 6, Paint()..color = const Color(0xFFEF4444));
-    canvas.drawCircle(focalPointRight, 6, Paint()..color = const Color(0xFFEF4444));
+    canvas.drawLine(Offset(ox, oy), Offset(cx, oy), Paint()..color = const Color(0xFF059669).withValues(alpha: 0.3)..strokeWidth = 8..strokeCap = StrokeCap.round);
+    canvas.drawLine(Offset(cx, oy), Offset(cx + f, cy), Paint()..color = const Color(0xFF059669)..strokeWidth = 2);
 
-    final objectX = size.width * 0.18;
-    final objectY = cy - lensHeight * 0.25;
-    final arrowPath = Path()
-      ..moveTo(objectX, objectY + 40)
-      ..lineTo(objectX, objectY)
-      ..lineTo(objectX - 10, objectY + 15)
-      ..moveTo(objectX, objectY)
-      ..lineTo(objectX + 10, objectY + 15);
-    canvas.drawPath(
-      arrowPath,
-      Paint()
-        ..color = const Color(0xFF059669)
-        ..strokeWidth = 3
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round,
-    );
+    canvas.drawLine(Offset(ox, oy), Offset(cx, oy), Paint()..color = const Color(0xFF059669).withValues(alpha: 0.3)..strokeWidth = 8..strokeCap = StrokeCap.round);
+    canvas.drawLine(Offset(cx, oy), Offset(cx + f, cy), Paint()..color = const Color(0xFF059669)..strokeWidth = 2);
 
-    final ray1End = Offset(cx, objectY);
-    canvas.drawLine(
-      Offset(objectX, objectY),
-      ray1End,
-      Paint()
-        ..color = const Color(0xFF059669).withValues(alpha: 0.3)
-        ..strokeWidth = 8
-        ..strokeCap = StrokeCap.round,
-    );
-    canvas.drawLine(
-      Offset(objectX, objectY),
-      ray1End,
-      Paint()
-        ..color = const Color(0xFF059669)
-        ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round,
-    );
+    final ix = cx + f * 0.8;
+    final iy = cy + (oy - cy) * 0.8 / f;
+    canvas.drawLine(Offset(ix, iy + 30), Offset(ix, iy), Paint()..color = const Color(0xFFDC2626)..strokeWidth = 3);
+    canvas.drawLine(Offset(ix - 8, iy + 12), Offset(ix, iy), Paint()..color = const Color(0xFFDC2626)..strokeWidth = 3);
+    canvas.drawLine(Offset(ix + 8, iy + 12), Offset(ix, iy), Paint()..color = const Color(0xFFDC2626)..strokeWidth = 3);
 
-    canvas.drawLine(
-      ray1End,
-      focalPointRight,
-      Paint()
-        ..color = const Color(0xFF059669).withValues(alpha: 0.3)
-        ..strokeWidth = 8
-        ..strokeCap = StrokeCap.round,
-    );
-    canvas.drawLine(
-      ray1End,
-      focalPointRight,
-      Paint()
-        ..color = const Color(0xFF059669)
-        ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round,
-    );
+    _drawText(canvas, 'OBJECT', Offset(ox - 25, oy + 50), const Color(0xFF059669));
+    _drawText(canvas, 'IMAGE', Offset(ix - 20, iy + 45), const Color(0xFFDC2626));
+    _drawText(canvas, 'F', Offset(cx - f - 8, cy + 15), const Color(0xFFEF4444));
+    _drawText(canvas, 'F', Offset(cx + f - 8, cy + 15), const Color(0xFFEF4444));
+    _drawText(canvas, 'CONVEX LENS', Offset(cx - 45, cy - h / 2 - 20), const Color(0xFF2563EB));
+  }
 
-    final ray2Start = Offset(objectX, objectY);
-    final ray2LensY = cy + (objectY - cy) * (cx - objectX) / (cx - objectX);
-    final ray2Through = Offset(cx, objectY);
-    canvas.drawLine(
-      ray2Start,
-      ray2Through,
-      Paint()
-        ..color = const Color(0xFF059669).withValues(alpha: 0.3)
-        ..strokeWidth = 8
-        ..strokeCap = StrokeCap.round,
-    );
-    canvas.drawLine(
-      ray2Start,
-      ray2Through,
-      Paint()
-        ..color = const Color(0xFF059669)
-        ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round,
-    );
+  void _drawText(Canvas canvas, String text, Offset pos, Color color) {
+    TextPainter(text: TextSpan(text: text, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700)), textDirection: TextDirection.ltr)..layout()..paint(canvas, pos);
+  }
 
-    canvas.drawLine(
-      ray2Through,
-      focalPointRight,
-      Paint()
-        ..color = const Color(0xFF059669).withValues(alpha: 0.3)
-        ..strokeWidth = 8
-        ..strokeCap = StrokeCap.round,
-    );
-    canvas.drawLine(
-      ray2Through,
-      focalPointRight,
-      Paint()
-        ..color = const Color(0xFF059669)
-        ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round,
-    );
-
-    final imageX = cx + focalLength * 0.8;
-    final imageY = cy + (objectY - cy) * (focalLength * 0.8) / focalLength;
-    final imageArrowPath = Path()
-      ..moveTo(imageX, imageY + 30)
-      ..lineTo(imageX, imageY)
-      ..lineTo(imageX - 8, imageY + 12)
-      ..moveTo(imageX, imageY)
-      ..lineTo(imageX + 8, imageY + 12);
-    canvas.drawPath(
-      imageArrowPath,
-      Paint()
-        ..color = const Color(0xFFDC2626)
-        ..strokeWidth = 3
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round,
-    );
-
-    canvas.drawLine(
-      Offset(objectX, objectY),
-      Offset(imageX, imageY),
-      Paint()
-        ..color = const Color(0xFFDC2626).withValues(alpha: 0.3)
-        ..strokeWidth = 8
-        ..strokeCap = StrokeCap.round
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-    );
-
-    _drawLabel(canvas, 'OBJECT', Offset(objectX - 25, objectY + 50), const Color(0xFF059669));
-    _drawLabel(canvas, 'IMAGE', Offset(imageX - 20, imageY + 45), const Color(0xFFDC2626));
-    _drawLabel(canvas, 'F', Offset(focalPointLeft.dx - 8, focalPointLeft.dy + 15), const Color(0xFFEF4444));
-    _drawLabel(canvas, 'F', Offset(focalPointRight.dx - 8, focalPointRight.dy + 15), const Color(0xFFEF4444));
-    _drawLabel(canvas, 'CONVEX LENS', Offset(cx - 45, cy - lensHeight / 2 - 20), const Color(0xFF2563EB));
-    _drawLabel(canvas, 'Real Inverted Image', Offset(imageX - 55, size.height - 40), const Color(0xFFDC2626));
+  void _drawArc(Canvas canvas, Offset c, double r, double s, double sw, Color clr, String lbl) {
+    canvas.drawArc(Rect.fromCircle(center: c, radius: r), s, sw, false, Paint()..color = clr..strokeWidth = 2..style = PaintingStyle.stroke);
+    final ma = s + sw / 2;
+    _drawText(canvas, lbl, Offset(c.dx + math.cos(ma) * (r + 10), c.dy + math.sin(ma) * (r + 10)), clr);
   }
 
   @override
-  bool shouldRepaint(covariant _ExperimentPainter oldDelegate) {
-    return oldDelegate.experimentId != experimentId ||
-        oldDelegate.incidentAngle != incidentAngle ||
-        oldDelegate.refractiveIndex != refractiveIndex ||
-        oldDelegate.prismRefractiveIndex != prismRefractiveIndex ||
-        oldDelegate.prismAngleA != prismAngleA ||
-        oldDelegate.deviationAngle != deviationAngle ||
-        oldDelegate.incidentHeight != incidentHeight ||
-        oldDelegate.pointer != pointer;
-  }
+  bool shouldRepaint(covariant _ExperimentPainter old) => old.experimentId != experimentId || old.incidentAngle != incidentAngle || old.refractiveIndex != refractiveIndex || old.prismRefractiveIndex != prismRefractiveIndex || old.prismAngleA != prismAngleA || old.deviationAngle != deviationAngle || old.incidentHeight != incidentHeight || old.pointer != pointer;
 }
