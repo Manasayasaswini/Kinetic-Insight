@@ -18,7 +18,8 @@ const state = {
 const FACTS = {
     transparency: "Transparent objects let most light pass, translucent objects let only some light through, and opaque objects block it almost completely.",
     shadow: "A shadow always forms on the side opposite the light source. Lower Sun angle means a longer shadow.",
-    pinhole: "A pinhole camera works because light travels in straight lines. Rays from the top and bottom of the object cross at the tiny hole."
+    pinhole: "A pinhole camera works because light travels in straight lines. Rays from the top and bottom of the object cross at the tiny hole.",
+    refraction: "When light moves from air into water, it changes speed and bends. That makes the underwater part of an object appear shifted."
 };
 
 function syncLayout() {
@@ -35,9 +36,11 @@ function syncLayout() {
         button.classList.toggle('bg-yellow-50', isActive && state.mode === 'shadow');
         button.classList.toggle('border-indigo-300', isActive && state.mode === 'pinhole');
         button.classList.toggle('bg-indigo-50', isActive && state.mode === 'pinhole');
+        button.classList.toggle('border-teal-300', isActive && state.mode === 'refraction');
+        button.classList.toggle('bg-teal-50', isActive && state.mode === 'refraction');
         button.classList.toggle('text-white', false);
         if (!isActive) {
-            button.classList.remove('bg-blue-50', 'bg-yellow-50', 'bg-indigo-50', 'border-blue-300', 'border-yellow-300', 'border-indigo-300');
+            button.classList.remove('bg-blue-50', 'bg-yellow-50', 'bg-indigo-50', 'bg-teal-50', 'border-blue-300', 'border-yellow-300', 'border-indigo-300', 'border-teal-300');
         }
     });
 
@@ -216,6 +219,37 @@ function drawProjectedCandle(cx, projection, alpha = 0.76) {
     ctx.restore();
 }
 
+function drawPencilSegment(x1, y1, x2, y2, color, width, tip = false) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(120, 68, 18, 0.55)';
+    ctx.lineWidth = Math.max(1, width * 0.18);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    if (tip) {
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        const tipLen = width * 1.1;
+        ctx.fillStyle = '#E3C18A';
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - Math.cos(angle - 0.34) * tipLen, y2 - Math.sin(angle - 0.34) * tipLen);
+        ctx.lineTo(x2 - Math.cos(angle + 0.34) * tipLen, y2 - Math.sin(angle + 0.34) * tipLen);
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
 function resize() {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
@@ -278,6 +312,8 @@ function setMode(m) {
     state.mode = m;
     if (m === 'pinhole') {
         obsText.innerHTML = "<strong>Inversion:</strong> Drag the candle up, down, closer, or farther. Straight-line rays cross at the pinhole, so the colorful image flips and changes size on the screen.";
+    } else if (m === 'refraction') {
+        obsText.innerHTML = "<strong>Refraction:</strong> Light bends when it enters water, so the underwater part of the pencil appears shifted at the surface.";
     } else if (m === 'shadow') {
         obsText.innerHTML = getShadowObservation(state.sunAngle);
     } else if (m === 'transparency' && currentObject) {
@@ -297,6 +333,8 @@ function draw() {
         drawShadowExperiment();
     } else if (state.mode === 'pinhole') {
         drawPinholeCamera();
+    } else if (state.mode === 'refraction') {
+        drawRefractionExperiment();
     }
 
     requestAnimationFrame(draw);
@@ -615,6 +653,117 @@ function drawPinholeCamera() {
     ctx.font = "12px 'Inter', sans-serif";
     ctx.fillText('Move the candle with your mouse', 36, boxY - 22);
     ctx.fillText('closer to the hole = bigger image', 36, boxY + boxH + 34);
+}
+
+function drawRefractionExperiment() {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const glassW = Math.min(170, canvas.width * 0.2);
+    const glassH = Math.min(260, canvas.height * 0.42);
+    const glassX = centerX - glassW / 2;
+    const glassY = centerY - glassH / 2 - 10;
+    const waterLevel = glassY + glassH * 0.48;
+    const rimRadius = glassW / 2;
+
+    const background = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    background.addColorStop(0, '#F8FBFF');
+    background.addColorStop(1, '#EAF3EF');
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const workbench = ctx.createLinearGradient(0, glassY + glassH - 15, 0, canvas.height);
+    workbench.addColorStop(0, '#E4D8C4');
+    workbench.addColorStop(1, '#D0BFA4');
+    ctx.fillStyle = workbench;
+    ctx.fillRect(0, glassY + glassH - 15, canvas.width, canvas.height - glassY - glassH + 15);
+
+    ctx.fillStyle = 'rgba(106, 132, 145, 0.12)';
+    ctx.beginPath();
+    ctx.ellipse(centerX, glassY + glassH + 18, glassW * 0.62, 20, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const glassShine = ctx.createLinearGradient(glassX, glassY, glassX + glassW, glassY + glassH);
+    glassShine.addColorStop(0, 'rgba(255,255,255,0.55)');
+    glassShine.addColorStop(0.5, 'rgba(220,241,255,0.16)');
+    glassShine.addColorStop(1, 'rgba(160,195,220,0.22)');
+    ctx.fillStyle = glassShine;
+    roundedRect(glassX, glassY, glassW, glassH, 20);
+    ctx.fill();
+
+    const water = ctx.createLinearGradient(0, waterLevel, 0, glassY + glassH);
+    water.addColorStop(0, 'rgba(72, 206, 200, 0.28)');
+    water.addColorStop(1, 'rgba(45, 212, 191, 0.48)');
+    ctx.fillStyle = water;
+    roundedRect(glassX + 6, waterLevel, glassW - 12, glassY + glassH - waterLevel - 6, 16);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(glassX + 12, waterLevel);
+    ctx.lineTo(glassX + glassW - 12, waterLevel);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(111, 137, 150, 0.38)';
+    ctx.lineWidth = 3;
+    roundedRect(glassX, glassY, glassW, glassH, 20);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(centerX, glassY + 6, rimRadius, 10, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    roundedRect(glassX + 12, glassY + 16, 12, glassH - 30, 8);
+    ctx.fill();
+
+    const pivotX = clamp(state.mouse.x, glassX - 150, glassX + glassW - 10);
+    const pivotY = clamp(state.mouse.y, glassY - 110, waterLevel - 8);
+    const pencilAngle = 0.92;
+    const topLength = 145;
+    const bottomLength = 128;
+    const topX = pivotX - Math.cos(pencilAngle) * topLength;
+    const topY = pivotY - Math.sin(pencilAngle) * topLength;
+    const rawBottomX = pivotX + Math.cos(pencilAngle) * bottomLength;
+    const rawBottomY = pivotY + Math.sin(pencilAngle) * bottomLength;
+    const entersWater = pivotX > glassX + 16 && pivotX < glassX + glassW - 16 && pivotY > glassY + 20;
+    const visibleUnderwater = entersWater && rawBottomY > waterLevel;
+    const refractShift = 24;
+    const bentBottomX = rawBottomX + refractShift;
+    const bentBottomY = rawBottomY;
+
+    drawPencilSegment(topX, topY, pivotX, pivotY, '#F4C542', 11, false);
+
+    if (visibleUnderwater) {
+        ctx.strokeStyle = 'rgba(45, 212, 191, 0.18)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(pivotX - 4, waterLevel - 18);
+        ctx.lineTo(pivotX + refractShift + 12, waterLevel + 40);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(glassX + 2, waterLevel - 2, glassW - 4, glassH - (waterLevel - glassY) + 2);
+        ctx.clip();
+        drawPencilSegment(pivotX + refractShift, pivotY + 2, bentBottomX, bentBottomY, 'rgba(244, 197, 66, 0.72)', 11, true);
+        ctx.restore();
+
+        ctx.fillStyle = '#2DD4BF';
+        ctx.beginPath();
+        ctx.arc(pivotX, waterLevel, 5, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        drawPencilSegment(pivotX, pivotY, rawBottomX, rawBottomY, '#F4C542', 11, true);
+    }
+
+    ctx.fillStyle = 'rgba(45, 52, 54, 0.72)';
+    ctx.font = "12px 'Inter', sans-serif";
+    ctx.fillText('move the pencil into the glass', glassX - 148, glassY - 18);
+    ctx.fillText('water surface', glassX + glassW + 18, waterLevel + 4);
+    if (visibleUnderwater) {
+        ctx.fillText('inside water it looks bent', glassX + glassW + 18, waterLevel + 24);
+    }
 }
 
 setObject('glass');

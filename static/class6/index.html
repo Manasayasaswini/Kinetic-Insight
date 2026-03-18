@@ -44,6 +44,11 @@
                     <span class="block text-sm font-bold text-slate-800">3. Pinhole Camera</span>
                     <span class="mt-1 block text-xs text-slate-500">See a real upside-down image form inside a dark chamber.</span>
                 </button>
+
+                <button data-mode-btn="refraction" onclick="setMode('refraction')" class="interactive-btn w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-left transition-all">
+                    <span class="block text-sm font-bold text-slate-800">4. The Broken Pencil</span>
+                    <span class="mt-1 block text-xs text-slate-500">Discover why water seems to bend objects.</span>
+                </button>
             </div>
 
             <div class="mt-8 border-t border-slate-100 pt-8">
@@ -88,6 +93,19 @@
                         <strong class="text-slate-800">Did you know?</strong> Your eye also forms an upside-down image on the retina before your brain interprets it.
                     </div>
                 </div>
+
+                <div data-control-panel="refraction" class="hidden space-y-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">Refraction Lab</h3>
+                        <p class="mt-1 text-xs leading-relaxed text-slate-500">Slide the pencil across the glass and watch the bend happen exactly at the water surface.</p>
+                    </div>
+                    <button onclick="setMode('refraction')" class="interactive-btn w-full rounded-xl p-3 text-sm font-medium">
+                        Explore Broken Pencil
+                    </button>
+                    <div class="rounded-2xl border border-teal-100 bg-teal-50 px-4 py-4 text-xs leading-relaxed text-slate-600">
+                        <strong class="text-slate-800">Why it happens:</strong> Light changes speed in water, so the underwater part of the pencil appears shifted from the part in air.
+                    </div>
+                </div>
             </div>
         </aside>
 
@@ -114,6 +132,6 @@
 
     </main>
 
-    <script src="script.js?v=20250215c"></script>
+    <script src="script.js?v=20250215d"></script>
 </body>
 </html>
