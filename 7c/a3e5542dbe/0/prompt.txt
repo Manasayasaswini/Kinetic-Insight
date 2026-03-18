@@ -1,0 +1,94 @@
+send me the code of .. Your Flutter API call code (the function calling /ai/tutor)
+
+---
+
+Replace your code with:
+
+final String _baseUrl =
+    const String.fromEnvironment('AI_BASE_URL');
+
+❌ REMOVE defaultValue completely . only this no other changes
+
+---
+
+import 'ai_tutor_models.dart';
+class AiTutorService {
+  AiTutorService({http.Client? client, String? baseUrl})
+  AiTutorService({http.Client? client})
+    : _client = client ?? http.Client(),
+      _baseUrl =
+          baseUrl ??
+          const String.fromEnvironment(
+            'AI_BASE_URL',
+            defaultValue: 'http://localhost:8000',
+          );
+      _baseUrl = const String.fromEnvironment('AI_BASE_URL');
+  final http.Client _client;
+  final String _baseUrl;
+Thinking: The edit was applied. The user only asked for this change, so I should not add any explanation or summary .. pls do it corectly
+
+---
+
+get me code you chnge
+
+---
+
+just touch this code and modify "from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# ✅ ADD MIDDLEWARE FIRST
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        'http://localhost:8080',
+        'http://127.0.0.1:8080',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://kinetic-insight.vercel.app',
+        'https://kineticinsight.530020.online',  # 👈 ADD THIS
+    ],
+    allow_origin_regex=r'https://.*\.vercel\.app',
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
+
+# ✅ THEN define routes
+@app.get("/")
+def root():
+    return {"message": "Backend is running"} " nothing other than this
+
+---
+
+just touch this part of main.py and modify "from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# ✅ ADD MIDDLEWARE FIRST
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        'http://localhost:8080',
+        'http://127.0.0.1:8080',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://kinetic-insight.vercel.app',
+        'https://kineticinsight.530020.online',  # 👈 ADD THIS
+    ],
+    allow_origin_regex=r'https://.*\.vercel\.app',
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
+
+# ✅ THEN define routes
+@app.get("/")
+def root():
+    return {"message": "Backend is running"} " keep remaing code as it iis and don't touch anything beyond these lines. don't remove just add or modify variables and the order app.add_middleware and the @app.get("/")..
+
+---
+
+allow_origin_regex=r'https://.*(vercel\.app|530020\.online)'. just this line
