@@ -555,7 +555,7 @@ class _ExperimentPainter extends CustomPainter {
       end: Alignment.bottomCenter,
       colors: [Color(0xFFF8FBFF), Color(0xFFF7F0E6)],
     ).createShader(rect);
-    canvas.drawRect(rect, background..shader = background);
+    canvas.drawRect(rect, Paint()..shader = background);
 
     final boundaryY = size.height * 0.44;
     final hitPoint = Offset(size.width * 0.55, boundaryY);
@@ -718,18 +718,16 @@ class _ExperimentPainter extends CustomPainter {
     final hitX = cx - prismSize * 0.4;
     final hitY = cy + (entryY - size.height / 2) * 0.4;
 
-    final whiteLight = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          Colors.white.withValues(alpha: 0.9),
-          Colors.white.withValues(alpha: 0.6),
-        ],
-      ).createShader(Rect.fromPoints(Offset(entryX, entryY), Offset(hitX, hitY)));
     canvas.drawLine(
       Offset(entryX, entryY),
       Offset(hitX, hitY),
       Paint()
-        ..shader = whiteLight
+        ..shader = LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.9),
+            Colors.white.withValues(alpha: 0.6),
+          ],
+        ).createShader(Rect.fromPoints(Offset(entryX, entryY), Offset(hitX, hitY)))
         ..strokeWidth = 8
         ..strokeCap = StrokeCap.round,
     );
@@ -862,7 +860,7 @@ class _ExperimentPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [Color(0xFF60A5FA), Color(0xFF3B82F6), Color(0xFF60A5FA)],
-        ).createShader(Rect.fromCenter(center: Offset(cx, cy), width: lensWidth, height: lensHeight.toInt()))
+        ).createShader(Rect.fromCenter(center: Offset(cx, cy), width: lensWidth, height: lensHeight))
         ..style = PaintingStyle.fill,
     );
     canvas.drawPath(
