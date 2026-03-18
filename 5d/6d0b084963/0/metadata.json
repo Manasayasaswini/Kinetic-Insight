@@ -1,0 +1,37 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "5d6d0b084963",
+  "session_id": "ses_2fea43567ffe3e9Morpna9mo8Z",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-18T15:09:15.553853097Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "class11_flutter/lib/features/ai/data/ai_tutor_models.dart",
+    "class11_flutter/lib/features/ai/data/ai_tutor_service.dart",
+    "class11_flutter/lib/features/class11/presentation/class11_lab_screen.dart",
+    "class11_flutter/lib/features/class6/presentation/class6_lab_screen.dart",
+    "class11_flutter/lib/features/class7/presentation/class7_lab_screen.dart",
+    "class11_flutter/pubspec.lock",
+    "class11_flutter/pubspec.yaml",
+    "class11_flutter/test/features/class7/presentation/class7_lab_screen_test.dart"
+  ],
+  "agent": "OpenCode",
+  "turn_id": "e0c5e06c45d0",
+  "token_usage": {
+    "input_tokens": 25665,
+    "cache_creation_tokens": 108479,
+    "cache_read_tokens": 1216207,
+    "output_tokens": 17677,
+    "api_call_count": 39
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-18T15:09:11.99949315Z",
+    "agent_lines": 601,
+    "human_added": 240,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 841,
+    "agent_percentage": 71.46254458977408
+  }
+}
