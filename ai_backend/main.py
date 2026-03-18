@@ -1,7 +1,5 @@
-import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-import requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -21,6 +19,14 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
+NEWTON_OPTIONS = [
+    'At very high speed, colors blend and the disc appears nearly white.',
+    'At high speed, each color becomes darker and separate.',
+    'The disc shows only red color when speed increases.',
+    'Color does not change with speed.',
+]
+CORRECT_OPTION_INDEX = 0
+
 
 class TutorRequest(BaseModel):
     classId: str = Field(..., min_length=1)
@@ -34,6 +40,10 @@ class TutorResponse(BaseModel):
     feedback: str
     nextStep: str
     status: str
+    options: List[str] = Field(default_factory=list)
+    isCorrect: Optional[bool] = None
+    botMood: str = 'neutral'
+    answerReview: str = ''
 
 
 def _build_newton_disc_state_summary(student_state: Dict[str, Any]) -> Dict[str, Any]:
@@ -46,126 +56,84 @@ def _build_newton_disc_state_summary(student_state: Dict[str, Any]) -> Dict[str,
 
     if level_value >= 3 and white_opacity >= 0.9:
         status = 'excellent'
-        summary = 'Student reached very high speed and observed near-white blending correctly.'
     elif level_value >= 2 and white_opacity >= 0.6:
         status = 'good_try'
-        summary = 'Student reached high speed and observed partial color blending.'
     else:
         status = 'needs_retry'
-        summary = 'Student has not yet reached sufficient speed for strong white blending.'
 
     return {
         'status': status,
-        'summary': summary,
         'speedLevel': speed_level,
         'whiteOpacity': round(white_opacity, 2),
     }
 
 
-def _fallback_tutor_response(state: Dict[str, Any], mode: str) -> TutorResponse:
-    if mode == 'ask_or_feedback' and not state:
-        return TutorResponse(
-            question='Set Newton\'s Disc speed to Very High. What color does the disc appear?',
-            feedback='Do the experiment first, then tap Check My Experiment.',
-            nextStep='Start at Low, then move to Very High and observe carefully.',
-            status='question',
-        )
+def _build_newton_question_response() -> TutorResponse:
+    return TutorResponse(
+        question='After increasing speed, what do you observe in Newton\'s Disc?',
+        feedback='Run the experiment and choose one option.',
+        nextStep='Move from Low to Very High, observe carefully, then submit your answer.',
+        status='question',
+        options=NEWTON_OPTIONS,
+        isCorrect=None,
+        botMood='neutral',
+        answerReview='',
+    )
 
+
+def _evaluate_newton_option(state: Dict[str, Any]) -> TutorResponse:
     eval_state = _build_newton_disc_state_summary(state)
-    status = eval_state['status']
-    white_opacity = eval_state['whiteOpacity']
+    selected_option = state.get('selectedOption')
 
-    if status == 'excellent':
-        feedback = (
-            f'Great observation. At {eval_state["speedLevel"]} speed, white blend ({white_opacity}) is strong, '
-            'so colors combine toward white.'
+    if not isinstance(selected_option, int):
+        return TutorResponse(
+            question='Choose one option first.',
+            feedback='Select an answer option and submit.',
+            nextStep='Observe the disc at Very High speed before answering.',
+            status='question',
+            options=NEWTON_OPTIONS,
+            isCorrect=None,
+            botMood='neutral',
+            answerReview='Pick one option and submit.',
         )
-        next_step = 'Now reduce speed to Low and compare the separate VIBGYOR colors.'
-    elif status == 'good_try':
-        feedback = (
-            f'Good work. You are seeing partial blending at {eval_state["speedLevel"]} speed '
-            f'(white blend {white_opacity}).'
+
+    concept_correct = selected_option == CORRECT_OPTION_INDEX
+    experiment_observed = eval_state['status'] in {'excellent', 'good_try'}
+
+    if concept_correct and experiment_observed:
+        return TutorResponse(
+            question='Great job, little scientist!',
+            feedback='Yes your experiment is correct little scientist! ...',
+            nextStep='Yess! You got the correct answer!',
+            status='correct',
+            options=NEWTON_OPTIONS,
+            isCorrect=True,
+            botMood='happy',
+            answerReview='Perfect observation. You matched the correct concept.',
         )
-        next_step = 'Increase to Very High and check if the disc appears closer to white.'
-    else:
-        feedback = (
-            f'Nice attempt. At {eval_state["speedLevel"]} speed the white blend ({white_opacity}) is still low.'
+
+    if concept_correct and not experiment_observed:
+        return TutorResponse(
+            question='Good thinking!',
+            feedback='You picked the right idea, but run the disc faster to verify it live.',
+            nextStep='Move to Very High speed, observe white blending, then submit again.',
+            status='retry',
+            options=NEWTON_OPTIONS,
+            isCorrect=False,
+            botMood='retry',
+            answerReview='Concept is correct, but experiment speed needs to be higher.',
         )
-        next_step = 'Increase speed and observe when colors start merging strongly.'
 
     return TutorResponse(
-        question='What changed in color appearance when speed increased?',
-        feedback=feedback,
-        nextStep=next_step,
-        status=status,
+        question='Nice try!',
+        feedback='You have done a try... the correct way is to increase speed and observe colors blending toward white.',
+        nextStep='Try again: At very high speed, the disc appears nearly white.',
+        status='incorrect',
+        options=NEWTON_OPTIONS,
+        isCorrect=False,
+        botMood='oops',
+        answerReview='Not this one. Focus on what happens at very high speed.',
     )
-
-
-def _openai_tutor_response(state: Dict[str, Any], mode: str) -> Optional[TutorResponse]:
-    api_key = os.getenv('OPENAI_API_KEY')
-    if not api_key:
-        return None
-
-    model = os.getenv('OPENAI_MODEL', 'gpt-4.1-mini')
-    eval_state = _build_newton_disc_state_summary(state)
-
-    system_prompt = (
-        'You are a friendly physics tutor for middle-school students. '\
-        'Respond in simple language. Keep each field concise (1-2 short lines). '\
-        'Never invent formulas beyond the provided context.'
-    )
-
-    user_prompt = {
-        'task': 'Return JSON with keys: question, feedback, nextStep, status.',
-        'mode': mode,
-        'classId': '7',
-        'experimentId': 'newton_disc',
-        'evaluatedState': eval_state,
-        'context': (
-            'Newton disc combines VIBGYOR toward white at very high rotation. '
-            'Student should compare Low vs Very High speed.'
-        ),
-    }
-
-    try:
-        response = requests.post(
-            'https://api.openai.com/v1/responses',
-            headers={
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json',
-            },
-            json={
-                'model': model,
-                'input': [
-                    {'role': 'system', 'content': system_prompt},
-                    {'role': 'user', 'content': str(user_prompt)},
-                ],
-                'temperature': 0.3,
-                'text': {'format': {'type': 'json_object'}},
-            },
-            timeout=20,
-        )
-        response.raise_for_status()
-        data = response.json()
-
-        raw_text = ''
-        for item in data.get('output', []):
-            for content in item.get('content', []):
-                if content.get('type') == 'output_text':
-                    raw_text += content.get('text', '')
-
-        if not raw_text:
-            return None
-
-        parsed = requests.models.complexjson.loads(raw_text)
-        return TutorResponse(
-            question=str(parsed.get('question', 'What do you observe now?')),
-            feedback=str(parsed.get('feedback', 'Good attempt. Keep observing carefully.')),
-            nextStep=str(parsed.get('nextStep', 'Try changing speed and compare results.')),
-            status=str(parsed.get('status', eval_state['status'])),
-        )
-    except Exception:
-        return None
 
 
 @app.get('/health')
@@ -181,10 +149,13 @@ def ai_tutor(request: TutorRequest) -> TutorResponse:
             feedback='This endpoint currently supports Class 7 Newton\'s Disc only.',
             nextStep='Switch to Class 7 Newton\'s Disc and try again.',
             status='unsupported',
+            options=[],
+            isCorrect=None,
+            botMood='neutral',
+            answerReview='',
         )
 
-    llm_response = _openai_tutor_response(request.studentState, request.mode)
-    if llm_response is not None:
-        return llm_response
+    if request.mode == 'check_answer':
+        return _evaluate_newton_option(request.studentState)
 
-    return _fallback_tutor_response(request.studentState, request.mode)
+    return _build_newton_question_response()

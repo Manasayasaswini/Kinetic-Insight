@@ -18,6 +18,12 @@ class Class7LabScreen extends StatefulWidget {
 class _Class7LabScreenState extends State<Class7LabScreen>
     with SingleTickerProviderStateMixin {
   static const _maxNewtonLevel = 3.0;
+  static const _defaultNewtonOptions = <String>[
+    'At very high speed, colors blend and the disc appears nearly white.',
+    'At high speed, each color becomes darker and separate.',
+    'The disc shows only red color when speed increases.',
+    'Color does not change with speed.',
+  ];
 
   _Class7Experiment _active = _Class7Experiment.planeMirror;
 
@@ -45,6 +51,11 @@ class _Class7LabScreenState extends State<Class7LabScreen>
   String? _aiQuestion;
   String? _aiFeedback;
   String? _aiNextStep;
+  List<String> _aiOptions = _defaultNewtonOptions;
+  int? _selectedOption;
+  bool? _aiIsCorrect;
+  String _aiBotMood = 'neutral';
+  String _aiAnswerReview = '';
 
   String? _inputError;
 
@@ -117,6 +128,13 @@ class _Class7LabScreenState extends State<Class7LabScreen>
         _aiQuestion = response.question;
         _aiFeedback = response.feedback;
         _aiNextStep = response.nextStep;
+        _aiOptions = response.options.isEmpty
+            ? _defaultNewtonOptions
+            : response.options;
+        _selectedOption = null;
+        _aiIsCorrect = response.isCorrect;
+        _aiBotMood = response.botMood;
+        _aiAnswerReview = response.answerReview;
       });
     } catch (e) {
       if (!mounted) return;
@@ -132,7 +150,14 @@ class _Class7LabScreenState extends State<Class7LabScreen>
     }
   }
 
-  Future<void> _checkExperimentWithAi() async {
+  Future<void> _checkAnswerWithAi() async {
+    if (_selectedOption == null) {
+      setState(() {
+        _aiError = 'Choose one option first.';
+      });
+      return;
+    }
+
     setState(() {
       _aiLoading = true;
       _aiError = null;
@@ -143,11 +168,12 @@ class _Class7LabScreenState extends State<Class7LabScreen>
         AiTutorRequest(
           classId: '7',
           experimentId: 'newton_disc',
-          mode: 'ask_or_feedback',
+          mode: 'check_answer',
           studentState: <String, dynamic>{
             'speedLevel': _speedLabel(_newtonSpeedLevel),
             'computed': <String, dynamic>{'whiteOpacity': _currentWhiteOpacity},
-            'step': 'observation_done',
+            'step': 'answer_submitted',
+            'selectedOption': _selectedOption,
           },
         ),
       );
@@ -157,6 +183,12 @@ class _Class7LabScreenState extends State<Class7LabScreen>
         _aiQuestion = response.question;
         _aiFeedback = response.feedback;
         _aiNextStep = response.nextStep;
+        _aiOptions = response.options.isEmpty
+            ? _defaultNewtonOptions
+            : response.options;
+        _aiIsCorrect = response.isCorrect;
+        _aiBotMood = response.botMood;
+        _aiAnswerReview = response.answerReview;
       });
     } catch (e) {
       if (!mounted) return;
@@ -314,8 +346,16 @@ class _Class7LabScreenState extends State<Class7LabScreen>
                       aiQuestion: _aiQuestion,
                       aiFeedback: _aiFeedback,
                       aiNextStep: _aiNextStep,
+                      aiOptions: _aiOptions,
+                      selectedOption: _selectedOption,
+                      aiIsCorrect: _aiIsCorrect,
+                      aiBotMood: _aiBotMood,
+                      aiAnswerReview: _aiAnswerReview,
                       onAskAi: _askAiQuestion,
-                      onCheckExperiment: _checkExperimentWithAi,
+                      onSubmitAnswer: _checkAnswerWithAi,
+                      onOptionSelected: (value) {
+                        setState(() => _selectedOption = value);
+                      },
                       onSpeedLevelChanged: (value) {
                         setState(() => _newtonSpeedLevel = value);
                         _updateDiscSpeed();
@@ -733,8 +773,14 @@ class _NewtonsDiscExperiment extends StatelessWidget {
     required this.aiQuestion,
     required this.aiFeedback,
     required this.aiNextStep,
+    required this.aiOptions,
+    required this.selectedOption,
+    required this.aiIsCorrect,
+    required this.aiBotMood,
+    required this.aiAnswerReview,
     required this.onAskAi,
-    required this.onCheckExperiment,
+    required this.onSubmitAnswer,
+    required this.onOptionSelected,
     required this.onSpeedLevelChanged,
   });
 
@@ -746,8 +792,14 @@ class _NewtonsDiscExperiment extends StatelessWidget {
   final String? aiQuestion;
   final String? aiFeedback;
   final String? aiNextStep;
+  final List<String> aiOptions;
+  final int? selectedOption;
+  final bool? aiIsCorrect;
+  final String aiBotMood;
+  final String aiAnswerReview;
   final Future<void> Function() onAskAi;
-  final Future<void> Function() onCheckExperiment;
+  final Future<void> Function() onSubmitAnswer;
+  final ValueChanged<int> onOptionSelected;
   final ValueChanged<double> onSpeedLevelChanged;
 
   @override
@@ -792,6 +844,26 @@ class _NewtonsDiscExperiment extends StatelessWidget {
               'White blend opacity = ${whiteOpacity.toStringAsFixed(2)}\n'
               'As speed increases, colors merge visually toward white.',
         ),
+        if (aiQuestion != null) ...[
+          const SizedBox(height: 12),
+          Text(aiQuestion!, style: theme.textTheme.titleMedium),
+        ],
+        if (aiOptions.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          for (var i = 0; i < aiOptions.length; i++)
+            RadioListTile<int>(
+              value: i,
+              groupValue: selectedOption,
+              onChanged: aiLoading
+                  ? null
+                  : (value) {
+                      if (value != null) onOptionSelected(value);
+                    },
+              title: Text(aiOptions[i]),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+        ],
         const SizedBox(height: 12),
         Row(
           children: [
@@ -802,9 +874,9 @@ class _NewtonsDiscExperiment extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             OutlinedButton.icon(
-              onPressed: aiLoading ? null : onCheckExperiment,
-              icon: const Icon(Icons.science),
-              label: const Text('Check My Experiment'),
+              onPressed: aiLoading ? null : onSubmitAnswer,
+              icon: const Icon(Icons.edit_note),
+              label: const Text('Submit Answer'),
             ),
             if (aiLoading) ...[
               const SizedBox(width: 12),
@@ -832,7 +904,40 @@ class _NewtonsDiscExperiment extends StatelessWidget {
             body:
                 'Question: ${aiQuestion ?? '-'}\n'
                 'Feedback: ${aiFeedback ?? '-'}\n'
-                'Next Step: ${aiNextStep ?? '-'}',
+                'Next Step: ${aiNextStep ?? '-'}\n'
+                'Answer Review: ${aiAnswerReview.isEmpty ? '-' : aiAnswerReview}',
+          ),
+        ],
+        if (aiIsCorrect != null) ...[
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Builder(
+                builder: (context) {
+                  final happy = aiBotMood == 'happy';
+                  return CircleAvatar(
+                    backgroundColor: happy
+                        ? const Color(0xFFDCFCE7)
+                        : const Color(0xFFFEE2E2),
+                    child: Icon(
+                      happy ? Icons.smart_toy : Icons.smart_toy_outlined,
+                      color: happy
+                          ? const Color(0xFF15803D)
+                          : const Color(0xFFB91C1C),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  aiIsCorrect == true
+                      ? 'Yes your experiment is correct little scientist! ...\nYess! You got the correct answer!'
+                      : 'You have done a try... the correct way is to increase speed and observe blending toward white.',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ],
           ),
         ],
         const SizedBox(height: 16),

@@ -27,12 +27,20 @@ class AiTutorResponse {
     required this.feedback,
     required this.nextStep,
     required this.status,
+    required this.options,
+    required this.isCorrect,
+    required this.botMood,
+    required this.answerReview,
   });
 
   final String question;
   final String feedback;
   final String nextStep;
   final String status;
+  final List<String> options;
+  final bool? isCorrect;
+  final String botMood;
+  final String answerReview;
 
   factory AiTutorResponse.fromJson(Map<String, dynamic> json) {
     return AiTutorResponse(
@@ -40,6 +48,12 @@ class AiTutorResponse {
       feedback: (json['feedback'] ?? '').toString(),
       nextStep: (json['nextStep'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
+      options: (json['options'] as List<dynamic>? ?? const [])
+          .map((item) => item.toString())
+          .toList(),
+      isCorrect: json['isCorrect'] is bool ? json['isCorrect'] as bool : null,
+      botMood: (json['botMood'] ?? 'neutral').toString(),
+      answerReview: (json['answerReview'] ?? '').toString(),
     );
   }
 }

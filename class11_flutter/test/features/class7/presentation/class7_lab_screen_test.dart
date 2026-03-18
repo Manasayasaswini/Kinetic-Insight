@@ -21,7 +21,13 @@ void main() {
     await tester.tap(find.text("Newton's Disc"));
     await tester.pump();
     expect(find.text('Ask AI'), findsOneWidget);
-    expect(find.text('Check My Experiment'), findsOneWidget);
+    expect(find.text('Submit Answer'), findsOneWidget);
+    expect(
+      find.text(
+        'At very high speed, colors blend and the disc appears nearly white.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('spherical mirror experiment calculates output', (tester) async {

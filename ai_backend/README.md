@@ -9,14 +9,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Environment
-
-```bash
-export OPENAI_API_KEY="your_api_key"
-export OPENAI_MODEL="gpt-4.1-mini"
-```
-
-If `OPENAI_API_KEY` is not set, backend returns deterministic fallback tutor responses.
+Backend currently uses deterministic tutor logic for Class 7 Newton's Disc.
 
 ## Run
 
@@ -34,13 +27,14 @@ Example body:
 {
   "classId": "7",
   "experimentId": "newton_disc",
-  "mode": "ask_or_feedback",
+  "mode": "check_answer",
   "studentState": {
-    "speedLevel": "High",
+    "speedLevel": "Very High",
     "computed": {
-      "whiteOpacity": 0.72
+      "whiteOpacity": 0.95
     },
-    "step": "observation_done"
+    "step": "answer_submitted",
+    "selectedOption": 0
   }
 }
 ```
