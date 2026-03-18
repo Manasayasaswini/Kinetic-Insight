@@ -258,7 +258,7 @@ class _ReflectionLawPainter extends CustomPainter {
     final cx = size.width * 0.4;
     final cy = size.height * 0.5;
     final mirrorLength = size.width * 0.7;
-    final rayLength = size.width * 0.45;
+    final rayLength = size.width * 0.3;
 
     canvas.drawLine(
       Offset(cx - mirrorLength / 2, cy),
@@ -300,9 +300,8 @@ class _ReflectionLawPainter extends CustomPainter {
         ..strokeWidth = 3,
     );
 
-    final arcRadius = rayLength * 0.35;
+    final arcRadius = rayLength * 0.4;
 
-    final incidentStartAngle = -math.pi / 2 - incidentRad;
     final arcPaint = Paint()
       ..color = const Color(0xFF059669)
       ..strokeWidth = 2
@@ -310,7 +309,7 @@ class _ReflectionLawPainter extends CustomPainter {
 
     canvas.drawArc(
       Rect.fromCircle(center: Offset(cx, cy), radius: arcRadius),
-      incidentStartAngle,
+      -math.pi / 2 - incidentRad,
       incidentRad,
       false,
       arcPaint,
@@ -318,12 +317,12 @@ class _ReflectionLawPainter extends CustomPainter {
 
     canvas.drawLine(
       Offset(
-        cx + arcRadius * math.sin(incidentStartAngle),
-        cy + arcRadius * math.cos(incidentStartAngle),
+        cx + arcRadius * math.sin(-math.pi / 2 - incidentRad),
+        cy + arcRadius * math.cos(-math.pi / 2 - incidentRad),
       ),
       Offset(
-        cx + (arcRadius - 8) * math.sin(incidentStartAngle),
-        cy + (arcRadius - 8) * math.cos(incidentStartAngle),
+        cx + (arcRadius - 8) * math.sin(-math.pi / 2 - incidentRad),
+        cy + (arcRadius - 8) * math.cos(-math.pi / 2 - incidentRad),
       ),
       arcPaint,
     );
@@ -350,10 +349,7 @@ class _ReflectionLawPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    thetaIPainter.paint(
-      canvas,
-      Offset(cx - arcRadius - 55, cy - arcRadius - 15),
-    );
+    thetaIPainter.paint(canvas, Offset(cx + 12, cy - arcRadius - 20));
 
     final arcPaint2 = Paint()
       ..color = const Color(0xFFDC2626)
@@ -402,7 +398,7 @@ class _ReflectionLawPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    thetaRPainter.paint(canvas, Offset(cx + 15, cy - arcRadius - 15));
+    thetaRPainter.paint(canvas, Offset(cx + 12, cy - arcRadius - 35));
 
     final normalLabelPainter = TextPainter(
       text: const TextSpan(
