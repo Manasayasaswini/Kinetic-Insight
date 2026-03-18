@@ -317,6 +317,25 @@ class _ControlRail extends StatelessWidget {
   final VoidCallback onCalculateLens;
   final VoidCallback onResetLens;
 
+  String get _studentGuide {
+    switch (activeExperiment.id) {
+      case 'tir':
+        return 'What to do: Enter refractive index and incident angle, then press Calculate.\n'
+            'What to observe: Below critical angle you get refraction, at critical angle r = 90°, above it you get total internal reflection.\n'
+            'Key idea: TIR happens only when light goes from denser to rarer medium and i > ic.';
+      case 'prism':
+        return 'What to do: Enter apex angle A and minimum deviation δ.\n'
+            'What to observe: The app computes prism refractive index n using the formula.\n'
+            'Key idea: n = sin((A + δ)/2) / sin(A/2) at minimum deviation.';
+      case 'lens':
+        return 'What to do: Choose lens type, enter object distance and focal length, then calculate.\n'
+            'What to observe: Image distance, magnification, orientation, and image type update instantly.\n'
+            'Key idea: Thin lens formula predicts where and how the image forms.';
+      default:
+        return activeExperiment.observation;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -470,6 +489,28 @@ class _ControlRail extends StatelessWidget {
                     activeExperiment.observation,
                     style: theme.textTheme.bodyMedium,
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE8DECF)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Student Guide',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(_studentGuide, style: theme.textTheme.bodyMedium),
                 ],
               ),
             ),

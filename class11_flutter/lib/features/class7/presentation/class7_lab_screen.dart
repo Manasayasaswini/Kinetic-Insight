@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../ai/data/ai_tutor_models.dart';
+import '../../ai/data/ai_tutor_service.dart';
 import '../domain/class7_mirror_calculator.dart';
 
 enum _Class7Experiment { planeMirror, sphericalMirror, newtonDisc }
@@ -36,6 +38,13 @@ class _Class7LabScreenState extends State<Class7LabScreen>
 
   double _newtonSpeedLevel = 0;
   late final AnimationController _discController;
+  final AiTutorService _aiTutorService = AiTutorService();
+
+  bool _aiLoading = false;
+  String? _aiError;
+  String? _aiQuestion;
+  String? _aiFeedback;
+  String? _aiNextStep;
 
   String? _inputError;
 
@@ -66,6 +75,101 @@ class _Class7LabScreenState extends State<Class7LabScreen>
     _discController
       ..reset()
       ..repeat();
+  }
+
+  String _speedLabel(double level) {
+    switch (level.round().clamp(0, 3)) {
+      case 0:
+        return 'Low';
+      case 1:
+        return 'Medium';
+      case 2:
+        return 'High';
+      default:
+        return 'Very High';
+    }
+  }
+
+  double get _currentWhiteOpacity =>
+      Class7MirrorCalculator.newtonDiscWhiteOpacity(
+        speed: _newtonSpeedLevel,
+        maxSpeed: _maxNewtonLevel,
+      );
+
+  Future<void> _askAiQuestion() async {
+    setState(() {
+      _aiLoading = true;
+      _aiError = null;
+    });
+
+    try {
+      final response = await _aiTutorService.getTutorResponse(
+        const AiTutorRequest(
+          classId: '7',
+          experimentId: 'newton_disc',
+          mode: 'ask_or_feedback',
+          studentState: <String, dynamic>{},
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _aiQuestion = response.question;
+        _aiFeedback = response.feedback;
+        _aiNextStep = response.nextStep;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _aiError =
+            'Could not connect to AI backend. Check if backend is running on port 8000.';
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _aiLoading = false;
+      });
+    }
+  }
+
+  Future<void> _checkExperimentWithAi() async {
+    setState(() {
+      _aiLoading = true;
+      _aiError = null;
+    });
+
+    try {
+      final response = await _aiTutorService.getTutorResponse(
+        AiTutorRequest(
+          classId: '7',
+          experimentId: 'newton_disc',
+          mode: 'ask_or_feedback',
+          studentState: <String, dynamic>{
+            'speedLevel': _speedLabel(_newtonSpeedLevel),
+            'computed': <String, dynamic>{'whiteOpacity': _currentWhiteOpacity},
+            'step': 'observation_done',
+          },
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _aiQuestion = response.question;
+        _aiFeedback = response.feedback;
+        _aiNextStep = response.nextStep;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _aiError =
+            'Could not connect to AI backend. Check if backend is running on port 8000.';
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _aiLoading = false;
+      });
+    }
   }
 
   void _calculatePlaneMirror() {
@@ -205,6 +309,13 @@ class _Class7LabScreenState extends State<Class7LabScreen>
                       speedLevel: _newtonSpeedLevel,
                       controller: _discController,
                       maxLevel: _maxNewtonLevel,
+                      aiLoading: _aiLoading,
+                      aiError: _aiError,
+                      aiQuestion: _aiQuestion,
+                      aiFeedback: _aiFeedback,
+                      aiNextStep: _aiNextStep,
+                      onAskAi: _askAiQuestion,
+                      onCheckExperiment: _checkExperimentWithAi,
                       onSpeedLevelChanged: (value) {
                         setState(() => _newtonSpeedLevel = value);
                         _updateDiscSpeed();
@@ -617,12 +728,26 @@ class _NewtonsDiscExperiment extends StatelessWidget {
     required this.speedLevel,
     required this.controller,
     required this.maxLevel,
+    required this.aiLoading,
+    required this.aiError,
+    required this.aiQuestion,
+    required this.aiFeedback,
+    required this.aiNextStep,
+    required this.onAskAi,
+    required this.onCheckExperiment,
     required this.onSpeedLevelChanged,
   });
 
   final double speedLevel;
   final AnimationController controller;
   final double maxLevel;
+  final bool aiLoading;
+  final String? aiError;
+  final String? aiQuestion;
+  final String? aiFeedback;
+  final String? aiNextStep;
+  final Future<void> Function() onAskAi;
+  final Future<void> Function() onCheckExperiment;
   final ValueChanged<double> onSpeedLevelChanged;
 
   @override
@@ -667,6 +792,49 @@ class _NewtonsDiscExperiment extends StatelessWidget {
               'White blend opacity = ${whiteOpacity.toStringAsFixed(2)}\n'
               'As speed increases, colors merge visually toward white.',
         ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            FilledButton.icon(
+              onPressed: aiLoading ? null : onAskAi,
+              icon: const Icon(Icons.psychology_alt),
+              label: const Text('Ask AI'),
+            ),
+            const SizedBox(width: 10),
+            OutlinedButton.icon(
+              onPressed: aiLoading ? null : onCheckExperiment,
+              icon: const Icon(Icons.science),
+              label: const Text('Check My Experiment'),
+            ),
+            if (aiLoading) ...[
+              const SizedBox(width: 12),
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
+          ],
+        ),
+        if (aiError != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            aiError!,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: const Color(0xFFB91C1C),
+            ),
+          ),
+        ],
+        if (aiQuestion != null || aiFeedback != null || aiNextStep != null) ...[
+          const SizedBox(height: 12),
+          _ResultPanel(
+            title: 'AI Tutor',
+            body:
+                'Question: ${aiQuestion ?? '-'}\n'
+                'Feedback: ${aiFeedback ?? '-'}\n'
+                'Next Step: ${aiNextStep ?? '-'}',
+          ),
+        ],
         const SizedBox(height: 16),
         Center(
           child: SizedBox(

@@ -17,6 +17,11 @@ void main() {
 
     expect(find.text('Class 7 - Mirrors and Light'), findsOneWidget);
     expect(find.text('Student Spec Document'), findsOneWidget);
+
+    await tester.tap(find.text("Newton's Disc"));
+    await tester.pump();
+    expect(find.text('Ask AI'), findsOneWidget);
+    expect(find.text('Check My Experiment'), findsOneWidget);
   });
 
   testWidgets('spherical mirror experiment calculates output', (tester) async {

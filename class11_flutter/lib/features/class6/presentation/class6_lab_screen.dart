@@ -18,7 +18,8 @@ class _Class6LabScreenState extends State<Class6LabScreen> {
       title: '1. Light & Materials',
       subtitle: 'Test transparent, translucent, and opaque objects.',
       observation: 'Transparent objects let most light pass through.',
-      fact: 'Transparent objects let most light pass, translucent let some, and opaque block it completely.',
+      fact:
+          'Transparent objects let most light pass, translucent let some, and opaque block it completely.',
       accent: Color(0xFF4A69BD),
     ),
     Class6Experiment(
@@ -41,8 +42,10 @@ class _Class6LabScreenState extends State<Class6LabScreen> {
       id: 'refraction',
       title: '4. The Broken Pencil',
       subtitle: 'Discover why water seems to bend objects.',
-      observation: 'Light bends when it enters water, making the pencil appear broken.',
-      fact: 'Light changes speed in water, so the underwater part appears shifted.',
+      observation:
+          'Light bends when it enters water, making the pencil appear broken.',
+      fact:
+          'Light changes speed in water, so the underwater part appears shifted.',
       accent: Color(0xFF0D9488),
     ),
   ];
@@ -186,6 +189,29 @@ class _ControlRail extends StatelessWidget {
     return activeExperiment.observation;
   }
 
+  String get _studentGuide {
+    switch (activeExperiment.id) {
+      case 'transparency':
+        return 'What to do: Choose glass, oiled paper, or wood.\n'
+            'What to observe: Glass lets most light pass, paper lets some light pass, wood blocks light.\n'
+            'Key idea: Materials are transparent, translucent, or opaque.';
+      case 'shadow':
+        return 'What to do: Move the sun angle from morning to evening.\n'
+            'What to observe: Shadow is longest in morning/evening and shortest near noon.\n'
+            'Key idea: Shadow forms opposite to light direction.';
+      case 'pinhole':
+        return 'What to do: Drag the candle around.\n'
+            'What to observe: Image inside the pinhole camera is upside down and changes size.\n'
+            'Key idea: Light travels in straight lines.';
+      case 'refraction':
+        return 'What to do: Observe the pencil at the water surface.\n'
+            'What to observe: Pencil looks bent or broken at the boundary.\n'
+            'Key idea: Light bends when it moves from air to water.';
+      default:
+        return activeExperiment.observation;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -245,7 +271,10 @@ class _ControlRail extends StatelessWidget {
             if (activeExperiment.id == 'shadow') ...[
               Text('Sun Position', style: theme.textTheme.titleLarge),
               const SizedBox(height: 14),
-              Text('Move the Sun from morning to evening', style: theme.textTheme.bodyMedium),
+              Text(
+                'Move the Sun from morning to evening',
+                style: theme.textTheme.bodyMedium,
+              ),
               const SizedBox(height: 12),
               Slider(
                 min: 10,
@@ -277,10 +306,37 @@ class _ControlRail extends StatelessWidget {
                 children: [
                   Text(
                     'Quick Fact',
-                    style: theme.textTheme.labelMedium?.copyWith(color: activeExperiment.accent),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: activeExperiment.accent,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  Text(activeExperiment.fact, style: theme.textTheme.bodyMedium),
+                  Text(
+                    activeExperiment.fact,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE8DECF)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Student Guide',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(_studentGuide, style: theme.textTheme.bodyMedium),
                 ],
               ),
             ),
@@ -325,10 +381,7 @@ class _ExperimentTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              experiment.title,
-              style: theme.textTheme.titleMedium,
-            ),
+            Text(experiment.title, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(experiment.subtitle, style: theme.textTheme.bodyMedium),
           ],
@@ -359,10 +412,14 @@ class _MaterialButton extends StatelessWidget {
       child: Ink(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.15) : const Color(0xFFF8F5EE),
+          color: selected
+              ? color.withValues(alpha: 0.15)
+              : const Color(0xFFF8F5EE),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: selected ? color.withValues(alpha: 0.4) : const Color(0xFFE8DECF),
+            color: selected
+                ? color.withValues(alpha: 0.4)
+                : const Color(0xFFE8DECF),
           ),
         ),
         child: Text(
@@ -580,7 +637,12 @@ class _Class6ExperimentPainter extends CustomPainter {
       passThrough = 0.0;
     }
 
-    final objectRect = Rect.fromLTWH(objectX - 20.0, torchY - 60.0, 40.0, 120.0);
+    final objectRect = Rect.fromLTWH(
+      objectX - 20.0,
+      torchY - 60.0,
+      40.0,
+      120.0,
+    );
     canvas.drawRect(
       objectRect,
       Paint()..color = const Color(0xFF646464).withValues(alpha: opacity),
@@ -602,7 +664,10 @@ class _Class6ExperimentPainter extends CustomPainter {
         ..close();
       canvas.drawPath(
         passPath,
-        Paint()..color = const Color(0xFFFFFFC8).withValues(alpha: passThrough * 0.5),
+        Paint()
+          ..color = const Color(
+            0xFFFFFFC8,
+          ).withValues(alpha: passThrough * 0.5),
       );
     }
 
@@ -615,25 +680,34 @@ class _Class6ExperimentPainter extends CustomPainter {
         ..close();
       canvas.drawPath(
         shadowPath,
-        Paint()..color = Colors.black.withValues(alpha: (1 - passThrough) * 0.15),
+        Paint()
+          ..color = Colors.black.withValues(alpha: (1 - passThrough) * 0.15),
       );
     }
 
     final labelStyle = TextPainter(textDirection: TextDirection.ltr);
     labelStyle.text = const TextSpan(
       text: 'Light Source',
-      style: TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600),
+      style: TextStyle(
+        color: Color(0xFF64748B),
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
     );
     labelStyle.layout();
     labelStyle.paint(canvas, Offset(torchX - 32.0, torchY + 25.0));
 
     labelStyle.text = TextSpan(
-      text: selectedMaterial == 'glass' 
-          ? 'Transparent' 
-          : selectedMaterial == 'paper' 
-              ? 'Translucent' 
-              : 'Opaque',
-      style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600),
+      text: selectedMaterial == 'glass'
+          ? 'Transparent'
+          : selectedMaterial == 'paper'
+          ? 'Translucent'
+          : 'Opaque',
+      style: const TextStyle(
+        color: Color(0xFF64748B),
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
     );
     labelStyle.layout();
     labelStyle.paint(canvas, Offset(objectX - 25.0, torchY + 75.0));
@@ -651,14 +725,27 @@ class _Class6ExperimentPainter extends CustomPainter {
       end: Alignment.bottomCenter,
       colors: const [Color(0xFFEEF7FF), Color(0xFFFFF8DA), Color(0xFFF5F0DB)],
     ).createShader(Rect.fromLTWH(0, 0, size.width, groundY));
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, groundY), Paint()..shader = sky);
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, groundY),
+      Paint()..shader = sky,
+    );
 
-    final groundGrad = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: const [Color(0xFFD8D2B8), Color(0xFFB6C98C), Color(0xFF89A663)],
-    ).createShader(Rect.fromLTWH(0, groundY, size.width, size.height - groundY));
-    canvas.drawRect(Rect.fromLTWH(0, groundY, size.width, size.height - groundY), Paint()..shader = groundGrad);
+    final groundGrad =
+        LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: const [
+            Color(0xFFD8D2B8),
+            Color(0xFFB6C98C),
+            Color(0xFF89A663),
+          ],
+        ).createShader(
+          Rect.fromLTWH(0, groundY, size.width, size.height - groundY),
+        );
+    canvas.drawRect(
+      Rect.fromLTWH(0, groundY, size.width, size.height - groundY),
+      Paint()..shader = groundGrad,
+    );
 
     final rad = sunAngle * math.pi / 180.0;
     final sunRadius = math.min(280.0, size.width * 0.28);
@@ -666,17 +753,29 @@ class _Class6ExperimentPainter extends CustomPainter {
     final sunY = groundY - sunRadius * math.sin(math.pi - rad);
 
     final shadowLen = pillarHeight / math.tan(rad);
-    final shadowOpacity = math.max(0.06, 0.24 - math.min(shadowLen.abs() / 1200.0, 0.14));
+    final shadowOpacity = math.max(
+      0.06,
+      0.24 - math.min(shadowLen.abs() / 1200.0, 0.14),
+    );
     final shadowWidth = math.max(18.0, shadowLen.abs() * 0.42);
     final shadowCenterX = centerX + shadowLen / 2;
 
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(shadowCenterX, groundY + 8.0), width: shadowWidth * 2.0, height: 28.0),
+      Rect.fromCenter(
+        center: Offset(shadowCenterX, groundY + 8.0),
+        width: shadowWidth * 2.0,
+        height: 28.0,
+      ),
       Paint()..color = Color.fromRGBO(45, 52, 54, shadowOpacity),
     );
 
     canvas.drawRect(
-      Rect.fromLTWH(pillarX - 12.0, groundY - pillarHeight - 2.0, pillarWidth + 24.0, pillarHeight + 4.0),
+      Rect.fromLTWH(
+        pillarX - 12.0,
+        groundY - pillarHeight - 2.0,
+        pillarWidth + 24.0,
+        pillarHeight + 4.0,
+      ),
       Paint()..color = const Color(0xFF9A8A76),
     );
     canvas.drawRect(
@@ -685,7 +784,12 @@ class _Class6ExperimentPainter extends CustomPainter {
     );
 
     final sunGrad = RadialGradient(
-      colors: const [Color(0xFFFFFFFF), Color(0xFFFFF4B3), Color(0xFFF1C40F), Color(0x00F1C40F)],
+      colors: const [
+        Color(0xFFFFFFFF),
+        Color(0xFFFFF4B3),
+        Color(0xFFF1C40F),
+        Color(0x00F1C40F),
+      ],
     ).createShader(Rect.fromCircle(center: Offset(sunX, sunY), radius: 44.0));
     canvas.drawCircle(Offset(sunX, sunY), 44.0, Paint()..shader = sunGrad);
 
@@ -702,8 +806,16 @@ class _Class6ExperimentPainter extends CustomPainter {
 
     final labelStyle = TextPainter(textDirection: TextDirection.ltr);
     labelStyle.text = TextSpan(
-      text: sunAngle < 40 ? 'Morning' : sunAngle > 140 ? 'Evening' : 'Sun Position',
-      style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600),
+      text: sunAngle < 40
+          ? 'Morning'
+          : sunAngle > 140
+          ? 'Evening'
+          : 'Sun Position',
+      style: const TextStyle(
+        color: Color(0xFF64748B),
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
     );
     labelStyle.layout();
     labelStyle.paint(canvas, Offset(sunX - 30, sunY - 60));
@@ -723,8 +835,13 @@ class _Class6ExperimentPainter extends CustomPainter {
     );
 
     final candleX = mousePosition.dx.clamp(size.width * 0.12, boxX - 95.0);
-    final candleBaseY = (mousePosition.dy + 36.0).clamp(boxY + 70.0, boxY + boxH + 70.0);
-    final scale = 0.95 + ((boxX - candleX) / math.max(160.0, boxX - size.width * 0.12)) * 0.35;
+    final candleBaseY = (mousePosition.dy + 36.0).clamp(
+      boxY + 70.0,
+      boxY + boxH + 70.0,
+    );
+    final scale =
+        0.95 +
+        ((boxX - candleX) / math.max(160.0, boxX - size.width * 0.12)) * 0.35;
     final bodyTopY = candleBaseY - 62 * scale;
     final flameTopY = candleBaseY - 88 * scale;
     final flameBottomY = candleBaseY - 54 * scale;
@@ -750,24 +867,50 @@ class _Class6ExperimentPainter extends CustomPainter {
       Paint()..color = const Color(0xFF1A1410),
     );
 
-    _drawGlowRay(canvas, Offset(candleX, flameTopY), Offset(boxX, pinholeY), Offset(screenX, projectedFlameTop));
-    _drawGlowRay(canvas, Offset(candleX, flameBottomY), Offset(boxX, pinholeY), Offset(screenX, projectedFlameBottom));
+    _drawGlowRay(
+      canvas,
+      Offset(candleX, flameTopY),
+      Offset(boxX, pinholeY),
+      Offset(screenX, projectedFlameTop),
+    );
+    _drawGlowRay(
+      canvas,
+      Offset(candleX, flameBottomY),
+      Offset(boxX, pinholeY),
+      Offset(screenX, projectedFlameBottom),
+    );
 
     _drawCandle(canvas, candleX, candleBaseY, scale);
 
-    final projectedBodyWidth = math.max(6.0, (projectedBodyBottom - projectedBodyTop).abs() * 0.32);
+    final projectedBodyWidth = math.max(
+      6.0,
+      (projectedBodyBottom - projectedBodyTop).abs() * 0.32,
+    );
     final projX = screenX - projectedBodyWidth / 2;
     final projY = math.min(projectedBodyTop, projectedBodyBottom);
 
     canvas.save();
-    canvas.clipRect(Rect.fromLTWH(boxX + 8.0, boxY + 10.0, boxW - 18.0, boxH - 20.0));
-    _drawProjectedCandle(canvas, screenX, projectedBodyTop, projectedBodyBottom, projectedFlameTop, projectedFlameBottom);
+    canvas.clipRect(
+      Rect.fromLTWH(boxX + 8.0, boxY + 10.0, boxW - 18.0, boxH - 20.0),
+    );
+    _drawProjectedCandle(
+      canvas,
+      screenX,
+      projectedBodyTop,
+      projectedBodyBottom,
+      projectedFlameTop,
+      projectedFlameBottom,
+    );
     canvas.restore();
 
     final labelStyle = TextPainter(textDirection: TextDirection.ltr);
     labelStyle.text = const TextSpan(
       text: 'PINHOLE CAMERA',
-      style: TextStyle(color: Color(0xFF6B4B24), fontSize: 11, fontWeight: FontWeight.w700),
+      style: TextStyle(
+        color: Color(0xFF6B4B24),
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+      ),
     );
     labelStyle.layout();
     labelStyle.paint(canvas, Offset(boxX + 18.0, boxY - 22.0));
@@ -828,7 +971,10 @@ class _Class6ExperimentPainter extends CustomPainter {
       colors: const [Color(0xFF9BE7A6), Color(0xFF78E08F), Color(0xFF58B36A)],
     ).createShader(Rect.fromLTWH(bodyX, bodyY, bodyW, bodyH));
     canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(bodyX, bodyY, bodyW, bodyH), Radius.circular(6 * scale)),
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(bodyX, bodyY, bodyW, bodyH),
+        Radius.circular(6 * scale),
+      ),
       Paint()..shader = waxGrad,
     );
 
@@ -849,12 +995,19 @@ class _Class6ExperimentPainter extends CustomPainter {
     );
     final flamePath = Path()
       ..moveTo(cx, bodyY - flameH)
-      ..quadraticBezierTo(cx + 12 * scale, bodyY - 12 * scale, cx, bodyY + 2 * scale)
-      ..quadraticBezierTo(cx - 12 * scale, bodyY - 12 * scale, cx, bodyY - flameH);
-    canvas.drawPath(
-      flamePath,
-      Paint()..color = const Color(0xFFFFF4B3),
-    );
+      ..quadraticBezierTo(
+        cx + 12 * scale,
+        bodyY - 12 * scale,
+        cx,
+        bodyY + 2 * scale,
+      )
+      ..quadraticBezierTo(
+        cx - 12 * scale,
+        bodyY - 12 * scale,
+        cx,
+        bodyY - flameH,
+      );
+    canvas.drawPath(flamePath, Paint()..color = const Color(0xFFFFF4B3));
     canvas.drawPath(
       flamePath,
       Paint()
@@ -864,7 +1017,14 @@ class _Class6ExperimentPainter extends CustomPainter {
     );
   }
 
-  void _drawProjectedCandle(Canvas canvas, double cx, double bodyTop, double bodyBottom, double flameTop, double flameBottom) {
+  void _drawProjectedCandle(
+    Canvas canvas,
+    double cx,
+    double bodyTop,
+    double bodyBottom,
+    double flameTop,
+    double flameBottom,
+  ) {
     final bodyHeight = math.max(10.0, (bodyBottom - bodyTop).abs()).toDouble();
     final bodyWidth = math.max(6.0, bodyHeight * 0.32).toDouble();
     final bodyX = cx - bodyWidth / 2;
@@ -876,19 +1036,36 @@ class _Class6ExperimentPainter extends CustomPainter {
       colors: const [Color(0xFFA6EDB1), Color(0xFF78E08F), Color(0xFF4D9D61)],
     ).createShader(Rect.fromLTWH(bodyX, bodyY, bodyWidth, bodyHeight));
     canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(bodyX, bodyY, bodyWidth, bodyHeight), const Radius.circular(4)),
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(bodyX, bodyY, bodyWidth, bodyHeight),
+        const Radius.circular(4),
+      ),
       Paint()..shader = waxGrad,
     );
 
-    final flameHalfW = math.max(4.0, (flameBottom - flameTop).abs() * 0.28).toDouble();
+    final flameHalfW = math
+        .max(4.0, (flameBottom - flameTop).abs() * 0.28)
+        .toDouble();
     final flamePath = Path()
       ..moveTo(cx, flameTop)
-      ..quadraticBezierTo(cx + flameHalfW, (flameTop + flameBottom) / 2, cx, flameBottom)
-      ..quadraticBezierTo(cx - flameHalfW, (flameTop + flameBottom) / 2, cx, flameTop);
+      ..quadraticBezierTo(
+        cx + flameHalfW,
+        (flameTop + flameBottom) / 2,
+        cx,
+        flameBottom,
+      )
+      ..quadraticBezierTo(
+        cx - flameHalfW,
+        (flameTop + flameBottom) / 2,
+        cx,
+        flameTop,
+      );
     canvas.drawCircle(
       Offset(cx, flameTop),
       12,
-      Paint()..color = const Color(0xFFF1C40F).withValues(alpha: 0.45)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+      Paint()
+        ..color = const Color(0xFFF1C40F).withValues(alpha: 0.45)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
     );
     canvas.drawPath(flamePath, Paint()..color = const Color(0xFFF1C40F));
   }
@@ -908,26 +1085,47 @@ class _Class6ExperimentPainter extends CustomPainter {
     );
 
     canvas.drawRect(
-      Rect.fromLTWH(0.0, glassY + glassH - 15.0, size.width, size.height - glassY - glassH + 15.0),
+      Rect.fromLTWH(
+        0.0,
+        glassY + glassH - 15.0,
+        size.width,
+        size.height - glassY - glassH + 15.0,
+      ),
       Paint()..color = const Color(0xFFE4D8C4),
     );
 
     canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(glassX, glassY, glassW, glassH), const Radius.circular(20)),
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(glassX, glassY, glassW, glassH),
+        const Radius.circular(20),
+      ),
       Paint()
         ..color = const Color(0xFFA0C3DC).withValues(alpha: 0.22)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
 
-    final waterGrad = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: const [Color(0xFF48CEC8), Color(0xFF2DD4BF)],
-    ).createShader(Rect.fromLTWH(glassX + 6.0, waterLevel, glassW - 12.0, glassY + glassH - waterLevel - 6.0));
+    final waterGrad =
+        LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: const [Color(0xFF48CEC8), Color(0xFF2DD4BF)],
+        ).createShader(
+          Rect.fromLTWH(
+            glassX + 6.0,
+            waterLevel,
+            glassW - 12.0,
+            glassY + glassH - waterLevel - 6.0,
+          ),
+        );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(glassX + 6.0, waterLevel, glassW - 12.0, glassY + glassH - waterLevel - 6.0),
+        Rect.fromLTWH(
+          glassX + 6.0,
+          waterLevel,
+          glassW - 12.0,
+          glassY + glassH - waterLevel - 6.0,
+        ),
         const Radius.circular(16),
       ),
       Paint()..shader = waterGrad,
@@ -941,7 +1139,10 @@ class _Class6ExperimentPainter extends CustomPainter {
         ..strokeWidth = 2,
     );
 
-    final pivotX = mousePosition.dx.clamp(glassX - 150.0, glassX + glassW - 10.0);
+    final pivotX = mousePosition.dx.clamp(
+      glassX - 150.0,
+      glassX + glassW - 10.0,
+    );
     final pivotY = mousePosition.dy.clamp(glassY - 110.0, waterLevel - 8.0);
     const pencilAngle = 0.92;
     const topLength = 145.0;
@@ -951,7 +1152,10 @@ class _Class6ExperimentPainter extends CustomPainter {
     final rawBottomX = pivotX + math.cos(pencilAngle) * bottomLength;
     final rawBottomY = pivotY + math.sin(pencilAngle) * bottomLength;
 
-    final entersWater = pivotX > glassX + 16.0 && pivotX < glassX + glassW - 16.0 && pivotY > glassY + 20.0;
+    final entersWater =
+        pivotX > glassX + 16.0 &&
+        pivotX < glassX + glassW - 16.0 &&
+        pivotY > glassY + 20.0;
     final visibleUnderwater = entersWater && rawBottomY > waterLevel;
     const refractShift = 24.0;
 
@@ -1011,7 +1215,10 @@ class _Class6ExperimentPainter extends CustomPainter {
         style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
       );
       labelStyle.layout();
-      labelStyle.paint(canvas, Offset(glassX + glassW + 18.0, waterLevel + 24.0));
+      labelStyle.paint(
+        canvas,
+        Offset(glassX + glassW + 18.0, waterLevel + 24.0),
+      );
     }
   }
 
