@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../class11/presentation/class11_lab_screen.dart';
 import '../../class6/presentation/class6_lab_screen.dart';
+import '../../class7/presentation/class7_lab_screen.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -43,18 +44,17 @@ class MainScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
-                Text(
-                  'Physics Lab',
-                  style: theme.textTheme.displaySmall,
-                ),
+                Text('Physics Lab', style: theme.textTheme.displaySmall),
                 const SizedBox(height: 16),
                 Text(
                   'Interactive experiments for learning',
                   style: theme.textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 48),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 24,
+                  runSpacing: 16,
                   children: [
                     ElevatedButton(
                       onPressed: () {
@@ -84,7 +84,34 @@ class MainScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const Class7LabScreenEntry(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 36,
+                          vertical: 20,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Class 7 - Mirrors & Light',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
@@ -160,6 +187,26 @@ class Class11LabScreenEntry extends StatelessWidget {
         ),
       ),
       body: const Class11LabScreen(),
+    );
+  }
+}
+
+class Class7LabScreenEntry extends StatelessWidget {
+  const Class7LabScreenEntry({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Class 7 - Mirrors and Light'),
+        backgroundColor: const Color(0xFF2563EB),
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: const Class7LabScreen(),
     );
   }
 }
