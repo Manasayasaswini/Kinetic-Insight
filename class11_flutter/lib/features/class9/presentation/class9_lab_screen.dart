@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/class9_kaleidoscope_calculator.dart';
 
-enum _Class9Experiment { lawsOfReflection, kaleidoscope, mirrorAngle }
+enum _Class9Experiment { lawsOfReflection, kaleidoscope }
 
 class Class9LabScreen extends StatefulWidget {
   const Class9LabScreen({super.key});
@@ -94,10 +94,6 @@ class _Class9LabScreenState extends State<Class9LabScreen>
                         value: _Class9Experiment.kaleidoscope,
                         label: Text('Kaleidoscope'),
                       ),
-                      ButtonSegment<_Class9Experiment>(
-                        value: _Class9Experiment.mirrorAngle,
-                        label: Text('Mirror Angles'),
-                      ),
                     ],
                     selected: <_Class9Experiment>{_active},
                     onSelectionChanged: (value) {
@@ -146,15 +142,6 @@ class _Class9LabScreenState extends State<Class9LabScreen>
                         _calculate();
                       },
                       rayController: _rayController,
-                    ),
-                  if (_active == _Class9Experiment.mirrorAngle)
-                    _MirrorAngleExperiment(
-                      mirrorAngle: _mirrorAngle,
-                      onMirrorAngleChanged: (value) {
-                        setState(() => _mirrorAngle = value);
-                        _calculate();
-                      },
-                      result: _result,
                     ),
                   const SizedBox(height: 32),
                   Text(
@@ -268,9 +255,10 @@ class _ReflectionLawPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cx = size.width * 0.35;
-    final cy = size.height * 0.7;
-    final mirrorLength = size.width * 0.6;
+    final cx = size.width * 0.4;
+    final cy = size.height * 0.5;
+    final mirrorLength = size.width * 0.7;
+    final rayLength = size.width * 0.45;
 
     canvas.drawLine(
       Offset(cx - mirrorLength / 2, cy),
@@ -280,15 +268,16 @@ class _ReflectionLawPainter extends CustomPainter {
         ..strokeWidth = 3,
     );
 
-    final normalPaint = Paint()
-      ..color = const Color(0xFF94A3B8)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-
-    canvas.drawLine(Offset(cx, cy - 20), Offset(cx, cy + 20), normalPaint);
+    canvas.drawLine(
+      Offset(cx, cy - rayLength),
+      Offset(cx, cy + rayLength),
+      Paint()
+        ..color = const Color(0xFF94A3B8)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke,
+    );
 
     final incidentRad = incidentAngle * math.pi / 180;
-    final rayLength = 120.0;
     final incidentEndX = cx - rayLength * math.sin(incidentRad);
     final incidentEndY = cy - rayLength * math.cos(incidentRad);
 
@@ -311,52 +300,122 @@ class _ReflectionLawPainter extends CustomPainter {
         ..strokeWidth = 3,
     );
 
-    final thetaIPainter = TextPainter(
-      text: const TextSpan(
-        text: 'θi',
-        style: TextStyle(
-          color: Color(0xFF059669),
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    thetaIPainter.paint(canvas, Offset(cx - 30, cy - 50));
+    final arcRadius = rayLength * 0.35;
 
-    final thetaRPainter = TextPainter(
-      text: const TextSpan(
-        text: 'θr',
-        style: TextStyle(
-          color: Color(0xFFDC2626),
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    thetaRPainter.paint(canvas, Offset(cx + 10, cy - 50));
-
+    final incidentStartAngle = -math.pi / 2 - incidentRad;
     final arcPaint = Paint()
       ..color = const Color(0xFF059669)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
     canvas.drawArc(
-      Rect.fromCenter(center: Offset(cx, cy), width: 40, height: 40),
-      -math.pi / 2 - incidentRad,
+      Rect.fromCircle(center: Offset(cx, cy), radius: arcRadius),
+      incidentStartAngle,
       incidentRad,
       false,
       arcPaint,
     );
 
+    canvas.drawLine(
+      Offset(
+        cx + arcRadius * math.sin(incidentStartAngle),
+        cy + arcRadius * math.cos(incidentStartAngle),
+      ),
+      Offset(
+        cx + (arcRadius - 8) * math.sin(incidentStartAngle),
+        cy + (arcRadius - 8) * math.cos(incidentStartAngle),
+      ),
+      arcPaint,
+    );
+    canvas.drawLine(
+      Offset(
+        cx + arcRadius * math.sin(-math.pi / 2),
+        cy + arcRadius * math.cos(-math.pi / 2),
+      ),
+      Offset(
+        cx + (arcRadius - 8) * math.sin(-math.pi / 2),
+        cy + (arcRadius - 8) * math.cos(-math.pi / 2),
+      ),
+      arcPaint,
+    );
+
+    final thetaIPainter = TextPainter(
+      text: TextSpan(
+        text: 'θi = ${incidentAngle.toStringAsFixed(0)}°',
+        style: const TextStyle(
+          color: Color(0xFF059669),
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    thetaIPainter.paint(
+      canvas,
+      Offset(cx - arcRadius - 55, cy - arcRadius - 15),
+    );
+
+    final arcPaint2 = Paint()
+      ..color = const Color(0xFFDC2626)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
     canvas.drawArc(
-      Rect.fromCenter(center: Offset(cx, cy), width: 40, height: 40),
-      -math.pi / 2 + incidentRad,
+      Rect.fromCircle(center: Offset(cx, cy), radius: arcRadius),
+      -math.pi / 2,
       incidentRad,
       false,
-      arcPaint..color = const Color(0xFFDC2626),
+      arcPaint2,
     );
+
+    canvas.drawLine(
+      Offset(
+        cx + arcRadius * math.sin(-math.pi / 2),
+        cy + arcRadius * math.cos(-math.pi / 2),
+      ),
+      Offset(
+        cx + (arcRadius - 8) * math.sin(-math.pi / 2),
+        cy + (arcRadius - 8) * math.cos(-math.pi / 2),
+      ),
+      arcPaint2,
+    );
+    canvas.drawLine(
+      Offset(
+        cx + arcRadius * math.sin(-math.pi / 2 + incidentRad),
+        cy + arcRadius * math.cos(-math.pi / 2 + incidentRad),
+      ),
+      Offset(
+        cx + (arcRadius - 8) * math.sin(-math.pi / 2 + incidentRad),
+        cy + (arcRadius - 8) * math.cos(-math.pi / 2 + incidentRad),
+      ),
+      arcPaint2,
+    );
+
+    final thetaRPainter = TextPainter(
+      text: TextSpan(
+        text: 'θr = ${incidentAngle.toStringAsFixed(0)}°',
+        style: const TextStyle(
+          color: Color(0xFFDC2626),
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    thetaRPainter.paint(canvas, Offset(cx + 15, cy - arcRadius - 15));
+
+    final normalLabelPainter = TextPainter(
+      text: const TextSpan(
+        text: 'Normal',
+        style: TextStyle(
+          color: Color(0xFF94A3B8),
+          fontSize: 12,
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    normalLabelPainter.paint(canvas, Offset(cx + 8, cy + 10));
   }
 
   @override
@@ -625,295 +684,11 @@ class _KaleidoscopePainter extends CustomPainter {
     );
   }
 
-  void _drawColorBlob(Canvas canvas, Offset center, double size, Color color) {
-    canvas.drawCircle(
-      center,
-      size,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.fill,
-    );
-  }
-
   @override
   bool shouldRepaint(covariant _KaleidoscopePainter oldDelegate) =>
       oldDelegate.mirrorAngleDegrees != mirrorAngleDegrees ||
       oldDelegate.numberOfMirrors != numberOfMirrors ||
       oldDelegate.animationValue != animationValue;
-}
-
-class _MirrorAngleExperiment extends StatelessWidget {
-  const _MirrorAngleExperiment({
-    required this.mirrorAngle,
-    required this.onMirrorAngleChanged,
-    required this.result,
-  });
-
-  final double mirrorAngle;
-  final ValueChanged<double> onMirrorAngleChanged;
-  final KaleidoscopeResult? result;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '3) Mirror Angle & Image Count',
-          style: theme.textTheme.titleLarge,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Formula: Number of images = (360° / θ) - 1',
-          style: theme.textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Angle θ: ${mirrorAngle.toStringAsFixed(0)}°',
-          style: theme.textTheme.bodyMedium,
-        ),
-        Slider(
-          value: mirrorAngle,
-          min: 15,
-          max: 90,
-          divisions: 15,
-          label: '${mirrorAngle.toStringAsFixed(0)}°',
-          onChanged: onMirrorAngleChanged,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [Text('15°'), Text('45°'), Text('90°')],
-        ),
-        const SizedBox(height: 12),
-        if (result != null)
-          _ResultPanel(
-            title: 'Output',
-            body:
-                'θ = ${result!.mirrorAngleDegrees.toStringAsFixed(0)}°\n'
-                '360° / θ = ${(360 / result!.mirrorAngleDegrees).toStringAsFixed(2)}\n'
-                'Number of images = ${result!.imageCount}\n'
-                'Note: At 60°, 6 images. At 45°, 8 images. At 30°, 12 images.',
-          ),
-        const SizedBox(height: 16),
-        AspectRatio(
-          aspectRatio: 16 / 8,
-          child: _MirrorAngleStage(
-            mirrorAngleDegrees: mirrorAngle,
-            imageCount: result?.imageCount ?? 0,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MirrorAngleStage extends StatelessWidget {
-  const _MirrorAngleStage({
-    required this.mirrorAngleDegrees,
-    required this.imageCount,
-  });
-
-  final double mirrorAngleDegrees;
-  final int imageCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: CustomPaint(
-        painter: _MirrorAnglePainter(
-          mirrorAngleDegrees: mirrorAngleDegrees,
-          imageCount: imageCount,
-        ),
-        child: const SizedBox.expand(),
-      ),
-    );
-  }
-}
-
-class _MirrorAnglePainter extends CustomPainter {
-  _MirrorAnglePainter({
-    required this.mirrorAngleDegrees,
-    required this.imageCount,
-  });
-
-  final double mirrorAngleDegrees;
-  final int imageCount;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width * 0.5;
-    final cy = size.height * 0.55;
-    final mirrorLength = size.width * 0.28;
-    final rayLength = size.width * 0.2;
-
-    final mirrorAngleRad = (mirrorAngleDegrees * math.pi) / 180;
-    final halfAngle = mirrorAngleRad / 2;
-
-    final mirror1EndX = cx + mirrorLength * math.sin(halfAngle);
-    final mirror1EndY = cy - mirrorLength * math.cos(halfAngle);
-    final mirror2EndX = cx + mirrorLength * math.sin(halfAngle);
-    final mirror2EndY = cy + mirrorLength * math.cos(halfAngle);
-
-    canvas.drawLine(
-      Offset(cx, cy),
-      Offset(mirror1EndX, mirror1EndY),
-      Paint()
-        ..color = const Color(0xFF94A3B8)
-        ..strokeWidth = 5,
-    );
-    canvas.drawLine(
-      Offset(cx, cy),
-      Offset(mirror2EndX, mirror2EndY),
-      Paint()
-        ..color = const Color(0xFF94A3B8)
-        ..strokeWidth = 5,
-    );
-
-    canvas.drawCircle(
-      Offset(cx, cy),
-      5,
-      Paint()
-        ..color = const Color(0xFF1E293B)
-        ..style = PaintingStyle.fill,
-    );
-
-    final incidentAngle = 45.0;
-    final incidentRad = incidentAngle * math.pi / 180;
-
-    final incidentEndX = cx - rayLength * math.sin(incidentRad);
-    final incidentEndY = cy - rayLength * math.cos(incidentRad);
-
-    canvas.drawLine(
-      Offset(incidentEndX, incidentEndY),
-      Offset(cx, cy),
-      Paint()
-        ..color = const Color(0xFF059669)
-        ..strokeWidth = 3,
-    );
-
-    final arrowX = incidentEndX + 15 * math.sin(incidentRad);
-    final arrowY = incidentEndY + 15 * math.cos(incidentRad);
-    canvas.drawLine(
-      Offset(arrowX - 6, arrowY + 8),
-      Offset(cx, cy),
-      Paint()
-        ..color = const Color(0xFF059669)
-        ..strokeWidth = 3,
-    );
-
-    final reflectedEndX = cx + rayLength * math.sin(incidentRad);
-    final reflectedEndY = cy - rayLength * math.cos(incidentRad);
-
-    canvas.drawLine(
-      Offset(cx, cy),
-      Offset(reflectedEndX, reflectedEndY),
-      Paint()
-        ..color = const Color(0xFFDC2626)
-        ..strokeWidth = 3,
-    );
-
-    final arcPaint = Paint()
-      ..color = const Color(0xFF059669)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(cx, cy), width: 50, height: 50),
-      -math.pi / 2 - incidentRad,
-      incidentRad,
-      false,
-      arcPaint,
-    );
-
-    final arcPaint2 = Paint()
-      ..color = const Color(0xFFDC2626)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(cx, cy), width: 50, height: 50),
-      -math.pi / 2 + incidentRad,
-      incidentRad,
-      false,
-      arcPaint2,
-    );
-
-    final mirrorArcPaint = Paint()
-      ..color = const Color(0xFF7C3AED)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(cx, cy), width: 70, height: 70),
-      -math.pi / 2 - halfAngle,
-      mirrorAngleRad,
-      false,
-      mirrorArcPaint,
-    );
-
-    final thetaIPainter = TextPainter(
-      text: const TextSpan(
-        text: 'θi',
-        style: TextStyle(
-          color: Color(0xFF059669),
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    thetaIPainter.paint(canvas, Offset(cx - 50, cy - 45));
-
-    final thetaRPainter = TextPainter(
-      text: const TextSpan(
-        text: 'θr',
-        style: TextStyle(
-          color: Color(0xFFDC2626),
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    thetaRPainter.paint(canvas, Offset(cx + 20, cy - 45));
-
-    final mirrorThetaPainter = TextPainter(
-      text: TextSpan(
-        text: 'θ = ${mirrorAngleDegrees.toStringAsFixed(0)}°',
-        style: const TextStyle(
-          color: Color(0xFF7C3AED),
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    mirrorThetaPainter.paint(canvas, Offset(cx + 40, cy + 5));
-
-    final infoText = TextPainter(
-      text: TextSpan(
-        text: '$imageCount images',
-        style: const TextStyle(
-          color: Color(0xFF334155),
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    infoText.paint(canvas, Offset(cx - 30, cy + mirrorLength + 30));
-  }
-
-  @override
-  bool shouldRepaint(covariant _MirrorAnglePainter oldDelegate) =>
-      oldDelegate.mirrorAngleDegrees != mirrorAngleDegrees ||
-      oldDelegate.imageCount != imageCount;
 }
 
 class _ResultPanel extends StatelessWidget {
@@ -993,19 +768,6 @@ class _SpecDocumentCard extends StatelessWidget {
             'What you see: Patterns multiply as angle decreases.\n'
             'Key idea: Each mirror creates multiple reflections, forming a kaleidoscope.\n'
             'Formula: Number of reflections = 360° / θ.',
-            style: theme.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 14),
-          Text(
-            '3. Mirror Angle & Image Count',
-            style: theme.textTheme.titleMedium,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'What you do: Change the angle between two mirrors.\n'
-            'What you see: The number of images changes.\n'
-            'Key idea: Smaller angles create more images.\n'
-            'At 60°: 6 images, At 45°: 8 images, At 30°: 12 images.',
             style: theme.textTheme.bodyMedium,
           ),
         ],
