@@ -916,6 +916,51 @@ class _ExperimentPainter extends CustomPainter {
         ..color = const Color(0xFF94A3B8)
         ..strokeWidth = 2,
     );
+    _drawLabel(
+      canvas,
+      'Normal',
+      Offset(hit.dx + 8, 18),
+      color: const Color(0xFF334155),
+    );
+    _drawLabel(
+      canvas,
+      'Interface',
+      Offset(14, boundaryY - 24),
+      color: const Color(0xFF334155),
+    );
+    _drawLabel(
+      canvas,
+      'Rarer medium (air)',
+      const Offset(14, 14),
+      color: const Color(0xFF1E3A8A),
+    );
+    _drawLabel(
+      canvas,
+      'Denser medium (glass/water)',
+      Offset(14, boundaryY + 10),
+      color: const Color(0xFF064E3B),
+    );
+    if (tirResult.criticalAngleDeg.isFinite) {
+      final icRad = tirResult.criticalAngleDeg * math.pi / 180;
+      final icEnd = Offset(
+        hit.dx - math.sin(icRad) * 90,
+        hit.dy + math.cos(icRad) * 90,
+      );
+      _drawDashedLine(
+        canvas,
+        start: hit,
+        end: icEnd,
+        color: const Color(0xFF0F766E),
+        strokeWidth: 2,
+      );
+      _drawLabel(
+        canvas,
+        'ic',
+        Offset(hit.dx - 50, hit.dy + 36),
+        color: const Color(0xFF0F766E),
+        fontSize: 13,
+      );
+    }
 
     final iRad = tirResult.incidentAngleDeg * math.pi / 180;
     final source = Offset(
@@ -928,6 +973,34 @@ class _ExperimentPainter extends CustomPainter {
       Paint()
         ..color = const Color(0xFFF97316)
         ..strokeWidth = 4,
+    );
+    _drawLabel(
+      canvas,
+      'Incident ray',
+      Offset((source.dx + hit.dx) / 2 - 70, (source.dy + hit.dy) / 2 + 12),
+      color: const Color(0xFF9A3412),
+    );
+
+    final incidentDirection = math.atan2(
+      source.dy - hit.dy,
+      source.dx - hit.dx,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: hit, radius: 34),
+      math.pi / 2,
+      incidentDirection - (math.pi / 2),
+      false,
+      Paint()
+        ..color = const Color(0xFFF97316)
+        ..strokeWidth = 2
+        ..style = PaintingStyle.stroke,
+    );
+    _drawLabel(
+      canvas,
+      'i',
+      Offset(hit.dx - 26, hit.dy + 24),
+      color: const Color(0xFFF97316),
+      fontSize: 13,
     );
 
     if (tirResult.state == TirState.refraction &&
@@ -944,20 +1017,82 @@ class _ExperimentPainter extends CustomPainter {
           ..color = const Color(0xFF2563EB)
           ..strokeWidth = 4,
       );
+      _drawLabel(
+        canvas,
+        'Refracted ray',
+        Offset(
+          (hit.dx + refractedEnd.dx) / 2 - 54,
+          (hit.dy + refractedEnd.dy) / 2 - 24,
+        ),
+        color: const Color(0xFF1D4ED8),
+      );
+      final refractedDirection = math.atan2(
+        refractedEnd.dy - hit.dy,
+        refractedEnd.dx - hit.dx,
+      );
+      canvas.drawArc(
+        Rect.fromCircle(center: hit, radius: 34),
+        -math.pi / 2,
+        refractedDirection - (-math.pi / 2),
+        false,
+        Paint()
+          ..color = const Color(0xFF2563EB)
+          ..strokeWidth = 2
+          ..style = PaintingStyle.stroke,
+      );
+      _drawLabel(
+        canvas,
+        'r',
+        Offset(hit.dx + 10, hit.dy - 32),
+        color: const Color(0xFF2563EB),
+        fontSize: 13,
+      );
     }
-
-    final reflectedEnd = Offset(
-      hit.dx + math.sin(iRad) * 220,
-      hit.dy + math.cos(iRad) * 220,
-    );
-    canvas.drawLine(
-      hit,
-      reflectedEnd,
-      Paint()
-        ..color = const Color(0xFFFDE047)
-        ..strokeWidth = 4,
-    );
+    if (tirResult.state == TirState.critical) {
+      final grazingEnd = Offset(size.width - 20, boundaryY - 1);
+      canvas.drawLine(
+        hit,
+        grazingEnd,
+        Paint()
+          ..color = const Color(0xFF2563EB)
+          ..strokeWidth = 4,
+      );
+      _drawLabel(
+        canvas,
+        'Refracted ray (r = 90°)',
+        Offset(hit.dx + 24, boundaryY - 24),
+        color: const Color(0xFF1D4ED8),
+      );
+    }
+    if (tirResult.state != TirState.refraction) {
+      final reflectedEnd = Offset(
+        hit.dx + math.sin(iRad) * 220,
+        hit.dy + math.cos(iRad) * 220,
+      );
+      canvas.drawLine(
+        hit,
+        reflectedEnd,
+        Paint()
+          ..color = const Color(0xFFFDE047)
+          ..strokeWidth = 4,
+      );
+      _drawLabel(
+        canvas,
+        'Reflected ray',
+        Offset(
+          (hit.dx + reflectedEnd.dx) / 2 - 46,
+          (hit.dy + reflectedEnd.dy) / 2 - 18,
+        ),
+        color: const Color(0xFFA16207),
+      );
+    }
     canvas.drawCircle(hit, 5, Paint()..color = Colors.white);
+    _drawLabel(
+      canvas,
+      'Point of incidence',
+      Offset(hit.dx + 8, hit.dy + 6),
+      color: const Color(0xFF334155),
+    );
   }
 
   void _drawPrism(Canvas canvas, Size size) {
@@ -1063,6 +1198,12 @@ class _ExperimentPainter extends CustomPainter {
         ..color = const Color(0xFF64748B)
         ..strokeWidth = 2,
     );
+    _drawLabel(
+      canvas,
+      'Principal axis',
+      Offset(12, cy + 8),
+      color: const Color(0xFF334155),
+    );
     canvas.drawCircle(
       Offset(cx - focalPx, cy),
       4,
@@ -1073,12 +1214,69 @@ class _ExperimentPainter extends CustomPainter {
       4,
       Paint()..color = const Color(0xFFEF4444),
     );
+    canvas.drawCircle(
+      Offset(cx - focalPx * 2, cy),
+      3,
+      Paint()..color = const Color(0xFFB91C1C),
+    );
+    canvas.drawCircle(
+      Offset(cx + focalPx * 2, cy),
+      3,
+      Paint()..color = const Color(0xFFB91C1C),
+    );
+    _drawLabel(
+      canvas,
+      'F1',
+      Offset(cx - focalPx - 18, cy + 10),
+      color: const Color(0xFFB91C1C),
+    );
+    _drawLabel(
+      canvas,
+      'F2',
+      Offset(cx + focalPx + 8, cy + 10),
+      color: const Color(0xFFB91C1C),
+    );
+    _drawLabel(
+      canvas,
+      '2F1',
+      Offset(cx - focalPx * 2 - 20, cy + 10),
+      color: const Color(0xFF991B1B),
+    );
+    _drawLabel(
+      canvas,
+      '2F2',
+      Offset(cx + focalPx * 2 + 8, cy + 10),
+      color: const Color(0xFF991B1B),
+    );
 
-    final lensHeight = size.height * 0.45;
-    final lensPath = Path()
-      ..moveTo(cx - 8, cy - lensHeight / 2)
-      ..quadraticBezierTo(cx + 12, cy, cx - 8, cy + lensHeight / 2)
-      ..quadraticBezierTo(cx - 28, cy, cx - 8, cy - lensHeight / 2);
+    final lensHeight = size.height * 0.46;
+    const lensHalfWidth = 18.0;
+    final lensPath = lensResult.type == LensType.convex
+        ? (Path()
+            ..moveTo(cx, cy - lensHeight / 2)
+            ..quadraticBezierTo(cx + lensHalfWidth, cy, cx, cy + lensHeight / 2)
+            ..quadraticBezierTo(
+              cx - lensHalfWidth,
+              cy,
+              cx,
+              cy - lensHeight / 2,
+            ))
+        : (Path()
+            ..moveTo(cx - lensHalfWidth, cy - lensHeight / 2)
+            ..quadraticBezierTo(
+              cx - 5,
+              cy,
+              cx - lensHalfWidth,
+              cy + lensHeight / 2,
+            )
+            ..lineTo(cx + lensHalfWidth, cy + lensHeight / 2)
+            ..quadraticBezierTo(
+              cx + 5,
+              cy,
+              cx + lensHalfWidth,
+              cy - lensHeight / 2,
+            )
+            ..close());
     canvas.drawPath(
       lensPath,
       Paint()..color = const Color(0xFF3B82F6).withValues(alpha: 0.7),
@@ -1089,6 +1287,25 @@ class _ExperimentPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..color = const Color(0xFF1D4ED8)
         ..strokeWidth = 2,
+    );
+    _drawLabel(
+      canvas,
+      lensResult.type == LensType.convex ? 'Convex lens' : 'Concave lens',
+      Offset(cx - 56, cy - lensHeight / 2 - 22),
+      color: const Color(0xFF1E40AF),
+      bounds: size,
+    );
+    canvas.drawCircle(
+      Offset(cx, cy),
+      3,
+      Paint()..color = const Color(0xFF1E40AF),
+    );
+    _drawLabel(
+      canvas,
+      'Optical centre (O)',
+      Offset(cx + 10, cy - 18),
+      color: const Color(0xFF1E40AF),
+      bounds: size,
     );
 
     final objectX = (cx - lensResult.objectDistanceCm * 3)
@@ -1102,6 +1319,13 @@ class _ExperimentPainter extends CustomPainter {
       tip: objectTip,
       color: const Color(0xFF059669),
     );
+    _drawLabel(
+      canvas,
+      'Object',
+      Offset(objectX - 28, objectTip.dy - 22),
+      color: const Color(0xFF065F46),
+      bounds: size,
+    );
 
     if (lensResult.imageDistanceCm != null &&
         lensResult.magnification != null) {
@@ -1109,43 +1333,165 @@ class _ExperimentPainter extends CustomPainter {
           .clamp(20.0, size.width - 20)
           .toDouble();
       final imageHeight = -objectHeight * lensResult.magnification!;
-      final imageTip = Offset(imageX, cy - imageHeight);
+      final imageTip = Offset(imageX, cy + imageHeight);
       _drawArrow(
         canvas,
         base: Offset(imageX, cy),
         tip: imageTip,
         color: const Color(0xFFDC2626),
       );
+      _drawLabel(
+        canvas,
+        lensResult.imageNature == LensImageNature.real
+            ? 'Real image'
+            : 'Virtual image',
+        lensResult.imageNature == LensImageNature.real
+            ? Offset(imageX + 8, imageTip.dy - 22)
+            : Offset(imageX - 92, imageTip.dy + 10),
+        color: const Color(0xFF991B1B),
+        bounds: size,
+      );
+
+      final lensPointParallel = Offset(cx, objectTip.dy);
+      final center = Offset(cx, cy);
+      final rightEdgeX = size.width - 10;
 
       canvas.drawLine(
         objectTip,
-        Offset(cx, objectTip.dy),
+        lensPointParallel,
         Paint()
-          ..color = const Color(0xFF16A34A).withValues(alpha: 0.4)
-          ..strokeWidth = 2,
+          ..color = const Color(0xFF16A34A).withValues(alpha: 0.45)
+          ..strokeWidth = 2.2,
       );
-      canvas.drawLine(
-        Offset(cx, objectTip.dy),
-        imageTip,
-        Paint()
-          ..color = const Color(0xFF16A34A).withValues(alpha: 0.7)
-          ..strokeWidth = 2,
+
+      if (lensResult.type == LensType.convex) {
+        final ray1End = _rayEndAtX(
+          start: lensPointParallel,
+          through: Offset(cx + focalPx, cy),
+          targetX: rightEdgeX,
+        );
+        canvas.drawLine(
+          lensPointParallel,
+          ray1End,
+          Paint()
+            ..color = const Color(0xFF16A34A).withValues(alpha: 0.75)
+            ..strokeWidth = 2.2,
+        );
+      } else {
+        final ray1End = _rayEndAtX(
+          start: lensPointParallel,
+          through: Offset(cx + 80, lensPointParallel.dy - 30),
+          targetX: rightEdgeX,
+        );
+        canvas.drawLine(
+          lensPointParallel,
+          ray1End,
+          Paint()
+            ..color = const Color(0xFF16A34A).withValues(alpha: 0.75)
+            ..strokeWidth = 2.2,
+        );
+        _drawDashedLine(
+          canvas,
+          start: lensPointParallel,
+          end: imageTip,
+          color: const Color(0xFF16A34A),
+          strokeWidth: 1.5,
+        );
+      }
+      _drawLabel(
+        canvas,
+        'Ray 1 (parallel to axis)',
+        Offset(cx - 175, objectTip.dy - 30),
+        color: const Color(0xFF166534),
+        bounds: size,
       );
+
       canvas.drawLine(
         objectTip,
-        Offset(cx, cy),
+        center,
         Paint()
-          ..color = const Color(0xFF2563EB).withValues(alpha: 0.6)
-          ..strokeWidth = 2,
+          ..color = const Color(0xFF2563EB).withValues(alpha: 0.65)
+          ..strokeWidth = 2.2,
+      );
+      final ray2End = _rayEndAtX(
+        start: center,
+        through: objectTip,
+        targetX: rightEdgeX,
       );
       canvas.drawLine(
-        Offset(cx, cy),
-        imageTip,
+        center,
+        ray2End,
         Paint()
-          ..color = const Color(0xFF2563EB).withValues(alpha: 0.6)
-          ..strokeWidth = 2,
+          ..color = const Color(0xFF2563EB).withValues(alpha: 0.65)
+          ..strokeWidth = 2.2,
       );
+      if (lensResult.imageNature == LensImageNature.virtual) {
+        _drawDashedLine(
+          canvas,
+          start: center,
+          end: imageTip,
+          color: const Color(0xFF2563EB),
+          strokeWidth: 1.5,
+        );
+      }
+      _drawLabel(
+        canvas,
+        'Ray 2 (through optical centre)',
+        Offset(cx - 170, cy + 14),
+        color: const Color(0xFF1D4ED8),
+        bounds: size,
+      );
+      if (lensResult.imageNature == LensImageNature.virtual) {
+        _drawLabel(
+          canvas,
+          'Virtual extension',
+          Offset(imageX - 84, imageTip.dy + 28),
+          color: const Color(0xFF7C3AED),
+          bounds: size,
+        );
+      }
     }
+  }
+
+  void _drawLabel(
+    Canvas canvas,
+    String text,
+    Offset position, {
+    Color color = const Color(0xFF0F172A),
+    double fontSize = 11,
+    Size? bounds,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: 220);
+    final drawX = bounds == null
+        ? position.dx
+        : position.dx.clamp(6.0, bounds.width - painter.width - 6).toDouble();
+    final drawY = bounds == null
+        ? position.dy
+        : position.dy.clamp(6.0, bounds.height - painter.height - 6).toDouble();
+    final bgRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        drawX - 4,
+        drawY - 2,
+        painter.width + 8,
+        painter.height + 4,
+      ),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(
+      bgRect,
+      Paint()..color = Colors.white.withValues(alpha: 0.75),
+    );
+    painter.paint(canvas, Offset(drawX, drawY));
   }
 
   void _drawArrow(
@@ -1161,6 +1507,43 @@ class _ExperimentPainter extends CustomPainter {
     final headY = tip.dy > base.dy ? -10 : 10;
     canvas.drawLine(Offset(tip.dx - 8, tip.dy + headY), tip, paint);
     canvas.drawLine(Offset(tip.dx + 8, tip.dy + headY), tip, paint);
+  }
+
+  void _drawDashedLine(
+    Canvas canvas, {
+    required Offset start,
+    required Offset end,
+    required Color color,
+    double strokeWidth = 2,
+    double dashLength = 7,
+    double gapLength = 5,
+  }) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth;
+    final total = (end - start).distance;
+    if (total <= 0) return;
+    final direction = (end - start) / total;
+    var offset = 0.0;
+    while (offset < total) {
+      final dashStart = start + direction * offset;
+      final dashEnd = start + direction * math.min(offset + dashLength, total);
+      canvas.drawLine(dashStart, dashEnd, paint);
+      offset += dashLength + gapLength;
+    }
+  }
+
+  Offset _rayEndAtX({
+    required Offset start,
+    required Offset through,
+    required double targetX,
+  }) {
+    final dx = through.dx - start.dx;
+    if (dx.abs() < 1e-6) {
+      return Offset(targetX, start.dy);
+    }
+    final slope = (through.dy - start.dy) / dx;
+    return Offset(targetX, start.dy + slope * (targetX - start.dx));
   }
 
   @override
