@@ -547,31 +547,28 @@ class _ExperimentPainter extends CustomPainter {
     canvas.drawCircle(Offset(entryX, entryY), 8, Paint()..color = Colors.white);
 
     final colors = [const Color(0xFFFF0000), const Color(0xFFFF7F00), const Color(0xFFFFFF00), const Color(0xFF00FF00), const Color(0xFF0000FF), const Color(0xFF4B0082), const Color(0xFF9400D3)];
-    final factors = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7];
 
     for (int i = 0; i < 7; i++) {
-      final n = prismRefractiveIndex * factors[i];
-      final angIn = aRad / 2;
-      final angInt = math.asin(math.sin(angIn) / n);
-      final intEndX = cx + pSize * 0.35;
-      final intEndY = (hitY + math.tan(angInt - aRad / 2) * (intEndX - hitX) * 0.8).clamp(cy - pSize * 0.6, cy + pSize * 0.3);
+      final colorN = prismRefractiveIndex + (i * 0.025);
+      final deviation = (colorN - 1.0) * 60 * (math.pi / 180);
+      final baseExitAngle = 0.4;
+      final finalAngle = baseExitAngle + (deviation * 0.5);
+      
+      final exitPoint = Offset(cx + pSize * 0.4, cy - pSize * 0.1 + i * 1.5);
+      final rayEnd = Offset(
+        exitPoint.dx + math.cos(finalAngle) * 600,
+        exitPoint.dy + math.sin(finalAngle) * 600,
+      );
 
-      canvas.drawLine(Offset(hitX, hitY), Offset(intEndX, intEndY), Paint()..color = colors[i].withValues(alpha: 0.5)..strokeWidth = 2);
-
-      final devF = deviationAngle / 50.0;
-      final angEx = (angInt + devF * (0.7 - i * 0.1)) * n / 1.5;
-      final exitX = size.width * 0.85;
-      final exitY = (intEndY + math.tan(angEx) * (exitX - intEndX)).clamp(size.height * 0.1, size.height * 0.9);
-
-      canvas.drawLine(Offset(intEndX, intEndY), Offset(exitX, exitY), Paint()..color = colors[i]..strokeWidth = 3..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+      canvas.drawLine(exitPoint, rayEnd, Paint()..color = colors[i].withValues(alpha: 0.8)..strokeWidth = 4..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
     }
 
     canvas.drawLine(Offset(entryX, entryY), Offset(size.width * 0.85, entryY - deviationAngle * 2), Paint()..color = Colors.white.withValues(alpha: 0.15)..strokeWidth = 1);
     _drawText(canvas, 'δ=${deviationAngle.toStringAsFixed(0)}°', Offset(size.width * 0.5, entryY - deviationAngle * 2 - 20), const Color(0xFFFFD700));
     _drawText(canvas, 'WHITE LIGHT', Offset(entryX - 60, entryY - 40), Colors.white70);
     _drawText(canvas, 'PRISM', Offset(cx - 25, cy - pSize - 25), const Color(0xFF0EA5E9));
-    _drawText(canvas, 'Since Violet (short λ) slows more → bends more', Offset(size.width * 0.08, size.height * 0.92), const Color(0xFFDDD6FE));
-    _drawText(canvas, 'Red (long λ) slows less → bends less', Offset(size.width * 0.08, size.height * 0.97), const Color(0xFFFCA5A5));
+    _drawText(canvas, 'Violet (short λ) bends MOST ↓', Offset(size.width * 0.08, size.height * 0.92), const Color(0xFFDDD6FE));
+    _drawText(canvas, 'Red (long λ) bends LEAST ↑', Offset(size.width * 0.08, size.height * 0.97), const Color(0xFFFCA5A5));
 
     final ly = size.height * 0.75;
     final names = ['R', 'O', 'Y', 'G', 'B', 'I', 'V'];
