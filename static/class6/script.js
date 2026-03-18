@@ -3,10 +3,22 @@ const ctx = canvas.getContext('2d');
 const obsText = document.getElementById('observationText');
 
 let currentObject = null;
+const state = {
+    mode: 'transparency',
+    sunAngle: 45,
+    lightColor: 'rgba(255, 248, 184, 0.75)',
+    torchPos: { x: 100, y: 250 },
+    objectPos: { x: 290, y: 250 },
+    mouse: { x: 150, y: 220 }
+};
 
 function resize() {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
+    state.torchPos = { x: Math.max(90, canvas.width * 0.14), y: canvas.height * 0.5 };
+    state.objectPos = { x: Math.max(state.torchPos.x + 170, canvas.width * 0.42), y: canvas.height * 0.5 };
+    state.mouse.x = Math.min(state.mouse.x, canvas.width - 40);
+    state.mouse.y = Math.min(state.mouse.y, canvas.height - 80);
 }
 window.onresize = resize;
 resize();
@@ -178,13 +190,16 @@ function drawShadowExperiment() {
 }
 
 function drawPinholeCamera() {
-    const boxX = 400, boxY = 150, boxW = 250, boxH = 200;
-    const pinholeY = boxY + boxH/2;
+    const boxW = Math.min(250, canvas.width * 0.35);
+    const boxH = Math.min(200, canvas.height * 0.45);
+    const boxX = canvas.width * 0.6;
+    const boxY = (canvas.height - boxH) / 2;
+    const pinholeY = boxY + boxH / 2;
     
     // 1. Draw the Candle (The Object)
     // We use the mouse Y position to let the student "move" the candle
-    const candleX = 150;
-    const candleY = Math.max(100, Math.min(400, state.mouse.y));
+    const candleX = canvas.width * 0.22;
+    const candleY = Math.max(100, Math.min(canvas.height - 100, state.mouse.y));
     
     // Candle Body
     ctx.fillStyle = "#E0E0D5";
@@ -242,4 +257,5 @@ function drawPinholeCamera() {
     ctx.restore();
 }
 
+setObject('glass');
 draw();
