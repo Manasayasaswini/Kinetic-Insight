@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../class11/presentation/class11_lab_screen.dart';
 import '../../class6/presentation/class6_lab_screen.dart';
 import '../../class7/presentation/class7_lab_screen.dart';
+import '../../class9/presentation/class9_lab_screen.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -117,6 +118,34 @@ class MainScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
+                            builder: (context) => const Class9LabScreenEntry(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7C3AED),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 36,
+                          vertical: 20,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Class 9 - Kaleidoscope',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
                             builder: (context) => const Class11LabScreenEntry(),
                           ),
                         );
@@ -207,6 +236,26 @@ class Class7LabScreenEntry extends StatelessWidget {
         ),
       ),
       body: const Class7LabScreen(),
+    );
+  }
+}
+
+class Class9LabScreenEntry extends StatelessWidget {
+  const Class9LabScreenEntry({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Class 9 - Kaleidoscope'),
+        backgroundColor: const Color(0xFF7C3AED),
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: const Class9LabScreen(),
     );
   }
 }
