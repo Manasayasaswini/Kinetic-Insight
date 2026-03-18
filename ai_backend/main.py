@@ -6,10 +6,6 @@ from pydantic import BaseModel, Field
 
 app = FastAPI(title='Kinetic Insight AI Backend', version='0.1.0')
 
-@app.get("/")
-def root():
-    return {"message": "Backend is running"}
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -18,12 +14,17 @@ app.add_middleware(
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'https://kinetic-insight.vercel.app',
+        'https://kineticinsight.530020.online',
     ],
-    allow_origin_regex=r'https://.*\.vercel\.app',
+    allow_origin_regex=r'https://.*(vercel\.app|530020\.online)',
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+@app.get("/")
+def root():
+    return {"message": "Backend is running"}
 
 NEWTON_OPTIONS = [
     'At very high speed, colors blend and the disc appears nearly white.',
