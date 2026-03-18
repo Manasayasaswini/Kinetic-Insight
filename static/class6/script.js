@@ -1,6 +1,9 @@
 const canvas = document.getElementById('experimentCanvas');
 const ctx = canvas.getContext('2d');
 const obsText = document.getElementById('observationText');
+const factText = document.getElementById('factText');
+const modeButtons = document.querySelectorAll('[data-mode-btn]');
+const controlPanels = document.querySelectorAll('[data-control-panel]');
 
 let currentObject = null;
 const state = {
@@ -11,6 +14,37 @@ const state = {
     objectPos: { x: 290, y: 250 },
     mouse: { x: 150, y: 220 }
 };
+
+const FACTS = {
+    transparency: "Transparent objects let most light pass, translucent objects let only some light through, and opaque objects block it almost completely.",
+    shadow: "A shadow always forms on the side opposite the light source. Lower Sun angle means a longer shadow.",
+    pinhole: "A pinhole camera works because light travels in straight lines. Rays from the top and bottom of the object cross at the tiny hole."
+};
+
+function syncLayout() {
+    controlPanels.forEach((panel) => {
+        panel.classList.toggle('hidden', panel.dataset.controlPanel !== state.mode);
+    });
+
+    modeButtons.forEach((button) => {
+        const isActive = button.dataset.modeBtn === state.mode;
+        button.classList.toggle('active-tab', isActive);
+        button.classList.toggle('border-blue-300', isActive && state.mode === 'transparency');
+        button.classList.toggle('bg-blue-50', isActive && state.mode === 'transparency');
+        button.classList.toggle('border-yellow-300', isActive && state.mode === 'shadow');
+        button.classList.toggle('bg-yellow-50', isActive && state.mode === 'shadow');
+        button.classList.toggle('border-indigo-300', isActive && state.mode === 'pinhole');
+        button.classList.toggle('bg-indigo-50', isActive && state.mode === 'pinhole');
+        button.classList.toggle('text-white', false);
+        if (!isActive) {
+            button.classList.remove('bg-blue-50', 'bg-yellow-50', 'bg-indigo-50', 'border-blue-300', 'border-yellow-300', 'border-indigo-300');
+        }
+    });
+
+    if (factText) {
+        factText.textContent = FACTS[state.mode];
+    }
+}
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -224,12 +258,14 @@ function setObject(type) {
     currentObject = MATERIALS[type];
     state.mode = 'transparency';
     obsText.innerHTML = `<strong>${currentObject.name}:</strong> ${currentObject.info}`;
+    syncLayout();
 }
 
 function updateSun(val) {
     state.mode = 'shadow';
     state.sunAngle = val;
     obsText.innerHTML = getShadowObservation(val);
+    syncLayout();
 }
 
 function getShadowObservation(angle) {
@@ -242,7 +278,14 @@ function setMode(m) {
     state.mode = m;
     if (m === 'pinhole') {
         obsText.innerHTML = "<strong>Inversion:</strong> Drag the candle up, down, closer, or farther. Straight-line rays cross at the pinhole, so the colorful image flips and changes size on the screen.";
+    } else if (m === 'shadow') {
+        obsText.innerHTML = getShadowObservation(state.sunAngle);
+    } else if (m === 'transparency' && currentObject) {
+        obsText.innerHTML = `<strong>${currentObject.name}:</strong> ${currentObject.info}`;
+    } else if (m === 'transparency') {
+        obsText.innerHTML = "Select an object to begin the experiment.";
     }
+    syncLayout();
 }
 
 function draw() {
@@ -496,4 +539,5 @@ function drawPinholeCamera() {
 }
 
 setObject('glass');
+syncLayout();
 draw();
