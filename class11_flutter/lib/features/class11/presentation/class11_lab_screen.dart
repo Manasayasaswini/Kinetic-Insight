@@ -43,6 +43,8 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
   double _incidentAngle = 44;
   double _refractiveIndex = 1.52;
   double _prismRefractiveIndex = 1.52;
+  double _prismAngleA = 60;
+  double _deviationAngle = 40;
   double _incidentHeight = 0.5;
   Offset _pointer = const Offset(0.52, 0.34);
 
@@ -84,6 +86,12 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                       onPrismRefractiveIndexChanged: (value) {
                         setState(() => _prismRefractiveIndex = value);
                       },
+                      onPrismAngleChanged: (value) {
+                        setState(() => _prismAngleA = value);
+                      },
+                      onDeviationAngleChanged: (value) {
+                        setState(() => _deviationAngle = value);
+                      },
                     ),
                     Expanded(
                       child: _StageArea(
@@ -91,6 +99,8 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                         incidentAngle: _incidentAngle,
                         refractiveIndex: _refractiveIndex,
                         prismRefractiveIndex: _prismRefractiveIndex,
+                        prismAngleA: _prismAngleA,
+                        deviationAngle: _deviationAngle,
                         incidentHeight: _incidentHeight,
                         pointer: _pointer,
                         onPointerChanged: (value) {
@@ -123,6 +133,12 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                         onPrismRefractiveIndexChanged: (value) {
                           setState(() => _prismRefractiveIndex = value);
                         },
+                        onPrismAngleChanged: (value) {
+                          setState(() => _prismAngleA = value);
+                        },
+                        onDeviationAngleChanged: (value) {
+                          setState(() => _deviationAngle = value);
+                        },
                       ),
                     ),
                     Expanded(
@@ -131,6 +147,8 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                         incidentAngle: _incidentAngle,
                         refractiveIndex: _refractiveIndex,
                         prismRefractiveIndex: _prismRefractiveIndex,
+                        prismAngleA: _prismAngleA,
+                        deviationAngle: _deviationAngle,
                         incidentHeight: _incidentHeight,
                         pointer: _pointer,
                         onPointerChanged: (value) {
@@ -156,10 +174,14 @@ class _ControlRail extends StatelessWidget {
     required this.incidentAngle,
     required this.refractiveIndex,
     required this.prismRefractiveIndex,
+    required this.prismAngleA,
+    required this.deviationAngle,
     required this.onExperimentSelected,
     required this.onIncidentAngleChanged,
     required this.onRefractiveIndexChanged,
     required this.onPrismRefractiveIndexChanged,
+    required this.onPrismAngleChanged,
+    required this.onDeviationAngleChanged,
   });
 
   final List<Class11Experiment> experiments;
@@ -167,10 +189,14 @@ class _ControlRail extends StatelessWidget {
   final double incidentAngle;
   final double refractiveIndex;
   final double prismRefractiveIndex;
+  final double prismAngleA;
+  final double deviationAngle;
   final ValueChanged<Class11Experiment> onExperimentSelected;
   final ValueChanged<double> onIncidentAngleChanged;
   final ValueChanged<double> onRefractiveIndexChanged;
   final ValueChanged<double> onPrismRefractiveIndexChanged;
+  final ValueChanged<double> onPrismAngleChanged;
+  final ValueChanged<double> onDeviationAngleChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -232,20 +258,77 @@ class _ControlRail extends StatelessWidget {
             ],
             if (activeExperiment.id == 'prism') ...[
               const SizedBox(height: 24),
-              Text('Prism Controls', style: theme.textTheme.titleLarge),
+              Text('Prism Parameters', style: theme.textTheme.titleLarge),
               const SizedBox(height: 14),
-              Text('Glass Refractive Index', style: theme.textTheme.titleMedium),
+              Text('Prism Angle (A)', style: theme.textTheme.titleMedium),
               Slider(
-                min: 1.40,
-                max: 1.80,
-                value: prismRefractiveIndex,
-                onChanged: onPrismRefractiveIndexChanged,
+                min: 40,
+                max: 80,
+                value: prismAngleA,
+                onChanged: onPrismAngleChanged,
               ),
               Text(
-                'n (glass) = ${prismRefractiveIndex.toStringAsFixed(2)}',
+                'A = ${prismAngleA.toStringAsFixed(0)}°',
                 style: theme.textTheme.bodyMedium,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
+              Text('Angle of Deviation (δ)', style: theme.textTheme.titleMedium),
+              Slider(
+                min: 20,
+                max: 60,
+                value: deviationAngle,
+                onChanged: onDeviationAngleChanged,
+              ),
+              Text(
+                'δ = ${deviationAngle.toStringAsFixed(0)}°',
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A2E),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Prism Formula',
+                      style: theme.textTheme.titleMedium?.copyWith(color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'n = sin((A + δ)/2) / sin(A/2)',
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        color: Color(0xFF60A5FA),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'n = sin((${prismAngleA.toStringAsFixed(0)}° + ${deviationAngle.toStringAsFixed(0)}°)/2) / sin(${prismAngleA.toStringAsFixed(0)}°/2)',
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        color: Color(0xFF93C5FD),
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'n = ${_calculateRefractiveIndex(prismAngleA, deviationAngle).toStringAsFixed(3)}',
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        color: Color(0xFF34D399),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
               Text(
                 'Move mouse vertically to change light entry point',
                 style: theme.textTheme.bodySmall,
@@ -277,6 +360,12 @@ class _ControlRail extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  double _calculateRefractiveIndex(double angleA, double deviation) {
+    final aRad = angleA * math.pi / 180;
+    final dRad = deviation * math.pi / 180;
+    return math.sin((aRad + dRad) / 2) / math.sin(aRad / 2);
   }
 }
 
@@ -356,6 +445,8 @@ class _StageArea extends StatelessWidget {
     required this.incidentAngle,
     required this.refractiveIndex,
     required this.prismRefractiveIndex,
+    required this.prismAngleA,
+    required this.deviationAngle,
     required this.incidentHeight,
     required this.pointer,
     required this.onPointerChanged,
@@ -365,6 +456,8 @@ class _StageArea extends StatelessWidget {
   final double incidentAngle;
   final double refractiveIndex;
   final double prismRefractiveIndex;
+  final double prismAngleA;
+  final double deviationAngle;
   final double incidentHeight;
   final Offset pointer;
   final ValueChanged<Offset> onPointerChanged;
@@ -392,6 +485,8 @@ class _StageArea extends StatelessWidget {
                 incidentAngle: incidentAngle,
                 refractiveIndex: refractiveIndex,
                 prismRefractiveIndex: prismRefractiveIndex,
+                prismAngleA: prismAngleA,
+                deviationAngle: deviationAngle,
                 incidentHeight: incidentHeight,
                 pointer: pointer,
               ),
@@ -442,11 +537,18 @@ class _StageArea extends StatelessWidget {
       final criticalAngle = math.asin(1 / refractiveIndex) * 180 / math.pi;
       return 'Angle of incidence (i): ${incidentAngle.toStringAsFixed(1)}°\nCritical angle (ic): ${criticalAngle.toStringAsFixed(1)}°\nState: ${_getState()}';
     } else if (experiment.id == 'prism') {
-      return 'Refractive index: ${prismRefractiveIndex.toStringAsFixed(2)}\nLight entry: ${(incidentHeight * 100).toStringAsFixed(0)}% height';
+      final calculatedN = _calculateRefractiveIndex(prismAngleA, deviationAngle);
+      return 'Prism Angle (A): ${prismAngleA.toStringAsFixed(0)}°\nDeviation (δ): ${deviationAngle.toStringAsFixed(0)}°\nn = ${calculatedN.toStringAsFixed(3)}';
     } else if (experiment.id == 'lens') {
       return 'Lens type: Convex (Converging)\nObject distance: adjustable\nImage: real & inverted';
     }
     return '';
+  }
+
+  double _calculateRefractiveIndex(double angleA, double deviation) {
+    final aRad = angleA * math.pi / 180;
+    final dRad = deviation * math.pi / 180;
+    return math.sin((aRad + dRad) / 2) / math.sin(aRad / 2);
   }
 
   String _getState() {
@@ -522,6 +624,8 @@ class _ExperimentPainter extends CustomPainter {
     required this.incidentAngle,
     required this.refractiveIndex,
     required this.prismRefractiveIndex,
+    required this.prismAngleA,
+    required this.deviationAngle,
     required this.incidentHeight,
     required this.pointer,
   });
@@ -530,6 +634,8 @@ class _ExperimentPainter extends CustomPainter {
   final double incidentAngle;
   final double refractiveIndex;
   final double prismRefractiveIndex;
+  final double prismAngleA;
+  final double deviationAngle;
   final double incidentHeight;
   final Offset pointer;
 
@@ -694,6 +800,7 @@ class _ExperimentPainter extends CustomPainter {
     final cx = size.width * 0.35;
     final cy = size.height * 0.5;
     final prismSize = math.min(size.width, size.height) * 0.32;
+    final prismAngleRad = prismAngleA * math.pi / 180;
 
     final path = Path()
       ..moveTo(cx, cy - prismSize)
@@ -712,6 +819,8 @@ class _ExperimentPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
+
+    _drawLabel(canvas, 'A = ${prismAngleA.toStringAsFixed(0)}°', Offset(cx - 50, cy + prismSize * 0.6), const Color(0xFF60A5FA));
 
     final entryY = size.height * incidentHeight;
     final entryX = size.width * 0.08;
@@ -743,13 +852,16 @@ class _ExperimentPainter extends CustomPainter {
       const Color(0xFF9400D3),
     ];
 
+    final wavelengthFactors = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7];
+
     for (int i = 0; i < rainbowColors.length; i++) {
-      final colorN = prismRefractiveIndex + (i * 0.012);
-      final angleIn = 30.0 * math.pi / 180;
+      final wavelengthFactor = wavelengthFactors[i];
+      final colorN = prismRefractiveIndex * wavelengthFactor;
+      final angleIn = (prismAngleA / 2) * math.pi / 180;
       final angleInternal = math.asin(math.sin(angleIn) / colorN);
 
       final internalEndX = cx + prismSize * 0.35;
-      final internalEndY = hitY + math.tan(angleInternal - 15 * math.pi / 180) * (internalEndX - hitX) * 0.8;
+      final internalEndY = hitY + math.tan(angleInternal - prismAngleRad / 2) * (internalEndX - hitX) * 0.8;
 
       canvas.drawLine(
         Offset(hitX, hitY),
@@ -759,8 +871,9 @@ class _ExperimentPainter extends CustomPainter {
           ..strokeWidth = 2,
       );
 
-      final angleExit = math.asin(math.sin(angleInternal) * colorN);
-      final exitAngle = angleExit - 15 * math.pi / 180;
+      final deviationFactor = deviationAngle / 50.0;
+      final angleExit = (angleInternal + (deviationFactor * (0.7 - i * 0.1))) * colorN / 1.5;
+      final exitAngle = angleExit;
       final exitEndX = size.width * 0.85;
       final exitEndY = internalEndY + math.tan(exitAngle) * (exitEndX - internalEndX);
 
@@ -774,6 +887,56 @@ class _ExperimentPainter extends CustomPainter {
       );
     }
 
+    canvas.drawLine(
+      Offset(entryX, entryY),
+      Offset(size.width * 0.85, entryY - deviationAngle * 2),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.15)
+        ..strokeWidth = 1,
+    );
+    _drawLabel(canvas, 'δ = ${deviationAngle.toStringAsFixed(0)}°', Offset(size.width * 0.5, entryY - deviationAngle * 2 - 20), const Color(0xFFFFD700));
+
+    _drawLabel(canvas, 'WHITE LIGHT', Offset(entryX - 60, entryY - 40), Colors.white70);
+    _drawLabel(canvas, 'PRISM', Offset(cx - 25, cy - prismSize - 25), const Color(0xFF0EA5E9));
+    _drawLabel(canvas, 'DISPERSION', Offset(size.width * 0.55, size.height * 0.08), const Color(0xFFFF6B6B));
+
+    _drawLabel(canvas, 'Since Violet (short λ) slows more → bends more', Offset(size.width * 0.08, size.height * 0.92), const Color(0xFFDDD6FE));
+    _drawLabel(canvas, 'Red (long λ) slows less → bends less', Offset(size.width * 0.08, size.height * 0.97), const Color(0xFFFCA5A5));
+
+    final legendY = size.height * 0.75;
+    final colorNames = ['R', 'O', 'Y', 'G', 'B', 'I', 'V'];
+    for (int i = 0; i < 7; i++) {
+      canvas.drawCircle(
+        Offset(size.width * 0.4 + i * 35.0, legendY),
+        8,
+        Paint()..color = rainbowColors[i],
+      );
+      _drawLabel(canvas, colorNames[i], Offset(size.width * 0.4 + i * 35.0 - 4, legendY + 15), rainbowColors[i]);
+    }
+  }
+
+  void _drawDashedLine(Canvas canvas, Offset start, Offset end, double dashLen, Paint paint) {
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    final dist = math.sqrt(dx * dx + dy * dy);
+    final dirX = dx / dist;
+    final dirY = dy / dist;
+    var drawn = 0.0;
+    var drawing = true;
+    while (drawn < dist) {
+      final len = math.min(dashLen, dist - drawn);
+      if (drawing) {
+        canvas.drawLine(
+          Offset(start.dx + dirX * drawn, start.dy + dirY * drawn),
+          Offset(start.dx + dirX * (drawn + len), start.dy + dirY * (drawn + len)),
+          paint,
+        );
+      }
+      drawn += len;
+      drawing = !drawing;
+    }
+  }
+
     _drawLabel(canvas, 'WHITE LIGHT', Offset(entryX - 60, entryY - 40), Colors.white70);
     _drawLabel(canvas, 'PRISM', Offset(cx - 25, cy - prismSize - 25), const Color(0xFF0EA5E9));
     _drawLabel(canvas, 'DISPERSION', Offset(size.width * 0.55, size.height * 0.15), const Color(0xFFFF6B6B));
@@ -786,7 +949,29 @@ class _ExperimentPainter extends CustomPainter {
         8,
         Paint()..color = rainbowColors[i],
       );
-      _drawLabel(canvas, colors[i], Offset(size.width * 0.4 + i * 35 - 4, legendY + 15), rainbowColors[i]);
+      _drawLabel(canvas, colorNames[i], Offset(size.width * 0.4 + i * 35.0 - 4, legendY + 15), rainbowColors[i]);
+    }
+  }
+
+  void _drawDashedLine(Canvas canvas, Offset start, Offset end, double dashLen, Paint paint) {
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    final dist = math.sqrt(dx * dx + dy * dy);
+    final dirX = dx / dist;
+    final dirY = dy / dist;
+    var drawn = 0.0;
+    var drawing = true;
+    while (drawn < dist) {
+      final len = math.min(dashLen, dist - drawn);
+      if (drawing) {
+        canvas.drawLine(
+          Offset(start.dx + dirX * drawn, start.dy + dirY * drawn),
+          Offset(start.dx + dirX * (drawn + len), start.dy + dirY * (drawn + len)),
+          paint,
+        );
+      }
+      drawn += len;
+      drawing = !drawing;
     }
   }
 
@@ -1007,6 +1192,8 @@ class _ExperimentPainter extends CustomPainter {
         oldDelegate.incidentAngle != incidentAngle ||
         oldDelegate.refractiveIndex != refractiveIndex ||
         oldDelegate.prismRefractiveIndex != prismRefractiveIndex ||
+        oldDelegate.prismAngleA != prismAngleA ||
+        oldDelegate.deviationAngle != deviationAngle ||
         oldDelegate.incidentHeight != incidentHeight ||
         oldDelegate.pointer != pointer;
   }
