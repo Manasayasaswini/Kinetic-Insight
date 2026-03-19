@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "3f6c94b50417",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "project/lib/features/class11/presentation/class11_lab_screen.dart",
+    "project/lib/features/class6/presentation/class6_lab_screen.dart"
+  ],
+  "sessions": [
+    {
+      "metadata": "/3f/6c94b50417/0/metadata.json",
+      "transcript": "/3f/6c94b50417/0/full.jsonl",
+      "context": "/3f/6c94b50417/0/context.md",
+      "content_hash": "/3f/6c94b50417/0/content_hash.txt",
+      "prompt": "/3f/6c94b50417/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 54112,
+    "cache_creation_tokens": 71019,
+    "cache_read_tokens": 463154,
+    "output_tokens": 4985,
+    "api_call_count": 12
+  }
+}

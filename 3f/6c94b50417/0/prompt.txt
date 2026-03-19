@@ -1,0 +1,12 @@
+view this project in android version or any other small versions the class 7,9 are nice but class 6, 11 are overlapping.. could you pls rectify
+
+---
+
+you have mentioned this Class 6 uses a Row layout with _ControlRail (352 width) and _StageArea (Expanded) in non-compact mode
+- Class 7 uses a SingleChildScrollView with centered content constrained to maxWidth: 1180
+- Class 9 uses a SingleChildScrollView with centered content constrained to maxWidth: 1180
+- Class 11 uses a Row layout with _ControlRail (380 width) and _StageArea (Expanded) in non-compact mode .. now after changes is contolrail is activated for all clasees and others
+
+---
+
+ok i understood and how to test now in local.. the commands
