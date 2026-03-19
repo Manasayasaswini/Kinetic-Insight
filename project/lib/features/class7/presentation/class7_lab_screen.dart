@@ -33,10 +33,10 @@ class _Class7LabScreenState extends State<Class7LabScreen>
   ];
 
   static const _defaultSphericalMirrorOptions = <String>[
-    'Concave mirror: image is virtual, upright, and magnified.',
-    'Convex mirror: image is virtual, upright, and diminished.',
-    'The image formed depends only on the object distance.',
-    'Both A and B describe the correct nature of spherical mirror images.',
+    'Object placed between focal point (F) and optical centre (O) — image is virtual and magnified.',
+    'Object placed beyond centre of curvature (C) — image is real, inverted, and diminished.',
+    'Object placed at centre of curvature (C) — image is real, inverted, and same size.',
+    'Object placed at focal point (F) — image forms at infinity and is highly magnified.',
   ];
 
   _Class7Experiment _active = _Class7Experiment.planeMirror;
