@@ -25,6 +25,20 @@ class _Class7LabScreenState extends State<Class7LabScreen>
     'Color does not change with speed.',
   ];
 
+  static const _defaultPlaneMirrorOptions = <String>[
+    'The image distance equals the object distance from the mirror.',
+    'The image is virtual, upright, and same size as the object.',
+    'Lateral inversion means left and right appear reversed.',
+    'All of the above are properties of a plane mirror image.',
+  ];
+
+  static const _defaultSphericalMirrorOptions = <String>[
+    'Concave mirror: image is virtual, upright, and magnified.',
+    'Convex mirror: image is virtual, upright, and diminished.',
+    'The image formed depends only on the object distance.',
+    'Both A and B describe the correct nature of spherical mirror images.',
+  ];
+
   _Class7Experiment _active = _Class7Experiment.planeMirror;
 
   final _planeDistanceController = TextEditingController(text: '30');
@@ -45,6 +59,28 @@ class _Class7LabScreenState extends State<Class7LabScreen>
   double _newtonSpeedLevel = 0;
   late final AnimationController _discController;
   final AiTutorService _aiTutorService = AiTutorService();
+
+  bool _planeAiLoading = false;
+  String? _planeAiError;
+  String? _planeAiQuestion;
+  String? _planeAiFeedback;
+  String? _planeAiNextStep;
+  List<String> _planeAiOptions = _defaultPlaneMirrorOptions;
+  int? _planeSelectedOption;
+  bool? _planeAiIsCorrect;
+  String _planeAiBotMood = 'neutral';
+  String _planeAiAnswerReview = '';
+
+  bool _sphereAiLoading = false;
+  String? _sphereAiError;
+  String? _sphereAiQuestion;
+  String? _sphereAiFeedback;
+  String? _sphereAiNextStep;
+  List<String> _sphereAiOptions = _defaultSphericalMirrorOptions;
+  int? _sphereSelectedOption;
+  bool? _sphereAiIsCorrect;
+  String _sphereAiBotMood = 'neutral';
+  String _sphereAiAnswerReview = '';
 
   bool _aiLoading = false;
   String? _aiError;
@@ -204,6 +240,208 @@ class _Class7LabScreenState extends State<Class7LabScreen>
     }
   }
 
+  Future<void> _askPlaneMirrorAi() async {
+    setState(() {
+      _planeAiLoading = true;
+      _planeAiError = null;
+    });
+
+    try {
+      final response = await _aiTutorService.getTutorResponse(
+        const AiTutorRequest(
+          classId: '7',
+          experimentId: 'plane_mirror',
+          mode: 'ask_or_feedback',
+          studentState: <String, dynamic>{},
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _planeAiQuestion = response.question;
+        _planeAiFeedback = response.feedback;
+        _planeAiNextStep = response.nextStep;
+        _planeAiOptions = response.options.isEmpty
+            ? _defaultPlaneMirrorOptions
+            : response.options;
+        _planeSelectedOption = null;
+        _planeAiIsCorrect = response.isCorrect;
+        _planeAiBotMood = response.botMood;
+        _planeAiAnswerReview = response.answerReview;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _planeAiError =
+            'Could not connect to AI backend. Check if backend is running on port 8000.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _planeAiLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _checkPlaneMirrorAnswerWithAi() async {
+    if (_planeSelectedOption == null) {
+      setState(() {
+        _planeAiError = 'Choose one option first.';
+      });
+      return;
+    }
+
+    setState(() {
+      _planeAiLoading = true;
+      _planeAiError = null;
+    });
+
+    try {
+      final response = await _aiTutorService.getTutorResponse(
+        AiTutorRequest(
+          classId: '7',
+          experimentId: 'plane_mirror',
+          mode: 'check_answer',
+          studentState: <String, dynamic>{
+            'objectDistanceCm': _planeResult.objectDistanceCm,
+            'imageDistanceCm': _planeResult.imageDistanceCm,
+            'step': 'answer_submitted',
+            'selectedOption': _planeSelectedOption,
+          },
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _planeAiQuestion = response.question;
+        _planeAiFeedback = response.feedback;
+        _planeAiNextStep = response.nextStep;
+        _planeAiOptions = response.options.isEmpty
+            ? _defaultPlaneMirrorOptions
+            : response.options;
+        _planeAiIsCorrect = response.isCorrect;
+        _planeAiBotMood = response.botMood;
+        _planeAiAnswerReview = response.answerReview;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _planeAiError =
+            'Could not connect to AI backend. Check if backend is running on port 8000.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _planeAiLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _askSphericalMirrorAi() async {
+    setState(() {
+      _sphereAiLoading = true;
+      _sphereAiError = null;
+    });
+
+    try {
+      final response = await _aiTutorService.getTutorResponse(
+        const AiTutorRequest(
+          classId: '7',
+          experimentId: 'spherical_mirror',
+          mode: 'ask_or_feedback',
+          studentState: <String, dynamic>{},
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _sphereAiQuestion = response.question;
+        _sphereAiFeedback = response.feedback;
+        _sphereAiNextStep = response.nextStep;
+        _sphereAiOptions = response.options.isEmpty
+            ? _defaultSphericalMirrorOptions
+            : response.options;
+        _sphereSelectedOption = null;
+        _sphereAiIsCorrect = response.isCorrect;
+        _sphereAiBotMood = response.botMood;
+        _sphereAiAnswerReview = response.answerReview;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _sphereAiError =
+            'Could not connect to AI backend. Check if backend is running on port 8000.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sphereAiLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _checkSphericalMirrorAnswerWithAi() async {
+    if (_sphereSelectedOption == null) {
+      setState(() {
+        _sphereAiError = 'Choose one option first.';
+      });
+      return;
+    }
+
+    setState(() {
+      _sphereAiLoading = true;
+      _sphereAiError = null;
+    });
+
+    try {
+      final response = await _aiTutorService.getTutorResponse(
+        AiTutorRequest(
+          classId: '7',
+          experimentId: 'spherical_mirror',
+          mode: 'check_answer',
+          studentState: <String, dynamic>{
+            'mirrorType': _mirrorType.name,
+            'objectDistanceCm': _mirrorResult.objectDistanceCm,
+            'focalLengthCm': _mirrorResult.focalLengthCm,
+            'imageDistanceCm': _mirrorResult.imageDistanceCm,
+            'magnification': _mirrorResult.magnification,
+            'imageNature': _mirrorResult.nature.name,
+            'step': 'answer_submitted',
+            'selectedOption': _sphereSelectedOption,
+          },
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _sphereAiQuestion = response.question;
+        _sphereAiFeedback = response.feedback;
+        _sphereAiNextStep = response.nextStep;
+        _sphereAiOptions = response.options.isEmpty
+            ? _defaultSphericalMirrorOptions
+            : response.options;
+        _sphereAiIsCorrect = response.isCorrect;
+        _sphereAiBotMood = response.botMood;
+        _sphereAiAnswerReview = response.answerReview;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _sphereAiError =
+            'Could not connect to AI backend. Check if backend is running on port 8000.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sphereAiLoading = false;
+        });
+      }
+    }
+  }
+
   void _calculatePlaneMirror() {
     final distance = double.tryParse(_planeDistanceController.text.trim());
     if (distance == null) {
@@ -323,6 +561,21 @@ class _Class7LabScreenState extends State<Class7LabScreen>
                       distanceController: _planeDistanceController,
                       result: _planeResult,
                       onCalculate: _calculatePlaneMirror,
+                      aiLoading: _planeAiLoading,
+                      aiError: _planeAiError,
+                      aiQuestion: _planeAiQuestion,
+                      aiFeedback: _planeAiFeedback,
+                      aiNextStep: _planeAiNextStep,
+                      aiOptions: _planeAiOptions,
+                      selectedOption: _planeSelectedOption,
+                      aiIsCorrect: _planeAiIsCorrect,
+                      aiBotMood: _planeAiBotMood,
+                      aiAnswerReview: _planeAiAnswerReview,
+                      onAskAi: _askPlaneMirrorAi,
+                      onSubmitAnswer: _checkPlaneMirrorAnswerWithAi,
+                      onOptionSelected: (value) {
+                        setState(() => _planeSelectedOption = value);
+                      },
                     ),
                   if (_active == _Class7Experiment.sphericalMirror)
                     _SphericalMirrorExperiment(
@@ -335,6 +588,21 @@ class _Class7LabScreenState extends State<Class7LabScreen>
                         _calculateSphericalMirror();
                       },
                       onCalculate: _calculateSphericalMirror,
+                      aiLoading: _sphereAiLoading,
+                      aiError: _sphereAiError,
+                      aiQuestion: _sphereAiQuestion,
+                      aiFeedback: _sphereAiFeedback,
+                      aiNextStep: _sphereAiNextStep,
+                      aiOptions: _sphereAiOptions,
+                      selectedOption: _sphereSelectedOption,
+                      aiIsCorrect: _sphereAiIsCorrect,
+                      aiBotMood: _sphereAiBotMood,
+                      aiAnswerReview: _sphereAiAnswerReview,
+                      onAskAi: _askSphericalMirrorAi,
+                      onSubmitAnswer: _checkSphericalMirrorAnswerWithAi,
+                      onOptionSelected: (value) {
+                        setState(() => _sphereSelectedOption = value);
+                      },
                     ),
                   if (_active == _Class7Experiment.newtonDisc)
                     _NewtonsDiscExperiment(
@@ -388,11 +656,37 @@ class _PlaneMirrorExperiment extends StatelessWidget {
     required this.distanceController,
     required this.result,
     required this.onCalculate,
+    required this.aiLoading,
+    required this.aiError,
+    required this.aiQuestion,
+    required this.aiFeedback,
+    required this.aiNextStep,
+    required this.aiOptions,
+    required this.selectedOption,
+    required this.aiIsCorrect,
+    required this.aiBotMood,
+    required this.aiAnswerReview,
+    required this.onAskAi,
+    required this.onSubmitAnswer,
+    required this.onOptionSelected,
   });
 
   final TextEditingController distanceController;
   final PlaneMirrorResult result;
   final VoidCallback onCalculate;
+  final bool aiLoading;
+  final String? aiError;
+  final String? aiQuestion;
+  final String? aiFeedback;
+  final String? aiNextStep;
+  final List<String> aiOptions;
+  final int? selectedOption;
+  final bool? aiIsCorrect;
+  final String aiBotMood;
+  final String aiAnswerReview;
+  final Future<void> Function() onAskAi;
+  final Future<void> Function() onSubmitAnswer;
+  final ValueChanged<int> onOptionSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -437,6 +731,22 @@ class _PlaneMirrorExperiment extends StatelessWidget {
         AspectRatio(
           aspectRatio: 16 / 8,
           child: _PlaneMirrorStage(distanceCm: result.objectDistanceCm),
+        ),
+        const SizedBox(height: 20),
+        _AiTutorCard(
+          aiLoading: aiLoading,
+          aiError: aiError,
+          aiQuestion: aiQuestion,
+          aiFeedback: aiFeedback,
+          aiNextStep: aiNextStep,
+          aiOptions: aiOptions,
+          selectedOption: selectedOption,
+          aiIsCorrect: aiIsCorrect,
+          aiBotMood: aiBotMood,
+          aiAnswerReview: aiAnswerReview,
+          onAskAi: onAskAi,
+          onSubmitAnswer: onSubmitAnswer,
+          onOptionSelected: onOptionSelected,
         ),
       ],
     );
@@ -534,6 +844,19 @@ class _SphericalMirrorExperiment extends StatelessWidget {
     required this.result,
     required this.onMirrorTypeChanged,
     required this.onCalculate,
+    required this.aiLoading,
+    required this.aiError,
+    required this.aiQuestion,
+    required this.aiFeedback,
+    required this.aiNextStep,
+    required this.aiOptions,
+    required this.selectedOption,
+    required this.aiIsCorrect,
+    required this.aiBotMood,
+    required this.aiAnswerReview,
+    required this.onAskAi,
+    required this.onSubmitAnswer,
+    required this.onOptionSelected,
   });
 
   final MirrorType mirrorType;
@@ -542,6 +865,19 @@ class _SphericalMirrorExperiment extends StatelessWidget {
   final SphericalMirrorResult result;
   final ValueChanged<MirrorType> onMirrorTypeChanged;
   final VoidCallback onCalculate;
+  final bool aiLoading;
+  final String? aiError;
+  final String? aiQuestion;
+  final String? aiFeedback;
+  final String? aiNextStep;
+  final List<String> aiOptions;
+  final int? selectedOption;
+  final bool? aiIsCorrect;
+  final String aiBotMood;
+  final String aiAnswerReview;
+  final Future<void> Function() onAskAi;
+  final Future<void> Function() onSubmitAnswer;
+  final ValueChanged<int> onOptionSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -619,6 +955,22 @@ class _SphericalMirrorExperiment extends StatelessWidget {
         AspectRatio(
           aspectRatio: 16 / 8,
           child: _MirrorStage(result: result),
+        ),
+        const SizedBox(height: 20),
+        _AiTutorCard(
+          aiLoading: aiLoading,
+          aiError: aiError,
+          aiQuestion: aiQuestion,
+          aiFeedback: aiFeedback,
+          aiNextStep: aiNextStep,
+          aiOptions: aiOptions,
+          selectedOption: selectedOption,
+          aiIsCorrect: aiIsCorrect,
+          aiBotMood: aiBotMood,
+          aiAnswerReview: aiAnswerReview,
+          onAskAi: onAskAi,
+          onSubmitAnswer: onSubmitAnswer,
+          onOptionSelected: onOptionSelected,
         ),
       ],
     );
@@ -1063,6 +1415,174 @@ class _ResultPanel extends StatelessWidget {
               fontFamily: 'monospace',
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AiTutorCard extends StatelessWidget {
+  const _AiTutorCard({
+    required this.aiLoading,
+    required this.aiError,
+    required this.aiQuestion,
+    required this.aiFeedback,
+    required this.aiNextStep,
+    required this.aiOptions,
+    required this.selectedOption,
+    required this.aiIsCorrect,
+    required this.aiBotMood,
+    required this.aiAnswerReview,
+    required this.onAskAi,
+    required this.onSubmitAnswer,
+    required this.onOptionSelected,
+  });
+
+  final bool aiLoading;
+  final String? aiError;
+  final String? aiQuestion;
+  final String? aiFeedback;
+  final String? aiNextStep;
+  final List<String> aiOptions;
+  final int? selectedOption;
+  final bool? aiIsCorrect;
+  final String aiBotMood;
+  final String aiAnswerReview;
+  final Future<void> Function() onAskAi;
+  final Future<void> Function() onSubmitAnswer;
+  final ValueChanged<int> onOptionSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.psychology_alt,
+                color: Color(0xFF0F766E),
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Text('AI Tutor', style: theme.textTheme.titleMedium),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (aiQuestion != null) ...[
+            Text(
+              'Question: ${aiQuestion!}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (aiOptions.isNotEmpty) ...[
+            ...List.generate(
+              aiOptions.length,
+              (i) => RadioListTile<int>(
+                value: i,
+                groupValue: selectedOption,
+                onChanged: aiLoading
+                    ? null
+                    : (value) {
+                        if (value != null) onOptionSelected(value);
+                      },
+                title: Text(aiOptions[i], style: theme.textTheme.bodyMedium),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          Row(
+            children: [
+              FilledButton.icon(
+                onPressed: aiLoading ? null : onAskAi,
+                icon: const Icon(Icons.lightbulb_outline, size: 18),
+                label: const Text('Ask AI'),
+              ),
+              const SizedBox(width: 10),
+              OutlinedButton.icon(
+                onPressed: aiLoading ? null : onSubmitAnswer,
+                icon: const Icon(Icons.edit_note, size: 18),
+                label: const Text('Submit Answer'),
+              ),
+              if (aiLoading) ...[
+                const SizedBox(width: 12),
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ],
+            ],
+          ),
+          if (aiError != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              aiError!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: const Color(0xFFB91C1C),
+              ),
+            ),
+          ],
+          if (aiQuestion != null ||
+              aiFeedback != null ||
+              aiNextStep != null) ...[
+            const SizedBox(height: 12),
+            _ResultPanel(
+              title: 'AI Response',
+              body:
+                  'Question: ${aiQuestion ?? '-'}\n'
+                  'Feedback: ${aiFeedback ?? '-'}\n'
+                  'Next Step: ${aiNextStep ?? '-'}',
+            ),
+          ],
+          if (aiIsCorrect != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Builder(
+                  builder: (context) {
+                    final happy = aiBotMood == 'happy';
+                    return CircleAvatar(
+                      backgroundColor: happy
+                          ? const Color(0xFFDCFCE7)
+                          : const Color(0xFFFEE2E2),
+                      child: Icon(
+                        happy ? Icons.smart_toy : Icons.smart_toy_outlined,
+                        color: happy
+                            ? const Color(0xFF15803D)
+                            : const Color(0xFFB91C1C),
+                        size: 20,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    aiIsCorrect == true
+                        ? 'Yes your experiment is correct! You got the right answer!'
+                        : 'Not quite right... ${aiAnswerReview.isNotEmpty ? aiAnswerReview : 'Try again and observe the mirror properties carefully.'}',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
