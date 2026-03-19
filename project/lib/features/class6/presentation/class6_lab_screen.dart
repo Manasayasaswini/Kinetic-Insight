@@ -492,10 +492,13 @@ class _StageArea extends StatelessWidget {
           left: 24,
           right: 24,
           bottom: 24,
-          child: _OverlayCard(
-            title: 'Live Observation',
-            accent: experiment.accent,
-            body: _getObservation(),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: _OverlayCard(
+              title: 'Live Observation',
+              accent: experiment.accent,
+              body: _getObservation(),
+            ),
           ),
         ),
       ],

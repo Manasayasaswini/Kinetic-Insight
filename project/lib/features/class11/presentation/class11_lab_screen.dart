@@ -748,9 +748,8 @@ class _StageArea extends StatelessWidget {
             Positioned(
               top: 24,
               left: 24,
-              right: compact ? 24 : null,
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: compact ? 420 : 360),
+                constraints: BoxConstraints(maxWidth: compact ? 340 : 360),
                 child: _OverlayCard(
                   title: 'Physics',
                   accent: experiment.accent,
@@ -761,9 +760,8 @@ class _StageArea extends StatelessWidget {
             Positioned(
               top: compact ? 144 : 24,
               right: 24,
-              left: compact ? 24 : null,
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: compact ? 420 : 340),
+                constraints: BoxConstraints(maxWidth: compact ? 340 : 340),
                 child: _OverlayCard(
                   title: 'Readout',
                   accent: experiment.accent,
@@ -775,10 +773,13 @@ class _StageArea extends StatelessWidget {
               bottom: 24,
               left: 24,
               right: 24,
-              child: _OverlayCard(
-                title: 'Observation',
-                accent: experiment.accent,
-                body: _observationText(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: compact ? 500 : 600),
+                child: _OverlayCard(
+                  title: 'Observation',
+                  accent: experiment.accent,
+                  body: _observationText(),
+                ),
               ),
             ),
           ],
