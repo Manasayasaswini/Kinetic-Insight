@@ -501,22 +501,27 @@ class _KaleidoscopeExperiment extends StatelessWidget {
           ),
         const SizedBox(height: 16),
         Center(
-          child: SizedBox(
-            width: 360,
-            height: 360,
-            child: AnimatedBuilder(
-              animation: rayController,
-              builder: (context, child) {
-                return CustomPaint(
-                  painter: _KaleidoscopePainter(
-                    mirrorAngleDegrees: mirrorAngle,
-                    numberOfMirrors: numberOfMirrors,
-                    animationValue: rayController.value,
-                  ),
-                  child: const SizedBox.expand(),
-                );
-              },
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final size = constraints.maxWidth.clamp(200.0, 360.0);
+              return SizedBox(
+                width: size,
+                height: size,
+                child: AnimatedBuilder(
+                  animation: rayController,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      painter: _KaleidoscopePainter(
+                        mirrorAngleDegrees: mirrorAngle,
+                        numberOfMirrors: numberOfMirrors,
+                        animationValue: rayController.value,
+                      ),
+                      child: const SizedBox.expand(),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ),
       ],

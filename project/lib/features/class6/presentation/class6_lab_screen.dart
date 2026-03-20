@@ -82,35 +82,20 @@ class _Class6LabScreenState extends State<Class6LabScreen> {
             ),
           ),
           child: compact
-              ? Column(
-                  children: [
-                    Expanded(
-                      flex: 6,
-                      child: _ControlRail(
-                        experiments: _experiments,
-                        activeExperiment: _activeExperiment,
-                        selectedMaterial: _selectedMaterial,
-                        sunAngle: _sunAngle,
-                        onExperimentSelected: _setExperiment,
-                        onMaterialSelected: _setMaterial,
-                        onSunAngleChanged: (value) {
-                          setState(() => _sunAngle = value);
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      flex: 5,
-                      child: _StageArea(
-                        experiment: _activeExperiment,
-                        selectedMaterial: _selectedMaterial,
-                        sunAngle: _sunAngle,
-                        mousePosition: _mousePosition,
-                        onMouseChanged: (value) {
-                          setState(() => _mousePosition = value);
-                        },
-                      ),
-                    ),
-                  ],
+              ? _MobileLayout(
+                  experiments: _experiments,
+                  activeExperiment: _activeExperiment,
+                  selectedMaterial: _selectedMaterial,
+                  sunAngle: _sunAngle,
+                  mousePosition: _mousePosition,
+                  onExperimentSelected: _setExperiment,
+                  onMaterialSelected: _setMaterial,
+                  onSunAngleChanged: (value) {
+                    setState(() => _sunAngle = value);
+                  },
+                  onMouseChanged: (value) {
+                    setState(() => _mousePosition = value);
+                  },
                 )
               : Row(
                   children: [
@@ -143,6 +128,365 @@ class _Class6LabScreenState extends State<Class6LabScreen> {
                 ),
         );
       },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MOBILE LAYOUT — student-friendly, scrollable, canvas-first
+// ═══════════════════════════════════════════════════════════════════
+class _MobileLayout extends StatelessWidget {
+  const _MobileLayout({
+    required this.experiments,
+    required this.activeExperiment,
+    required this.selectedMaterial,
+    required this.sunAngle,
+    required this.mousePosition,
+    required this.onExperimentSelected,
+    required this.onMaterialSelected,
+    required this.onSunAngleChanged,
+    required this.onMouseChanged,
+  });
+
+  final List<Class6Experiment> experiments;
+  final Class6Experiment activeExperiment;
+  final String selectedMaterial;
+  final double sunAngle;
+  final Offset mousePosition;
+  final ValueChanged<Class6Experiment> onExperimentSelected;
+  final ValueChanged<String> onMaterialSelected;
+  final ValueChanged<double> onSunAngleChanged;
+  final ValueChanged<Offset> onMouseChanged;
+
+  String _getObservation() {
+    if (activeExperiment.id == 'transparency') {
+      switch (selectedMaterial) {
+        case 'glass': return 'Light passes through completely. Objects are clearly visible.';
+        case 'paper': return 'Light passes partially. Objects look blurry and faint.';
+        case 'wood':  return 'Light is blocked completely. A dark shadow forms behind it.';
+        default: return activeExperiment.observation;
+      }
+    } else if (activeExperiment.id == 'shadow') {
+      if (sunAngle > 80 && sunAngle < 100) return 'Noon: The sun is overhead. Shadow is shortest!';
+      if (sunAngle < 40 || sunAngle > 140) return 'Morning/Evening: Sun is low. Shadows are very long.';
+      return 'Shadow always forms on the side opposite the light source.';
+    } else if (activeExperiment.id == 'pinhole') {
+      return 'Rays cross at the pinhole — image flips and changes size.';
+    } else if (activeExperiment.id == 'refraction') {
+      return 'Light bends at the water surface — the pencil appears shifted.';
+    }
+    return activeExperiment.observation;
+  }
+
+  String _getFunFact() => activeExperiment.fact;
+
+  String _getStudentGuide() {
+    switch (activeExperiment.id) {
+      case 'transparency':
+        return 'Tap a material above and watch the light beam change.\nGlass lets all light pass. Paper lets some. Wood blocks it completely.';
+      case 'shadow':
+        return 'Drag the slider to move the sun from morning to evening.\nWatch the shadow grow and shrink. At noon the shadow is shortest!';
+      case 'pinhole':
+        return 'Touch or drag on the canvas to move the candle up and down.\nThe image inside the camera flips because light travels in straight lines.';
+      case 'refraction':
+        return 'Touch the canvas to place the pencil in the glass.\nThe bend you see is caused by light changing speed when entering water.';
+      default: return activeExperiment.observation;
+    }
+  }
+
+  // Canvas height — enough for each painter to render fully
+  double _canvasHeight(String id) {
+    switch (id) {
+      case 'shadow':     return 360.0;
+      case 'pinhole':    return 340.0;
+      case 'refraction': return 360.0;
+      default:           return 300.0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = activeExperiment.accent;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+          // ── 1. Experiment chip tabs ─────────────────────────────
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: experiments.map((exp) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _ExperimentChip(
+                  experiment: exp,
+                  active: activeExperiment.id == exp.id,
+                  onTap: () => onExperimentSelected(exp),
+                ),
+              )).toList(),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // ── 2. Inline controls (ABOVE canvas) ──────────────────
+          if (activeExperiment.id == 'transparency') ...[
+            Text('Choose a material:', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(child: _MaterialBtn(label: 'Glass',
+                sublabel: 'Transparent', selected: selectedMaterial == 'glass',
+                color: const Color(0xFF4A69BD),
+                onTap: () => onMaterialSelected('glass'))),
+              const SizedBox(width: 8),
+              Expanded(child: _MaterialBtn(label: 'Paper',
+                sublabel: 'Translucent', selected: selectedMaterial == 'paper',
+                color: const Color(0xFFF1C40F),
+                onTap: () => onMaterialSelected('paper'))),
+              const SizedBox(width: 8),
+              Expanded(child: _MaterialBtn(label: 'Wood',
+                sublabel: 'Opaque', selected: selectedMaterial == 'wood',
+                color: const Color(0xFF8B4513),
+                onTap: () => onMaterialSelected('wood'))),
+            ]),
+            const SizedBox(height: 12),
+          ],
+
+          if (activeExperiment.id == 'shadow') ...[
+            Row(children: [
+              const Icon(Icons.wb_sunny, size: 18, color: Color(0xFFF1C40F)),
+              const SizedBox(width: 8),
+              Text('Move the Sun', style: theme.textTheme.titleSmall),
+            ]),
+            Slider(min: 10, max: 170, value: sunAngle,
+              activeColor: const Color(0xFFF1C40F),
+              onChanged: onSunAngleChanged),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: ['Morning', 'Noon', 'Evening']
+                    .map((s) => Text(s, style: theme.textTheme.bodySmall))
+                    .toList(),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // ── 3. Canvas — HERO ────────────────────────────────────
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              height: _canvasHeight(activeExperiment.id),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: accent.withValues(alpha: 0.18), width: 1.5),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: GestureDetector(
+                onPanUpdate: (d) => onMouseChanged(d.localPosition),
+                onTapDown:   (d) => onMouseChanged(d.localPosition),
+                child: CustomPaint(
+                  painter: _Class6ExperimentPainter(
+                    experimentId: activeExperiment.id,
+                    selectedMaterial: selectedMaterial,
+                    sunAngle: sunAngle,
+                    mousePosition: mousePosition,
+                  ),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ── 4. Student Guide ────────────────────────────────────
+          _InfoCard(
+            icon: Icons.menu_book_outlined,
+            title: 'Student Guide',
+            body: _getStudentGuide(),
+            accent: const Color(0xFF334155),
+            bgColor: Colors.white,
+            borderColor: const Color(0xFFE8DECF),
+          ),
+          const SizedBox(height: 10),
+
+          // ── 5. Live Observation ─────────────────────────────────
+          _InfoCard(
+            icon: Icons.visibility_outlined,
+            title: 'Live Observation',
+            body: _getObservation(),
+            accent: accent,
+            bgColor: accent.withValues(alpha: 0.06),
+            borderColor: accent.withValues(alpha: 0.18),
+          ),
+          const SizedBox(height: 10),
+
+          // ── 6. Fun Fact ─────────────────────────────────────────
+          _InfoCard(
+            icon: Icons.lightbulb_outline,
+            title: 'Fun Fact',
+            body: _getFunFact(),
+            accent: const Color(0xFFD97706),
+            bgColor: const Color(0xFFFFFBEB),
+            borderColor: const Color(0xFFFDE68A),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Experiment chip ─────────────────────────────────────────────────
+class _ExperimentChip extends StatelessWidget {
+  const _ExperimentChip({
+    required this.experiment,
+    required this.active,
+    required this.onTap,
+  });
+  final Class6Experiment experiment;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active
+              ? experiment.accent
+              : experiment.accent.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: active
+                ? experiment.accent
+                : experiment.accent.withValues(alpha: 0.30),
+          ),
+        ),
+        child: Text(
+          experiment.title,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: active ? Colors.white : experiment.accent,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Material button ─────────────────────────────────────────────────
+class _MaterialBtn extends StatelessWidget {
+  const _MaterialBtn({
+    required this.label,
+    required this.sublabel,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+  final String label;
+  final String sublabel;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? color : color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? color : color.withValues(alpha: 0.35),
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: selected ? Colors.white : color,
+              ),
+              textAlign: TextAlign.center),
+            Text(sublabel,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: selected
+                    ? Colors.white.withValues(alpha: 0.80)
+                    : color.withValues(alpha: 0.70),
+                fontSize: 10,
+              ),
+              textAlign: TextAlign.center),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Reusable info card ──────────────────────────────────────────────
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.accent,
+    required this.bgColor,
+    required this.borderColor,
+  });
+  final IconData icon;
+  final String title;
+  final String body;
+  final Color accent;
+  final Color bgColor;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 1),
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                  style: theme.textTheme.labelMedium
+                      ?.copyWith(color: accent)),
+                const SizedBox(height: 4),
+                Text(body, style: theme.textTheme.bodyMedium),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -603,6 +947,40 @@ class _Class6ExperimentPainter extends CustomPainter {
     }
   }
 
+  // ── Shared label helper — always clamps inside canvas ──────────
+  void _label(
+    Canvas canvas,
+    Size size,
+    String text,
+    Offset pos, {
+    Color color = const Color(0xFF64748B),
+    double fontSize = 11,
+    bool bold = false,
+  }) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: fontSize,
+          fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: size.width * 0.45);
+    final x = pos.dx.clamp(4.0, size.width - tp.width - 4).toDouble();
+    final y = pos.dy.clamp(4.0, size.height - tp.height - 4).toDouble();
+    // Small white bg for readability
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(x - 3, y - 2, tp.width + 6, tp.height + 4),
+        const Radius.circular(4),
+      ),
+      Paint()..color = Colors.white.withValues(alpha: 0.78),
+    );
+    tp.paint(canvas, Offset(x, y));
+  }
+
   void _drawTransparencyExperiment(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     final background = const LinearGradient(
@@ -692,244 +1070,216 @@ class _Class6ExperimentPainter extends CustomPainter {
       );
     }
 
-    final labelStyle = TextPainter(textDirection: TextDirection.ltr);
-    labelStyle.text = const TextSpan(
-      text: 'Light Source',
-      style: TextStyle(
-        color: Color(0xFF64748B),
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-    labelStyle.layout();
-    labelStyle.paint(canvas, Offset(torchX - 32.0, torchY + 25.0));
-
-    labelStyle.text = TextSpan(
-      text: selectedMaterial == 'glass'
+    _label(canvas, size, 'Light Source',
+        Offset(torchX - 32.0, torchY + 25.0));
+    _label(
+      canvas,
+      size,
+      selectedMaterial == 'glass'
           ? 'Transparent'
           : selectedMaterial == 'paper'
           ? 'Translucent'
           : 'Opaque',
-      style: const TextStyle(
-        color: Color(0xFF64748B),
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-      ),
+      Offset(objectX - 25.0, torchY + 75.0),
     );
-    labelStyle.layout();
-    labelStyle.paint(canvas, Offset(objectX - 25.0, torchY + 75.0));
   }
 
   void _drawShadowExperiment(Canvas canvas, Size size) {
-    final centerX = size.width / 2;
-    final groundY = size.height - 120.0;
-    final pillarHeight = 132.0;
-    final pillarWidth = 34.0;
-    final pillarX = centerX - pillarWidth / 2;
+    // ── proportional layout ───────────────────────────────────────
+    final groundY    = size.height * 0.62;           // ground at 62% height
+    final skyH       = groundY;
+    final pillarH    = skyH * 0.38;                  // pillar = 38% of sky height
+    final pillarW    = size.width * 0.055;
+    final centerX    = size.width * 0.5;
+    final pillarX    = centerX - pillarW / 2;
 
-    final sky = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: const [Color(0xFFEEF7FF), Color(0xFFFFF8DA), Color(0xFFF5F0DB)],
-    ).createShader(Rect.fromLTWH(0, 0, size.width, groundY));
+    // ── sky ───────────────────────────────────────────────────────
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, groundY),
-      Paint()..shader = sky,
+      Paint()..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFCEE8FF), Color(0xFFFFF8DA), Color(0xFFF5F0DB)],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, groundY)),
     );
 
-    final groundGrad =
-        LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: const [
-            Color(0xFFD8D2B8),
-            Color(0xFFB6C98C),
-            Color(0xFF89A663),
-          ],
-        ).createShader(
-          Rect.fromLTWH(0, groundY, size.width, size.height - groundY),
-        );
+    // ── ground ────────────────────────────────────────────────────
     canvas.drawRect(
       Rect.fromLTWH(0, groundY, size.width, size.height - groundY),
-      Paint()..shader = groundGrad,
+      Paint()..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFD8D2B8), Color(0xFFB6C98C), Color(0xFF89A663)],
+      ).createShader(
+        Rect.fromLTWH(0, groundY, size.width, size.height - groundY)),
     );
 
-    final rad = sunAngle * math.pi / 180.0;
-    final sunRadius = math.min(280.0, size.width * 0.28);
-    final sunX = centerX + sunRadius * math.cos(math.pi - rad);
-    final sunY = groundY - sunRadius * math.sin(math.pi - rad);
+    // ── sun position ──────────────────────────────────────────────
+    // Sun orbits on a semicircle ABOVE ground, radius = 42% of sky height
+    // so at noon (90°) sun is at top-center, never below pillar top
+    final rad    = sunAngle * math.pi / 180.0;
+    final orbitR = skyH * 0.72;                      // orbit radius in pixels
+    final sunX   = centerX + orbitR * math.cos(math.pi - rad);
+    final sunY   = groundY - orbitR * math.sin(math.pi - rad);
+    // clamp so sun never dips below top of pillar
+    final sunYClamped = sunY.clamp(8.0, groundY - pillarH - 12.0).toDouble();
+    final sunR   = size.width * 0.055;               // sun radius scales too
 
-    final shadowLen = pillarHeight / math.tan(rad);
-    final shadowOpacity = math.max(
-      0.06,
-      0.24 - math.min(shadowLen.abs() / 1200.0, 0.14),
-    );
-    final shadowWidth = math.max(18.0, shadowLen.abs() * 0.42);
-    final shadowCenterX = centerX + shadowLen / 2;
-
+    // ── shadow on ground ─────────────────────────────────────────
+    // shadow length from tan of elevation angle
+    final elevation  = math.max(0.05, math.sin(rad));
+    final shadowLen  = (pillarH / math.tan(math.max(0.05, rad)))
+        .clamp(-size.width * 0.8, size.width * 0.8);
+    final shadowW    = math.max(pillarW, shadowLen.abs() * 0.18)
+        .clamp(pillarW, size.width * 0.35);
+    final shadowCx   = centerX + shadowLen * 0.5;
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(shadowCenterX, groundY + 8.0),
-        width: shadowWidth * 2.0,
-        height: 28.0,
+        center: Offset(shadowCx, groundY + 5),
+        width: shadowW * 2,
+        height: pillarW * 0.8,
       ),
-      Paint()..color = Color.fromRGBO(45, 52, 54, shadowOpacity),
+      Paint()..color = Color.fromRGBO(
+        45, 52, 54,
+        math.max(0.06, 0.28 - elevation * 0.18)),
     );
 
+    // ── pillar ────────────────────────────────────────────────────
     canvas.drawRect(
-      Rect.fromLTWH(
-        pillarX - 12.0,
-        groundY - pillarHeight - 2.0,
-        pillarWidth + 24.0,
-        pillarHeight + 4.0,
-      ),
+      Rect.fromLTWH(pillarX - 3, groundY - pillarH, pillarW + 6, pillarH),
       Paint()..color = const Color(0xFF9A8A76),
     );
     canvas.drawRect(
-      Rect.fromLTWH(pillarX, groundY - pillarHeight, pillarWidth, pillarHeight),
+      Rect.fromLTWH(pillarX, groundY - pillarH, pillarW, pillarH),
       Paint()..color = const Color(0xFF7F7364),
     );
 
-    final sunGrad = RadialGradient(
-      colors: const [
-        Color(0xFFFFFFFF),
-        Color(0xFFFFF4B3),
-        Color(0xFFF1C40F),
-        Color(0x00F1C40F),
-      ],
-    ).createShader(Rect.fromCircle(center: Offset(sunX, sunY), radius: 44.0));
-    canvas.drawCircle(Offset(sunX, sunY), 44.0, Paint()..shader = sunGrad);
-
+    // ── sun glow + rays ───────────────────────────────────────────
+    canvas.drawCircle(
+      Offset(sunX, sunYClamped),
+      sunR * 1.8,
+      Paint()
+        ..color = const Color(0xFFF1C40F).withValues(alpha: 0.18)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+    );
+    canvas.drawCircle(
+      Offset(sunX, sunYClamped),
+      sunR,
+      Paint()..shader = RadialGradient(
+        colors: const [
+          Color(0xFFFFFFFF),
+          Color(0xFFFFF4B3),
+          Color(0xFFF1C40F),
+          Color(0x00F1C40F),
+        ],
+      ).createShader(Rect.fromCircle(
+          center: Offset(sunX, sunYClamped), radius: sunR)),
+    );
     for (int i = 0; i < 8; i++) {
-      final angle = (math.pi * 2.0 * i) / 8.0;
+      final a = (math.pi * 2.0 * i) / 8.0;
       canvas.drawLine(
-        Offset(sunX + math.cos(angle) * 34.0, sunY + math.sin(angle) * 34.0),
-        Offset(sunX + math.cos(angle) * 54.0, sunY + math.sin(angle) * 54.0),
+        Offset(sunX + math.cos(a) * sunR * 0.85,
+               sunYClamped + math.sin(a) * sunR * 0.85),
+        Offset(sunX + math.cos(a) * sunR * 1.5,
+               sunYClamped + math.sin(a) * sunR * 1.5),
         Paint()
-          ..color = const Color(0xFFFFDC6B).withValues(alpha: 0.4)
+          ..color = const Color(0xFFFFDC6B).withValues(alpha: 0.5)
           ..strokeWidth = 2,
       );
     }
 
-    final labelStyle = TextPainter(textDirection: TextDirection.ltr);
-    labelStyle.text = TextSpan(
-      text: sunAngle < 40
-          ? 'Morning'
-          : sunAngle > 140
-          ? 'Evening'
-          : 'Sun Position',
-      style: const TextStyle(
-        color: Color(0xFF64748B),
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-    labelStyle.layout();
-    labelStyle.paint(canvas, Offset(sunX - 30, sunY - 60));
+    // ── label — always inside canvas ─────────────────────────────
+    final lbl = sunAngle < 40
+        ? 'Morning'
+        : sunAngle > 140
+        ? 'Evening'
+        : 'Noon ☀️';
+    _label(canvas, size, lbl,
+        Offset(sunX - 20, sunYClamped + sunR + 6),
+        color: const Color(0xFF7A6300), bold: true);
   }
 
   void _drawPinholeExperiment(Canvas canvas, Size size) {
-    final boxW = math.min(300.0, size.width * 0.38).toDouble();
-    final boxH = math.min(250.0, size.height * 0.52).toDouble();
-    final boxX = (size.width * 0.54).toDouble();
-    final boxY = ((size.height - boxH) / 2).toDouble();
-    final pinholeY = boxY + boxH / 2;
-    final screenX = boxX + boxW - 20.0;
-
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
       Paint()..color = const Color(0xFFFCFAF4),
     );
 
-    final candleX = mousePosition.dx.clamp(size.width * 0.12, boxX - 95.0);
-    final candleBaseY = (mousePosition.dy + 36.0).clamp(
-      boxY + 70.0,
-      boxY + boxH + 70.0,
-    );
-    final scale =
-        0.95 +
-        ((boxX - candleX) / math.max(160.0, boxX - size.width * 0.12)) * 0.35;
-    final bodyTopY = candleBaseY - 62 * scale;
-    final flameTopY = candleBaseY - 88 * scale;
-    final flameBottomY = candleBaseY - 54 * scale;
-
-    final ratio = (screenX - boxX) / math.max(40.0, boxX - candleX);
-    final projectedBodyBottom = pinholeY + (pinholeY - candleBaseY) * ratio;
-    final projectedBodyTop = pinholeY + (pinholeY - bodyTopY) * ratio;
-    final projectedFlameTop = pinholeY + (pinholeY - flameTopY) * ratio;
-    final projectedFlameBottom = pinholeY + (pinholeY - flameBottomY) * ratio;
+    // ── Camera box — right 40% ────────────────────────────────────
+    final boxW    = size.width  * 0.40;
+    final boxH    = size.height * 0.60;
+    final boxX    = size.width  * 0.56;
+    final boxY    = (size.height - boxH) * 0.50;
+    final pinY    = boxY + boxH * 0.50;
+    final screenX = boxX + boxW * 0.88;
 
     canvas.drawRect(
-      Rect.fromLTWH(boxX - 12.0, boxY - 10.0, boxW + 24.0, boxH + 20.0),
+      Rect.fromLTWH(boxX - 8, boxY - 8, boxW + 16, boxH + 16),
       Paint()..color = const Color(0xFFE6C898),
     );
     canvas.drawRect(
       Rect.fromLTWH(boxX, boxY, boxW, boxH),
       Paint()..color = const Color(0xFF231E17),
     );
+    canvas.drawCircle(Offset(boxX, pinY), 3,
+        Paint()..color = const Color(0xFFFFE566));
 
-    canvas.drawCircle(
-      Offset(boxX, pinholeY),
-      5,
-      Paint()..color = const Color(0xFF1A1410),
-    );
+    // ── Candle zone: left portion ─────────────────────────────────
+    final zoneLeft  = size.width * 0.04;
+    final zoneRight = boxX - size.width * 0.05;
 
-    _drawGlowRay(
-      canvas,
-      Offset(candleX, flameTopY),
-      Offset(boxX, pinholeY),
-      Offset(screenX, projectedFlameTop),
-    );
-    _drawGlowRay(
-      canvas,
-      Offset(candleX, flameBottomY),
-      Offset(boxX, pinholeY),
-      Offset(screenX, projectedFlameBottom),
-    );
+    final candleX     = mousePosition.dx.clamp(zoneLeft, zoneRight).toDouble();
+    final candleBaseY = mousePosition.dy.clamp(size.height * 0.15, size.height * 0.92).toDouble();
 
-    _drawCandle(canvas, candleX, candleBaseY, scale);
+    final bodyH  = size.height * 0.16;
+    final bodyW  = size.width  * 0.04;
+    final flameH = size.height * 0.07;
 
-    final projectedBodyWidth = math.max(
-      6.0,
-      (projectedBodyBottom - projectedBodyTop).abs() * 0.32,
-    );
-    final projX = screenX - projectedBodyWidth / 2;
-    final projY = math.min(projectedBodyTop, projectedBodyBottom);
+    // Key Y positions on real candle (small Y = higher on screen)
+    final flameTipY  = candleBaseY - bodyH - flameH; // topmost = smallest Y
+    final flameBaseY = candleBaseY - bodyH;           // top of body
 
+    // ── Pinhole projection: point (candleX, srcY) → (screenX, dstY) ──
+    // Through pinhole at (boxX, pinY):
+    //   dstY = pinY + (pinY - srcY) * dImg / dObj
+    // Inversion: if flameTip is ABOVE pinY (srcY < pinY), dstY > pinY (below)
+    final dObj = (boxX - candleX).clamp(1.0, double.infinity);
+    final dImg = (screenX - boxX).abs();
+    double proj(double srcY) => pinY + (pinY - srcY) * dImg / dObj;
+
+    final scrTip  = proj(flameTipY);   // flame tip   → projects below pinY
+    final scrBase = proj(flameBaseY);  // body top    → projects above scrTip
+    final scrBot  = proj(candleBaseY); // candle base → projects highest above
+
+    // Outside rays: candle → pinhole (left of box)
     canvas.save();
-    canvas.clipRect(
-      Rect.fromLTWH(boxX + 8.0, boxY + 10.0, boxW - 18.0, boxH - 20.0),
-    );
-    _drawProjectedCandle(
-      canvas,
-      screenX,
-      projectedBodyTop,
-      projectedBodyBottom,
-      projectedFlameTop,
-      projectedFlameBottom,
-    );
+    canvas.clipRect(Rect.fromLTWH(0, 0, boxX + 1, size.height));
+    _drawGlowRay(canvas, Offset(candleX, flameTipY),  Offset(boxX, pinY), Offset(boxX, pinY));
+    _drawGlowRay(canvas, Offset(candleX, candleBaseY), Offset(boxX, pinY), Offset(boxX, pinY));
     canvas.restore();
 
-    final labelStyle = TextPainter(textDirection: TextDirection.ltr);
-    labelStyle.text = const TextSpan(
-      text: 'PINHOLE CAMERA',
-      style: TextStyle(
-        color: Color(0xFF6B4B24),
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-      ),
-    );
-    labelStyle.layout();
-    labelStyle.paint(canvas, Offset(boxX + 18.0, boxY - 22.0));
+    // Inside box: rays + projected inverted candle
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(boxX, boxY, boxW, boxH));
+    _drawGlowRay(canvas, Offset(candleX, flameTipY),   Offset(boxX, pinY), Offset(screenX, scrTip));
+    _drawGlowRay(canvas, Offset(candleX, candleBaseY), Offset(boxX, pinY), Offset(screenX, scrBot));
 
-    labelStyle.text = const TextSpan(
-      text: 'Move the candle with your mouse',
-      style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
-    );
-    labelStyle.layout();
-    labelStyle.paint(canvas, Offset(36.0, boxY - 22.0));
+    // Inverted image: flame tip projects LOW, candle base projects HIGH
+    // scrBot < scrTip (base is higher = smaller Y value)
+    // Draw body from scrBot to scrBase, then flame from scrBase to scrTip
+    _drawProjectedCandleInverted(canvas, screenX,
+        scrBot, scrBase, scrTip, bodyW * 0.7);
+    canvas.restore();
+
+    // Real candle
+    _drawCandle(canvas, candleX, candleBaseY, bodyH, bodyW, flameH);
+
+    // Labels
+    _label(canvas, size, 'PINHOLE CAMERA',
+        Offset(boxX + 6, boxY + 4), color: const Color(0xFF6B4B24), bold: true);
+    _label(canvas, size, 'Drag candle ↕',
+        Offset(zoneLeft, boxY + 4), color: const Color(0xFF64748B));
   }
-
   void _drawGlowRay(Canvas canvas, Offset from, Offset via, Offset to) {
     canvas.drawLine(
       from,
@@ -965,10 +1315,8 @@ class _Class6ExperimentPainter extends CustomPainter {
     );
   }
 
-  void _drawCandle(Canvas canvas, double cx, double baseY, double scale) {
-    final bodyW = 20 * scale;
-    final bodyH = 62 * scale;
-    final flameH = 26 * scale;
+  void _drawCandle(Canvas canvas, double cx, double baseY,
+      double bodyH, double bodyW, double flameH) {
     final bodyX = cx - bodyW / 2;
     final bodyY = baseY - bodyH;
 
@@ -980,252 +1328,227 @@ class _Class6ExperimentPainter extends CustomPainter {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(bodyX, bodyY, bodyW, bodyH),
-        Radius.circular(6 * scale),
+        Radius.circular(bodyW * 0.3),
       ),
       Paint()..shader = waxGrad,
     );
-
+    // Wick
     canvas.drawLine(
-      Offset(cx, bodyY - 4 * scale),
-      Offset(cx, bodyY + 8 * scale),
+      Offset(cx, bodyY - bodyW * 0.2),
+      Offset(cx, bodyY + bodyW * 0.4),
       Paint()
         ..color = const Color(0xFF5B4636)
-        ..strokeWidth = 1.2 * scale,
+        ..strokeWidth = 1.5,
     );
-
+    // Glow
     canvas.drawCircle(
-      Offset(cx, bodyY - flameH),
-      18 * scale,
+      Offset(cx, bodyY - flameH * 0.5),
+      flameH * 0.9,
       Paint()
-        ..color = const Color(0xFFF1C40F).withValues(alpha: 0.5)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+        ..color = const Color(0xFFF1C40F).withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
     );
+    // Flame shape — pointed tip UP, wide base
     final flamePath = Path()
-      ..moveTo(cx, bodyY - flameH)
+      ..moveTo(cx, bodyY - flameH)                         // tip (top)
       ..quadraticBezierTo(
-        cx + 12 * scale,
-        bodyY - 12 * scale,
-        cx,
-        bodyY + 2 * scale,
-      )
+          cx + flameH * 0.45, bodyY - flameH * 0.35,
+          cx, bodyY)                                        // base right
       ..quadraticBezierTo(
-        cx - 12 * scale,
-        bodyY - 12 * scale,
-        cx,
-        bodyY - flameH,
-      );
+          cx - flameH * 0.45, bodyY - flameH * 0.35,
+          cx, bodyY - flameH);                              // base left
     canvas.drawPath(flamePath, Paint()..color = const Color(0xFFFFF4B3));
-    canvas.drawPath(
-      flamePath,
-      Paint()
-        ..color = const Color(0xFFF1C40F)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
+    canvas.drawPath(flamePath, Paint()
+      ..color = const Color(0xFFF1C40F)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5);
   }
 
-  void _drawProjectedCandle(
-    Canvas canvas,
-    double cx,
-    double bodyTop,
-    double bodyBottom,
-    double flameTop,
-    double flameBottom,
-  ) {
-    final bodyHeight = math.max(10.0, (bodyBottom - bodyTop).abs()).toDouble();
-    final bodyWidth = math.max(6.0, bodyHeight * 0.32).toDouble();
-    final bodyX = cx - bodyWidth / 2;
-    final bodyY = math.min(bodyTop, bodyBottom);
+  // Draws the inverted candle image on the screen inside the box.
+  // bodyTop = projected candle base (highest = smallest Y)
+  // bodyBot = projected body top
+  // flameTip = projected flame tip (lowest = largest Y)
+  void _drawProjectedCandleInverted(
+    Canvas canvas, double cx,
+    double bodyTop, double bodyBot,
+    double flameTip, double bodyW) {
 
-    final waxGrad = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: const [Color(0xFFA6EDB1), Color(0xFF78E08F), Color(0xFF4D9D61)],
-    ).createShader(Rect.fromLTWH(bodyX, bodyY, bodyWidth, bodyHeight));
+    final bH = (bodyBot - bodyTop).abs().clamp(6.0, double.infinity);
+    final bW = bodyW.clamp(4.0, 20.0);
+    final bX = cx - bW / 2;
+    final bY = math.min(bodyTop, bodyBot);
+
+    // Body (green wax)
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(bodyX, bodyY, bodyWidth, bodyHeight),
-        const Radius.circular(4),
-      ),
-      Paint()..shader = waxGrad,
+        Rect.fromLTWH(bX, bY, bW, bH), Radius.circular(bW * 0.3)),
+      Paint()..shader = const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFA6EDB1), Color(0xFF4D9D61)],
+      ).createShader(Rect.fromLTWH(bX, bY, bW, bH)),
     );
 
-    final flameHalfW = math
-        .max(4.0, (flameBottom - flameTop).abs() * 0.28)
-        .toDouble();
-    final flamePath = Path()
-      ..moveTo(cx, flameTop)
-      ..quadraticBezierTo(
-        cx + flameHalfW,
-        (flameTop + flameBottom) / 2,
-        cx,
-        flameBottom,
-      )
-      ..quadraticBezierTo(
-        cx - flameHalfW,
-        (flameTop + flameBottom) / 2,
-        cx,
-        flameTop,
-      );
+    // Flame (inverted — tip points DOWN)
+    // flameTip > bodyBot  (further down the screen)
+    final fH = (flameTip - bodyBot).abs().clamp(4.0, double.infinity);
+    final fHalfW = (fH * 0.4).clamp(3.0, 12.0);
+    final fBaseY = math.min(flameTip, bodyBot); // top of flame zone
+    final fTipY  = math.max(flameTip, bodyBot); // bottom = inverted tip
+
+    // Glow
     canvas.drawCircle(
-      Offset(cx, flameTop),
-      12,
+      Offset(cx, fTipY), fH * 0.55,
       Paint()
-        ..color = const Color(0xFFF1C40F).withValues(alpha: 0.45)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+        ..color = const Color(0xFFF1C40F).withValues(alpha: 0.40)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
-    canvas.drawPath(flamePath, Paint()..color = const Color(0xFFF1C40F));
+    // Flame shape — tip points DOWN
+    final fp = Path()
+      ..moveTo(cx, fTipY)                                         // tip (down)
+      ..quadraticBezierTo(cx + fHalfW, fBaseY + fH * 0.4, cx, fBaseY)  // right
+      ..quadraticBezierTo(cx - fHalfW, fBaseY + fH * 0.4, cx, fTipY);  // left
+    canvas.drawPath(fp, Paint()..color = const Color(0xFFFFF4B3));
+    canvas.drawPath(fp, Paint()
+      ..color = const Color(0xFFF1C40F)
+      ..style = PaintingStyle.stroke ..strokeWidth = 1.2);
   }
 
   void _drawRefractionExperiment(Canvas canvas, Size size) {
-    final centerX = size.width / 2;
-    final centerY = size.height / 2;
-    final glassW = math.min(170.0, size.width * 0.2).toDouble();
-    final glassH = math.min(260.0, size.height * 0.42).toDouble();
-    final glassX = centerX - glassW / 2;
-    final glassY = centerY - glassH / 2 - 10.0;
-    final waterLevel = glassY + glassH * 0.48;
-
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
       Paint()..color = const Color(0xFFF8FBFF),
     );
 
+    // ── Table ─────────────────────────────────────────────────────
+    final tableY = size.height * 0.84;
     canvas.drawRect(
-      Rect.fromLTWH(
-        0.0,
-        glassY + glassH - 15.0,
-        size.width,
-        size.height - glassY - glassH + 15.0,
-      ),
+      Rect.fromLTWH(0, tableY, size.width, size.height - tableY),
       Paint()..color = const Color(0xFFE4D8C4),
     );
 
+    // ── Glass — centred, proportional ────────────────────────────
+    final glassW  = size.width  * 0.30;
+    final glassH  = size.height * 0.52;
+    final glassX  = (size.width  - glassW) / 2;
+    final glassY  = size.height  * 0.14;
+    final waterLv = glassY + glassH * 0.44;
+
+    // Glass outline
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(glassX, glassY, glassW, glassH),
-        const Radius.circular(20),
-      ),
+        const Radius.circular(10)),
       Paint()
-        ..color = const Color(0xFFA0C3DC).withValues(alpha: 0.22)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3,
+        ..color = const Color(0xFFA0C3DC).withValues(alpha: 0.50)
+        ..style = PaintingStyle.stroke ..strokeWidth = 2.5,
     );
-
-    final waterGrad =
-        LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: const [Color(0xFF48CEC8), Color(0xFF2DD4BF)],
-        ).createShader(
-          Rect.fromLTWH(
-            glassX + 6.0,
-            waterLevel,
-            glassW - 12.0,
-            glassY + glassH - waterLevel - 6.0,
-          ),
-        );
+    // Water fill
+    final wH = glassY + glassH - waterLv - 4;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          glassX + 6.0,
-          waterLevel,
-          glassW - 12.0,
-          glassY + glassH - waterLevel - 6.0,
-        ),
-        const Radius.circular(16),
-      ),
-      Paint()..shader = waterGrad,
+        Rect.fromLTWH(glassX + 4, waterLv, glassW - 8, wH),
+        const Radius.circular(7)),
+      Paint()..shader = const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF48CEC8), Color(0xFF2DD4BF)],
+      ).createShader(Rect.fromLTWH(glassX + 4, waterLv, glassW - 8, wH)),
     );
-
+    // Water surface
     canvas.drawLine(
-      Offset(glassX + 12, waterLevel),
-      Offset(glassX + glassW - 12, waterLevel),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.65)
-        ..strokeWidth = 2,
+      Offset(glassX + 6, waterLv), Offset(glassX + glassW - 6, waterLv),
+      Paint()..color = Colors.white.withValues(alpha: 0.75) ..strokeWidth = 1.5,
     );
 
-    final pivotX = mousePosition.dx.clamp(
-      glassX - 150.0,
-      glassX + glassW - 10.0,
-    );
-    final pivotY = mousePosition.dy.clamp(glassY - 110.0, waterLevel - 8.0);
-    const pencilAngle = 0.92;
-    const topLength = 145.0;
-    const bottomLength = 128.0;
-    final topX = pivotX - math.cos(pencilAngle) * topLength;
-    final topY = pivotY - math.sin(pencilAngle) * topLength;
-    final rawBottomX = pivotX + math.cos(pencilAngle) * bottomLength;
-    final rawBottomY = pivotY + math.sin(pencilAngle) * bottomLength;
+    // ── Pencil physics ────────────────────────────────────────────
+    // The pencil is a straight rod held at an angle.
+    // The user controls WHERE along the rod the water surface intersects.
+    // Touch X anywhere → pencil slides left/right freely.
+    // Touch Y → how deep pencil dips (pivot Y above water).
+    //
+    // Key design: pivot (entry point) X is FREE (follows touch X across canvas)
+    //             pivot Y stays ABOVE waterLv
+    //             The rod extends both up-left and down-right from pivot.
 
-    final entersWater =
-        pivotX > glassX + 16.0 &&
-        pivotX < glassX + glassW - 16.0 &&
-        pivotY > glassY + 20.0;
-    final visibleUnderwater = entersWater && rawBottomY > waterLevel;
-    const refractShift = 24.0;
+    const angle = 0.88; // radians ~50° from horizontal
+    final strokeW = size.width * 0.030;
 
+    // Pivot follows touch freely — only Y is clamped above water
+    final pivotX = mousePosition.dx.clamp(8.0, size.width - 8.0).toDouble();
+    final pivotY = mousePosition.dy.clamp(glassY + 6, waterLv - 4).toDouble();
+
+    // Above-water portion (tip goes up-left)
+    final aboveLen = size.height * 0.42;
+    final topX = pivotX - math.cos(angle) * aboveLen;
+    final topY = pivotY - math.sin(angle) * aboveLen;
+
+    // Below-water raw end (goes down-right)
+    final belowLen = size.height * 0.34;
+    final botRawX  = pivotX + math.cos(angle) * belowLen;
+    final botRawY  = pivotY + math.sin(angle) * belowLen;
+
+    // Refraction shift — lateral displacement when entering water
+    final shift = glassW * 0.20;
+
+    // Is pivot inside glass horizontally?
+    final pivotInGlass = pivotX >= glassX + 8 && pivotX <= glassX + glassW - 8;
+    // Does the pencil actually reach below water?
+    final belowWater = pivotInGlass && botRawY > waterLv;
+
+    // Draw above-water part (clamp tip to canvas bounds)
     canvas.drawLine(
-      Offset(topX, topY),
+      Offset(topX.clamp(2.0, size.width - 2).toDouble(),
+             topY.clamp(2.0, size.height - 2).toDouble()),
       Offset(pivotX, pivotY),
       Paint()
         ..color = const Color(0xFFF4C542)
-        ..strokeWidth = 11
-        ..strokeCap = StrokeCap.round,
+        ..strokeWidth = strokeW ..strokeCap = StrokeCap.round,
     );
 
-    if (visibleUnderwater) {
+    if (belowWater) {
+      // Shifted below-water segment clipped inside glass water zone
+      canvas.save();
+      canvas.clipRect(Rect.fromLTWH(
+          glassX + 2, waterLv, glassW - 4, wH - 2));
       canvas.drawLine(
-        Offset(pivotX + refractShift, pivotY + 2.0),
-        Offset(rawBottomX + refractShift, rawBottomY),
+        Offset(pivotX + shift * 0.12, waterLv + 1),
+        Offset(
+          (botRawX + shift).clamp(glassX + 4, glassX + glassW - 4).toDouble(),
+          botRawY.clamp(waterLv + 2, glassY + glassH - 4).toDouble()),
         Paint()
-          ..color = const Color(0xFFF4C542).withValues(alpha: 0.72)
-          ..strokeWidth = 11
-          ..strokeCap = StrokeCap.round,
+          ..color = const Color(0xFFF4C542).withValues(alpha: 0.82)
+          ..strokeWidth = strokeW ..strokeCap = StrokeCap.round,
       );
+      canvas.restore();
 
-      canvas.drawCircle(
-        Offset(pivotX, waterLevel),
-        5,
-        Paint()..color = const Color(0xFF2DD4BF),
-      );
+      // Entry dot at water surface
+      canvas.drawCircle(Offset(pivotX, waterLv), 4,
+          Paint()..color = const Color(0xFF2DD4BF));
     } else {
+      // Pencil straight through (not in water or outside glass)
       canvas.drawLine(
         Offset(pivotX, pivotY),
-        Offset(rawBottomX, rawBottomY),
+        Offset(botRawX.clamp(2.0, size.width - 2).toDouble(),
+               botRawY.clamp(2.0, size.height - 2).toDouble()),
         Paint()
           ..color = const Color(0xFFF4C542)
-          ..strokeWidth = 11
-          ..strokeCap = StrokeCap.round,
+          ..strokeWidth = strokeW ..strokeCap = StrokeCap.round,
       );
     }
 
-    final labelStyle = TextPainter(textDirection: TextDirection.ltr);
-    labelStyle.text = const TextSpan(
-      text: 'water surface',
-      style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
-    );
-    labelStyle.layout();
-    labelStyle.paint(canvas, Offset(glassX + glassW + 18.0, waterLevel + 4.0));
-
-    labelStyle.text = const TextSpan(
-      text: 'move the pencil into the glass',
-      style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
-    );
-    labelStyle.layout();
-    labelStyle.paint(canvas, Offset(glassX - 148.0, glassY - 18.0));
-
-    if (visibleUnderwater) {
-      labelStyle.text = const TextSpan(
-        text: 'inside water it looks bent',
-        style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
-      );
-      labelStyle.layout();
-      labelStyle.paint(
-        canvas,
-        Offset(glassX + glassW + 18.0, waterLevel + 24.0),
-      );
+    // ── Labels ────────────────────────────────────────────────────
+    _label(canvas, size, 'water surface',
+        Offset(glassX + glassW + 6, waterLv - 2),
+        color: const Color(0xFF0D9488));
+    if (belowWater) {
+      _label(canvas, size, 'looks bent! 👀',
+          Offset(glassX + glassW + 6, waterLv + 14),
+          color: const Color(0xFF475569));
+    } else if (pivotInGlass) {
+      _label(canvas, size, 'dip pencil deeper',
+          Offset(4, glassY + 4), color: const Color(0xFF94A3B8));
+    } else {
+      _label(canvas, size, 'move pencil over glass',
+          Offset(4, glassY + 4), color: const Color(0xFF94A3B8));
     }
   }
 

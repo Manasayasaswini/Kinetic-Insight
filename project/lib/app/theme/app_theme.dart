@@ -17,7 +17,7 @@ ThemeData buildAppTheme() {
     scaffoldBackgroundColor: base,
     textTheme: const TextTheme(
       displaySmall: TextStyle(
-        fontSize: 38,
+        fontSize: 28,
         fontWeight: FontWeight.w800,
         color: ink,
         height: 1.05,

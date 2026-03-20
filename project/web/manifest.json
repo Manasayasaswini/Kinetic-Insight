@@ -1,12 +1,12 @@
 {
-    "name": "class11_flutter",
-    "short_name": "class11_flutter",
+    "name": "Kinetic Insight",
+    "short_name": "Kinetic Insight",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#F6F0E5",
+    "theme_color": "#0F766E",
+    "description": "Interactive Physics Lab for grades 6-11",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

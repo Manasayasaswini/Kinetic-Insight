@@ -187,11 +187,10 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
             ),
           ),
           child: compact
-              ? Column(
-                  children: [
-                    Expanded(
-                      flex: 6,
-                      child: _ControlRail(
+              ? SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _ControlRail(
                         experiments: _experiments,
                         activeExperiment: _activeExperiment,
                         inputError: _inputError,
@@ -216,17 +215,17 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                         onCalculateLens: _calculateLens,
                         onResetLens: _resetLens,
                       ),
-                    ),
-                    Expanded(
-                      flex: 5,
-                      child: _StageArea(
-                        experiment: _activeExperiment,
-                        tirResult: _tirResult,
-                        prismResult: _prismResult,
-                        lensResult: _lensResult,
+                      SizedBox(
+                        height: constraints.maxWidth < 480 ? 580 : 660,
+                        child: _StageArea(
+                          experiment: _activeExperiment,
+                          tirResult: _tirResult,
+                          prismResult: _prismResult,
+                          lensResult: _lensResult,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 )
               : Row(
                   children: [
@@ -731,25 +730,68 @@ class _StageArea extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 700;
         final compact = constraints.maxWidth < 860;
+
+        final canvasPainter = CustomPaint(
+          painter: _ExperimentPainter(
+            experimentId: experiment.id,
+            tirResult: tirResult,
+            prismResult: prismResult,
+            lensResult: lensResult,
+          ),
+          child: const SizedBox.expand(),
+        );
+
+        if (isMobile) {
+          return Column(
+            children: [
+              // Canvas takes available space
+              Expanded(child: canvasPainter),
+              // Info strip below — clean, no overlap
+              Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFFCF7),
+                  border: Border(top: BorderSide(color: Color(0xFFE8DECF))),
+                ),
+                child: Column(
+                  children: [
+                    _MobileInfoTile(
+                      title: 'Physics',
+                      body: _equationText(),
+                      accent: experiment.accent,
+                      icon: Icons.functions_outlined,
+                    ),
+                    Divider(height: 1, color: const Color(0xFFE8DECF)),
+                    _MobileInfoTile(
+                      title: 'Readout',
+                      body: _readoutText(),
+                      accent: experiment.accent,
+                      icon: Icons.analytics_outlined,
+                    ),
+                    Divider(height: 1, color: const Color(0xFFE8DECF)),
+                    _MobileInfoTile(
+                      title: 'Observation',
+                      body: _observationText(),
+                      accent: experiment.accent,
+                      icon: Icons.visibility_outlined,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+
+        // Desktop — floating overlay cards
         return Stack(
           children: [
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _ExperimentPainter(
-                  experimentId: experiment.id,
-                  tirResult: tirResult,
-                  prismResult: prismResult,
-                  lensResult: lensResult,
-                ),
-                child: const SizedBox.expand(),
-              ),
-            ),
+            Positioned.fill(child: canvasPainter),
             Positioned(
               top: 24,
               left: 24,
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: compact ? 340 : 360),
+                constraints: BoxConstraints(maxWidth: compact ? 240 : 360),
                 child: _OverlayCard(
                   title: 'Physics',
                   accent: experiment.accent,
@@ -758,10 +800,10 @@ class _StageArea extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: compact ? 144 : 24,
+              top: 24,
               right: 24,
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: compact ? 340 : 340),
+                constraints: BoxConstraints(maxWidth: compact ? 240 : 340),
                 child: _OverlayCard(
                   title: 'Readout',
                   accent: experiment.accent,
@@ -827,6 +869,56 @@ class _StageArea extends StatelessWidget {
     if (experiment.id == 'tir') return tirResult.message;
     if (experiment.id == 'prism') return prismResult.message;
     return lensResult.message;
+  }
+}
+
+class _MobileInfoTile extends StatelessWidget {
+  const _MobileInfoTile({
+    required this.title,
+    required this.body,
+    required this.accent,
+    required this.icon,
+  });
+
+  final String title;
+  final String body;
+  final Color accent;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 2),
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.labelMedium?.copyWith(color: accent),
+                ),
+                const SizedBox(height: 4),
+                Text(body, style: theme.textTheme.bodyMedium),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
