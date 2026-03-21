@@ -2,11 +2,23 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../ai/data/ai_tutor_models.dart';
-import '../../ai/data/ai_tutor_service.dart';
 import '../domain/class7_mirror_calculator.dart';
 
 enum _Class7Experiment { planeMirror, sphericalMirror, newtonDisc }
+
+class _Class7CheckpointQuestion {
+  const _Class7CheckpointQuestion({
+    required this.prompt,
+    required this.options,
+    required this.correctIndex,
+    required this.explanation,
+  });
+
+  final String prompt;
+  final List<String> options;
+  final int correctIndex;
+  final String explanation;
+}
 
 class Class7LabScreen extends StatefulWidget {
   const Class7LabScreen({super.key});
@@ -18,26 +30,179 @@ class Class7LabScreen extends StatefulWidget {
 class _Class7LabScreenState extends State<Class7LabScreen>
     with SingleTickerProviderStateMixin {
   static const _maxNewtonLevel = 3.0;
-  static const _defaultNewtonOptions = <String>[
-    'At very high speed, colors blend and the disc appears nearly white.',
-    'At high speed, each color becomes darker and separate.',
-    'The disc shows only red color when speed increases.',
-    'Color does not change with speed.',
-  ];
+  static const String _checkpointPrompt =
+      'Do the experiment and answer the checkpoint questions.';
 
-  static const _defaultPlaneMirrorOptions = <String>[
-    'The image distance equals the object distance from the mirror.',
-    'The image is virtual, upright, and same size as the object.',
-    'Lateral inversion means left and right appear reversed.',
-    'All of the above are properties of a plane mirror image.',
-  ];
-
-  static const _defaultSphericalMirrorOptions = <String>[
-    'Object placed between focal point (F) and optical centre (O) — image is virtual and magnified.',
-    'Object placed beyond centre of curvature (C) — image is real, inverted, and diminished.',
-    'Object placed at centre of curvature (C) — image is real, inverted, and same size.',
-    'Object placed at focal point (F) — image forms at infinity and is highly magnified.',
-  ];
+  static const Map<_Class7Experiment, List<_Class7CheckpointQuestion>>
+  _checkpointQuestionBank = {
+    _Class7Experiment.planeMirror: <_Class7CheckpointQuestion>[
+      _Class7CheckpointQuestion(
+        prompt:
+            'In a plane mirror, image distance compared to object distance is:',
+        options: <String>['Equal', 'Half', 'Double', 'Always zero'],
+        correctIndex: 0,
+        explanation:
+            'For a plane mirror, image distance equals object distance.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'A plane mirror image is usually:',
+        options: <String>[
+          'Virtual and erect',
+          'Real and inverted',
+          'Real and erect',
+          'Virtual and inverted',
+        ],
+        correctIndex: 0,
+        explanation: 'Plane mirror image is virtual and erect.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'Which effect is shown by the word AMBULANCE in mirrors?',
+        options: <String>[
+          'Lateral inversion',
+          'Diffraction',
+          'Dispersion',
+          'Interference',
+        ],
+        correctIndex: 0,
+        explanation: 'Left-right reversal is called lateral inversion.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'Size of image in plane mirror is:',
+        options: <String>[
+          'Same as object',
+          'Always smaller',
+          'Always larger',
+          'Zero',
+        ],
+        correctIndex: 0,
+        explanation: 'Plane mirror image size is same as object size.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'A plane mirror image can be taken on a screen?',
+        options: <String>[
+          'No, because it is virtual',
+          'Yes, always',
+          'Only at night',
+          'Only if mirror is convex',
+        ],
+        correctIndex: 0,
+        explanation: 'Virtual images cannot be obtained on a screen.',
+      ),
+    ],
+    _Class7Experiment.sphericalMirror: <_Class7CheckpointQuestion>[
+      _Class7CheckpointQuestion(
+        prompt: 'For a concave mirror, object beyond F forms image that is:',
+        options: <String>[
+          'Real and inverted',
+          'Virtual and erect',
+          'Virtual and inverted',
+          'Always at infinity',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Beyond focus in concave mirror gives real inverted image.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'A convex mirror image is generally:',
+        options: <String>[
+          'Virtual, erect, and diminished',
+          'Real and magnified',
+          'Real and same size',
+          'Inverted and magnified',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Convex mirrors produce virtual, erect, diminished images.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'In spherical mirrors, C denotes:',
+        options: <String>[
+          'Centre of curvature',
+          'Critical angle',
+          'Color point',
+          'Convergence line',
+        ],
+        correctIndex: 0,
+        explanation: 'C is the centre of curvature.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'If object is placed at F of a concave mirror, image forms:',
+        options: <String>[
+          'At infinity',
+          'At C',
+          'Between F and C',
+          'Behind mirror at finite distance',
+        ],
+        correctIndex: 0,
+        explanation:
+            'At F, reflected rays become parallel so image is at infinity.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'Mirror formula used in this experiment is:',
+        options: <String>[
+          '1/f = 1/v + 1/u',
+          'v = u + f',
+          'f = u + v',
+          'm = u/v only',
+        ],
+        correctIndex: 0,
+        explanation: 'The mirror relation is 1/f = 1/v + 1/u.',
+      ),
+    ],
+    _Class7Experiment.newtonDisc: <_Class7CheckpointQuestion>[
+      _Class7CheckpointQuestion(
+        prompt: 'As Newton disc speed increases, colors appear to:',
+        options: <String>[
+          'Merge toward white',
+          'Become black',
+          'Separate more',
+          'Turn only red',
+        ],
+        correctIndex: 0,
+        explanation: 'Fast rotation blends colors and appears whitish.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'The disc has sectors of:',
+        options: <String>[
+          'VIBGYOR colors',
+          'Only primary colors',
+          'Only black and white',
+          'Random grayscale',
+        ],
+        correctIndex: 0,
+        explanation: 'Newton disc uses VIBGYOR sectors.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'At low speed, the color sectors are:',
+        options: <String>[
+          'Clearly visible',
+          'Fully white',
+          'Invisible',
+          'All black',
+        ],
+        correctIndex: 0,
+        explanation: 'Low speed keeps individual sectors visible.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'Newton disc demonstrates:',
+        options: <String>[
+          'Persistence of vision and color recombination',
+          'Only reflection',
+          'Only refraction',
+          'Only shadow formation',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Rapid color mixing with persistence of vision gives near-white appearance.',
+      ),
+      _Class7CheckpointQuestion(
+        prompt: 'When speed is very high, white opacity in output should be:',
+        options: <String>['Near 1', 'Near 0', 'Negative', 'Undefined'],
+        correctIndex: 0,
+        explanation: 'In this simulation, white blend opacity approaches 1.',
+      ),
+    ],
+  };
 
   _Class7Experiment _active = _Class7Experiment.planeMirror;
 
@@ -58,40 +223,18 @@ class _Class7LabScreenState extends State<Class7LabScreen>
 
   double _newtonSpeedLevel = 0;
   late final AnimationController _discController;
-  final AiTutorService _aiTutorService = AiTutorService();
-
-  bool _planeAiLoading = false;
-  String? _planeAiError;
-  String? _planeAiQuestion;
-  String? _planeAiFeedback;
-  String? _planeAiNextStep;
-  List<String> _planeAiOptions = _defaultPlaneMirrorOptions;
-  int? _planeSelectedOption;
-  bool? _planeAiIsCorrect;
-  String _planeAiBotMood = 'neutral';
-  String _planeAiAnswerReview = '';
-
-  bool _sphereAiLoading = false;
-  String? _sphereAiError;
-  String? _sphereAiQuestion;
-  String? _sphereAiFeedback;
-  String? _sphereAiNextStep;
-  List<String> _sphereAiOptions = _defaultSphericalMirrorOptions;
-  int? _sphereSelectedOption;
-  bool? _sphereAiIsCorrect;
-  String _sphereAiBotMood = 'neutral';
-  String _sphereAiAnswerReview = '';
-
-  bool _aiLoading = false;
-  String? _aiError;
-  String? _aiQuestion;
-  String? _aiFeedback;
-  String? _aiNextStep;
-  List<String> _aiOptions = _defaultNewtonOptions;
-  int? _selectedOption;
-  bool? _aiIsCorrect;
-  String _aiBotMood = 'neutral';
-  String _aiAnswerReview = '';
+  final Map<_Class7Experiment, bool> _checkpointVisible =
+      <_Class7Experiment, bool>{};
+  final Map<_Class7Experiment, int> _checkpointIndex =
+      <_Class7Experiment, int>{};
+  final Map<_Class7Experiment, List<int?>> _checkpointAnswers =
+      <_Class7Experiment, List<int?>>{};
+  final Map<_Class7Experiment, List<bool>> _checkpointSubmitted =
+      <_Class7Experiment, List<bool>>{};
+  final Map<_Class7Experiment, String> _checkpointFeedback =
+      <_Class7Experiment, String>{};
+  final Map<_Class7Experiment, int> _checkpointScore =
+      <_Class7Experiment, int>{};
 
   String? _inputError;
 
@@ -103,6 +246,9 @@ class _Class7LabScreenState extends State<Class7LabScreen>
       duration: const Duration(milliseconds: 3000),
     )..repeat();
     _updateDiscSpeed();
+    for (final experiment in _Class7Experiment.values) {
+      _resetCheckpoint(experiment);
+    }
   }
 
   @override
@@ -122,324 +268,6 @@ class _Class7LabScreenState extends State<Class7LabScreen>
     _discController
       ..reset()
       ..repeat();
-  }
-
-  String _speedLabel(double level) {
-    switch (level.round().clamp(0, 3)) {
-      case 0:
-        return 'Low';
-      case 1:
-        return 'Medium';
-      case 2:
-        return 'High';
-      default:
-        return 'Very High';
-    }
-  }
-
-  double get _currentWhiteOpacity =>
-      Class7MirrorCalculator.newtonDiscWhiteOpacity(
-        speed: _newtonSpeedLevel,
-        maxSpeed: _maxNewtonLevel,
-      );
-
-  Future<void> _askAiQuestion() async {
-    setState(() {
-      _aiLoading = true;
-      _aiError = null;
-    });
-
-    try {
-      final response = await _aiTutorService.getTutorResponse(
-        const AiTutorRequest(
-          classId: '7',
-          experimentId: 'newton_disc',
-          mode: 'ask_or_feedback',
-          studentState: <String, dynamic>{},
-        ),
-      );
-
-      if (!mounted) return;
-      setState(() {
-        _aiQuestion = response.question;
-        _aiFeedback = response.feedback;
-        _aiNextStep = response.nextStep;
-        _aiOptions = response.options.isEmpty
-            ? _defaultNewtonOptions
-            : response.options;
-        _selectedOption = null;
-        _aiIsCorrect = response.isCorrect;
-        _aiBotMood = response.botMood;
-        _aiAnswerReview = response.answerReview;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _aiError =
-            'Could not connect to AI backend. Check if backend is running on port 8000.';
-      });
-    } finally {
-      if (!mounted) return;
-      setState(() {
-        _aiLoading = false;
-      });
-    }
-  }
-
-  Future<void> _checkAnswerWithAi() async {
-    if (_selectedOption == null) {
-      setState(() {
-        _aiError = 'Choose one option first.';
-      });
-      return;
-    }
-
-    setState(() {
-      _aiLoading = true;
-      _aiError = null;
-    });
-
-    try {
-      final response = await _aiTutorService.getTutorResponse(
-        AiTutorRequest(
-          classId: '7',
-          experimentId: 'newton_disc',
-          mode: 'check_answer',
-          studentState: <String, dynamic>{
-            'speedLevel': _speedLabel(_newtonSpeedLevel),
-            'computed': <String, dynamic>{'whiteOpacity': _currentWhiteOpacity},
-            'step': 'answer_submitted',
-            'selectedOption': _selectedOption,
-          },
-        ),
-      );
-
-      if (!mounted) return;
-      setState(() {
-        _aiQuestion = response.question;
-        _aiFeedback = response.feedback;
-        _aiNextStep = response.nextStep;
-        _aiOptions = response.options.isEmpty
-            ? _defaultNewtonOptions
-            : response.options;
-        _aiIsCorrect = response.isCorrect;
-        _aiBotMood = response.botMood;
-        _aiAnswerReview = response.answerReview;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _aiError =
-            'Could not connect to AI backend. Check if backend is running on port 8000.';
-      });
-    } finally {
-      if (!mounted) return;
-      setState(() {
-        _aiLoading = false;
-      });
-    }
-  }
-
-  Future<void> _askPlaneMirrorAi() async {
-    setState(() {
-      _planeAiLoading = true;
-      _planeAiError = null;
-    });
-
-    try {
-      final response = await _aiTutorService.getTutorResponse(
-        const AiTutorRequest(
-          classId: '7',
-          experimentId: 'plane_mirror',
-          mode: 'ask_or_feedback',
-          studentState: <String, dynamic>{},
-        ),
-      );
-
-      if (!mounted) return;
-      setState(() {
-        _planeAiQuestion = response.question;
-        _planeAiFeedback = response.feedback;
-        _planeAiNextStep = response.nextStep;
-        _planeAiOptions = response.options.isEmpty
-            ? _defaultPlaneMirrorOptions
-            : response.options;
-        _planeSelectedOption = null;
-        _planeAiIsCorrect = response.isCorrect;
-        _planeAiBotMood = response.botMood;
-        _planeAiAnswerReview = response.answerReview;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _planeAiError =
-            'Could not connect to AI backend. Check if backend is running on port 8000.';
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _planeAiLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _checkPlaneMirrorAnswerWithAi() async {
-    if (_planeSelectedOption == null) {
-      setState(() {
-        _planeAiError = 'Choose one option first.';
-      });
-      return;
-    }
-
-    setState(() {
-      _planeAiLoading = true;
-      _planeAiError = null;
-    });
-
-    try {
-      final response = await _aiTutorService.getTutorResponse(
-        AiTutorRequest(
-          classId: '7',
-          experimentId: 'plane_mirror',
-          mode: 'check_answer',
-          studentState: <String, dynamic>{
-            'objectDistanceCm': _planeResult.objectDistanceCm,
-            'imageDistanceCm': _planeResult.imageDistanceCm,
-            'step': 'answer_submitted',
-            'selectedOption': _planeSelectedOption,
-          },
-        ),
-      );
-
-      if (!mounted) return;
-      setState(() {
-        _planeAiQuestion = response.question;
-        _planeAiFeedback = response.feedback;
-        _planeAiNextStep = response.nextStep;
-        _planeAiOptions = response.options.isEmpty
-            ? _defaultPlaneMirrorOptions
-            : response.options;
-        _planeAiIsCorrect = response.isCorrect;
-        _planeAiBotMood = response.botMood;
-        _planeAiAnswerReview = response.answerReview;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _planeAiError =
-            'Could not connect to AI backend. Check if backend is running on port 8000.';
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _planeAiLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _askSphericalMirrorAi() async {
-    setState(() {
-      _sphereAiLoading = true;
-      _sphereAiError = null;
-    });
-
-    try {
-      final response = await _aiTutorService.getTutorResponse(
-        const AiTutorRequest(
-          classId: '7',
-          experimentId: 'spherical_mirror',
-          mode: 'ask_or_feedback',
-          studentState: <String, dynamic>{},
-        ),
-      );
-
-      if (!mounted) return;
-      setState(() {
-        _sphereAiQuestion = response.question;
-        _sphereAiFeedback = response.feedback;
-        _sphereAiNextStep = response.nextStep;
-        _sphereAiOptions = response.options.isEmpty
-            ? _defaultSphericalMirrorOptions
-            : response.options;
-        _sphereSelectedOption = null;
-        _sphereAiIsCorrect = response.isCorrect;
-        _sphereAiBotMood = response.botMood;
-        _sphereAiAnswerReview = response.answerReview;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _sphereAiError =
-            'Could not connect to AI backend. Check if backend is running on port 8000.';
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _sphereAiLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _checkSphericalMirrorAnswerWithAi() async {
-    if (_sphereSelectedOption == null) {
-      setState(() {
-        _sphereAiError = 'Choose one option first.';
-      });
-      return;
-    }
-
-    setState(() {
-      _sphereAiLoading = true;
-      _sphereAiError = null;
-    });
-
-    try {
-      final response = await _aiTutorService.getTutorResponse(
-        AiTutorRequest(
-          classId: '7',
-          experimentId: 'spherical_mirror',
-          mode: 'check_answer',
-          studentState: <String, dynamic>{
-            'mirrorType': _mirrorType.name,
-            'objectDistanceCm': _mirrorResult.objectDistanceCm,
-            'focalLengthCm': _mirrorResult.focalLengthCm,
-            'imageDistanceCm': _mirrorResult.imageDistanceCm,
-            'magnification': _mirrorResult.magnification,
-            'imageNature': _mirrorResult.nature.name,
-            'step': 'answer_submitted',
-            'selectedOption': _sphereSelectedOption,
-          },
-        ),
-      );
-
-      if (!mounted) return;
-      setState(() {
-        _sphereAiQuestion = response.question;
-        _sphereAiFeedback = response.feedback;
-        _sphereAiNextStep = response.nextStep;
-        _sphereAiOptions = response.options.isEmpty
-            ? _defaultSphericalMirrorOptions
-            : response.options;
-        _sphereAiIsCorrect = response.isCorrect;
-        _sphereAiBotMood = response.botMood;
-        _sphereAiAnswerReview = response.answerReview;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _sphereAiError =
-            'Could not connect to AI backend. Check if backend is running on port 8000.';
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _sphereAiLoading = false;
-        });
-      }
-    }
   }
 
   void _calculatePlaneMirror() {
@@ -484,9 +312,145 @@ class _Class7LabScreenState extends State<Class7LabScreen>
     });
   }
 
+  void _resetCheckpoint(_Class7Experiment experiment) {
+    final total = _checkpointQuestionBank[experiment]?.length ?? 0;
+    _checkpointVisible[experiment] = false;
+    _checkpointIndex[experiment] = 0;
+    _checkpointAnswers[experiment] = List<int?>.filled(total, null);
+    _checkpointSubmitted[experiment] = List<bool>.filled(total, false);
+    _checkpointFeedback[experiment] = '';
+    _checkpointScore[experiment] = 0;
+  }
+
+  bool _isExperimentVerified(_Class7Experiment experiment) {
+    final questions = _checkpointQuestionBank[experiment] ?? const [];
+    final submitted = _checkpointSubmitted[experiment] ?? const [];
+    final submittedAll =
+        questions.isNotEmpty && submitted.every((value) => value);
+    final score = _checkpointScore[experiment] ?? 0;
+    return submittedAll && score >= 4;
+  }
+
+  void _startCheckpoint() {
+    final experiment = _active;
+    setState(() {
+      _checkpointVisible[experiment] = true;
+      _checkpointFeedback[experiment] = '';
+    });
+  }
+
+  void _selectCheckpointOption(int optionIndex) {
+    final experiment = _active;
+    final index = _checkpointIndex[experiment] ?? 0;
+    final answers = _checkpointAnswers[experiment];
+    if (answers == null || index >= answers.length) return;
+    setState(() {
+      answers[index] = optionIndex;
+      _checkpointFeedback[experiment] = '';
+    });
+  }
+
+  void _submitCheckpointAnswer() {
+    final experiment = _active;
+    final questions = _checkpointQuestionBank[experiment] ?? const [];
+    if (questions.isEmpty) return;
+
+    final index = (_checkpointIndex[experiment] ?? 0)
+        .clamp(0, questions.length - 1)
+        .toInt();
+    final answers = _checkpointAnswers[experiment];
+    final submitted = _checkpointSubmitted[experiment];
+    if (answers == null || submitted == null) return;
+
+    final selected = answers[index];
+    if (selected == null) {
+      setState(() {
+        _checkpointFeedback[experiment] =
+            'Choose one option before submitting your answer.';
+      });
+      return;
+    }
+
+    if (submitted[index]) {
+      setState(() {
+        _checkpointFeedback[experiment] =
+            'Answer already submitted. Click Next Question.';
+      });
+      return;
+    }
+
+    final question = questions[index];
+    final isCorrect = selected == question.correctIndex;
+
+    setState(() {
+      submitted[index] = true;
+      if (isCorrect) {
+        _checkpointScore[experiment] = (_checkpointScore[experiment] ?? 0) + 1;
+      }
+      _checkpointFeedback[experiment] = isCorrect
+          ? 'Correct. ${question.explanation}'
+          : 'Not correct. ${question.explanation}';
+    });
+  }
+
+  void _goToNextCheckpointQuestion() {
+    final experiment = _active;
+    final questions = _checkpointQuestionBank[experiment] ?? const [];
+    if (questions.isEmpty) return;
+
+    final index = (_checkpointIndex[experiment] ?? 0)
+        .clamp(0, questions.length - 1)
+        .toInt();
+    final submitted = _checkpointSubmitted[experiment] ?? const [];
+    if (!submitted[index]) {
+      setState(() {
+        _checkpointFeedback[experiment] =
+            'Submit this answer before moving to the next question.';
+      });
+      return;
+    }
+
+    if (index < questions.length - 1) {
+      setState(() {
+        _checkpointIndex[experiment] = index + 1;
+        _checkpointFeedback[experiment] = '';
+      });
+    }
+  }
+
+  void _restartCheckpoint() {
+    final experiment = _active;
+    setState(() {
+      _resetCheckpoint(experiment);
+      _checkpointVisible[experiment] = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final activeQuestions = _checkpointQuestionBank[_active] ?? const [];
+    final activeIndex = (_checkpointIndex[_active] ?? 0)
+        .clamp(0, math.max(0, activeQuestions.length - 1))
+        .toInt();
+    final activeQuestion = activeQuestions.isNotEmpty
+        ? activeQuestions[activeIndex]
+        : const _Class7CheckpointQuestion(
+            prompt: '',
+            options: <String>[],
+            correctIndex: 0,
+            explanation: '',
+          );
+    final activeAnswers = _checkpointAnswers[_active] ?? const <int?>[];
+    final activeSubmitted = _checkpointSubmitted[_active] ?? const <bool>[];
+    final selectedCheckpointOption = activeIndex < activeAnswers.length
+        ? activeAnswers[activeIndex]
+        : null;
+    final hasSubmittedCurrent = activeIndex < activeSubmitted.length
+        ? activeSubmitted[activeIndex]
+        : false;
+    final checkpointScore = _checkpointScore[_active] ?? 0;
+    final checkpointVerified = _isExperimentVerified(_active);
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -561,21 +525,21 @@ class _Class7LabScreenState extends State<Class7LabScreen>
                       distanceController: _planeDistanceController,
                       result: _planeResult,
                       onCalculate: _calculatePlaneMirror,
-                      aiLoading: _planeAiLoading,
-                      aiError: _planeAiError,
-                      aiQuestion: _planeAiQuestion,
-                      aiFeedback: _planeAiFeedback,
-                      aiNextStep: _planeAiNextStep,
-                      aiOptions: _planeAiOptions,
-                      selectedOption: _planeSelectedOption,
-                      aiIsCorrect: _planeAiIsCorrect,
-                      aiBotMood: _planeAiBotMood,
-                      aiAnswerReview: _planeAiAnswerReview,
-                      onAskAi: _askPlaneMirrorAi,
-                      onSubmitAnswer: _checkPlaneMirrorAnswerWithAi,
-                      onOptionSelected: (value) {
-                        setState(() => _planeSelectedOption = value);
-                      },
+                      checkpointVisible: _checkpointVisible[_active] ?? false,
+                      checkpointPrompt: _checkpointPrompt,
+                      checkpointQuestion: activeQuestion,
+                      checkpointQuestionIndex: activeIndex,
+                      checkpointTotalQuestions: activeQuestions.length,
+                      checkpointSelectedOption: selectedCheckpointOption,
+                      checkpointHasSubmittedCurrent: hasSubmittedCurrent,
+                      checkpointFeedback: _checkpointFeedback[_active] ?? '',
+                      checkpointScore: checkpointScore,
+                      checkpointVerified: checkpointVerified,
+                      onStartCheckpoint: _startCheckpoint,
+                      onCheckpointOptionSelected: _selectCheckpointOption,
+                      onSubmitCheckpointAnswer: _submitCheckpointAnswer,
+                      onNextCheckpointQuestion: _goToNextCheckpointQuestion,
+                      onRestartCheckpoint: _restartCheckpoint,
                     ),
                   if (_active == _Class7Experiment.sphericalMirror)
                     _SphericalMirrorExperiment(
@@ -588,46 +552,46 @@ class _Class7LabScreenState extends State<Class7LabScreen>
                         _calculateSphericalMirror();
                       },
                       onCalculate: _calculateSphericalMirror,
-                      aiLoading: _sphereAiLoading,
-                      aiError: _sphereAiError,
-                      aiQuestion: _sphereAiQuestion,
-                      aiFeedback: _sphereAiFeedback,
-                      aiNextStep: _sphereAiNextStep,
-                      aiOptions: _sphereAiOptions,
-                      selectedOption: _sphereSelectedOption,
-                      aiIsCorrect: _sphereAiIsCorrect,
-                      aiBotMood: _sphereAiBotMood,
-                      aiAnswerReview: _sphereAiAnswerReview,
-                      onAskAi: _askSphericalMirrorAi,
-                      onSubmitAnswer: _checkSphericalMirrorAnswerWithAi,
-                      onOptionSelected: (value) {
-                        setState(() => _sphereSelectedOption = value);
-                      },
+                      checkpointVisible: _checkpointVisible[_active] ?? false,
+                      checkpointPrompt: _checkpointPrompt,
+                      checkpointQuestion: activeQuestion,
+                      checkpointQuestionIndex: activeIndex,
+                      checkpointTotalQuestions: activeQuestions.length,
+                      checkpointSelectedOption: selectedCheckpointOption,
+                      checkpointHasSubmittedCurrent: hasSubmittedCurrent,
+                      checkpointFeedback: _checkpointFeedback[_active] ?? '',
+                      checkpointScore: checkpointScore,
+                      checkpointVerified: checkpointVerified,
+                      onStartCheckpoint: _startCheckpoint,
+                      onCheckpointOptionSelected: _selectCheckpointOption,
+                      onSubmitCheckpointAnswer: _submitCheckpointAnswer,
+                      onNextCheckpointQuestion: _goToNextCheckpointQuestion,
+                      onRestartCheckpoint: _restartCheckpoint,
                     ),
                   if (_active == _Class7Experiment.newtonDisc)
                     _NewtonsDiscExperiment(
                       speedLevel: _newtonSpeedLevel,
                       controller: _discController,
                       maxLevel: _maxNewtonLevel,
-                      aiLoading: _aiLoading,
-                      aiError: _aiError,
-                      aiQuestion: _aiQuestion,
-                      aiFeedback: _aiFeedback,
-                      aiNextStep: _aiNextStep,
-                      aiOptions: _aiOptions,
-                      selectedOption: _selectedOption,
-                      aiIsCorrect: _aiIsCorrect,
-                      aiBotMood: _aiBotMood,
-                      aiAnswerReview: _aiAnswerReview,
-                      onAskAi: _askAiQuestion,
-                      onSubmitAnswer: _checkAnswerWithAi,
-                      onOptionSelected: (value) {
-                        setState(() => _selectedOption = value);
-                      },
                       onSpeedLevelChanged: (value) {
                         setState(() => _newtonSpeedLevel = value);
                         _updateDiscSpeed();
                       },
+                      checkpointVisible: _checkpointVisible[_active] ?? false,
+                      checkpointPrompt: _checkpointPrompt,
+                      checkpointQuestion: activeQuestion,
+                      checkpointQuestionIndex: activeIndex,
+                      checkpointTotalQuestions: activeQuestions.length,
+                      checkpointSelectedOption: selectedCheckpointOption,
+                      checkpointHasSubmittedCurrent: hasSubmittedCurrent,
+                      checkpointFeedback: _checkpointFeedback[_active] ?? '',
+                      checkpointScore: checkpointScore,
+                      checkpointVerified: checkpointVerified,
+                      onStartCheckpoint: _startCheckpoint,
+                      onCheckpointOptionSelected: _selectCheckpointOption,
+                      onSubmitCheckpointAnswer: _submitCheckpointAnswer,
+                      onNextCheckpointQuestion: _goToNextCheckpointQuestion,
+                      onRestartCheckpoint: _restartCheckpoint,
                     ),
                   const SizedBox(height: 32),
                   Text(
@@ -656,37 +620,41 @@ class _PlaneMirrorExperiment extends StatelessWidget {
     required this.distanceController,
     required this.result,
     required this.onCalculate,
-    required this.aiLoading,
-    required this.aiError,
-    required this.aiQuestion,
-    required this.aiFeedback,
-    required this.aiNextStep,
-    required this.aiOptions,
-    required this.selectedOption,
-    required this.aiIsCorrect,
-    required this.aiBotMood,
-    required this.aiAnswerReview,
-    required this.onAskAi,
-    required this.onSubmitAnswer,
-    required this.onOptionSelected,
+    required this.checkpointVisible,
+    required this.checkpointPrompt,
+    required this.checkpointQuestion,
+    required this.checkpointQuestionIndex,
+    required this.checkpointTotalQuestions,
+    required this.checkpointSelectedOption,
+    required this.checkpointHasSubmittedCurrent,
+    required this.checkpointFeedback,
+    required this.checkpointScore,
+    required this.checkpointVerified,
+    required this.onStartCheckpoint,
+    required this.onCheckpointOptionSelected,
+    required this.onSubmitCheckpointAnswer,
+    required this.onNextCheckpointQuestion,
+    required this.onRestartCheckpoint,
   });
 
   final TextEditingController distanceController;
   final PlaneMirrorResult result;
   final VoidCallback onCalculate;
-  final bool aiLoading;
-  final String? aiError;
-  final String? aiQuestion;
-  final String? aiFeedback;
-  final String? aiNextStep;
-  final List<String> aiOptions;
-  final int? selectedOption;
-  final bool? aiIsCorrect;
-  final String aiBotMood;
-  final String aiAnswerReview;
-  final Future<void> Function() onAskAi;
-  final Future<void> Function() onSubmitAnswer;
-  final ValueChanged<int> onOptionSelected;
+  final bool checkpointVisible;
+  final String checkpointPrompt;
+  final _Class7CheckpointQuestion checkpointQuestion;
+  final int checkpointQuestionIndex;
+  final int checkpointTotalQuestions;
+  final int? checkpointSelectedOption;
+  final bool checkpointHasSubmittedCurrent;
+  final String checkpointFeedback;
+  final int checkpointScore;
+  final bool checkpointVerified;
+  final VoidCallback onStartCheckpoint;
+  final ValueChanged<int> onCheckpointOptionSelected;
+  final VoidCallback onSubmitCheckpointAnswer;
+  final VoidCallback onNextCheckpointQuestion;
+  final VoidCallback onRestartCheckpoint;
 
   @override
   Widget build(BuildContext context) {
@@ -733,20 +701,22 @@ class _PlaneMirrorExperiment extends StatelessWidget {
               'Object distance = ${result.objectDistanceCm.toStringAsFixed(1)} cm\nImage distance = ${result.imageDistanceCm.toStringAsFixed(1)} cm\nRule: d(object) = d(image)',
         ),
         const SizedBox(height: 20),
-        _AiTutorCard(
-          aiLoading: aiLoading,
-          aiError: aiError,
-          aiQuestion: aiQuestion,
-          aiFeedback: aiFeedback,
-          aiNextStep: aiNextStep,
-          aiOptions: aiOptions,
-          selectedOption: selectedOption,
-          aiIsCorrect: aiIsCorrect,
-          aiBotMood: aiBotMood,
-          aiAnswerReview: aiAnswerReview,
-          onAskAi: onAskAi,
-          onSubmitAnswer: onSubmitAnswer,
-          onOptionSelected: onOptionSelected,
+        _CheckpointCard(
+          active: checkpointVisible,
+          prompt: checkpointPrompt,
+          question: checkpointQuestion,
+          questionIndex: checkpointQuestionIndex,
+          totalQuestions: checkpointTotalQuestions,
+          selectedOption: checkpointSelectedOption,
+          hasSubmittedCurrent: checkpointHasSubmittedCurrent,
+          feedback: checkpointFeedback,
+          score: checkpointScore,
+          verified: checkpointVerified,
+          onStart: onStartCheckpoint,
+          onOptionSelected: onCheckpointOptionSelected,
+          onSubmitAnswer: onSubmitCheckpointAnswer,
+          onNextQuestion: onNextCheckpointQuestion,
+          onRestart: onRestartCheckpoint,
         ),
       ],
     );
@@ -844,19 +814,21 @@ class _SphericalMirrorExperiment extends StatelessWidget {
     required this.result,
     required this.onMirrorTypeChanged,
     required this.onCalculate,
-    required this.aiLoading,
-    required this.aiError,
-    required this.aiQuestion,
-    required this.aiFeedback,
-    required this.aiNextStep,
-    required this.aiOptions,
-    required this.selectedOption,
-    required this.aiIsCorrect,
-    required this.aiBotMood,
-    required this.aiAnswerReview,
-    required this.onAskAi,
-    required this.onSubmitAnswer,
-    required this.onOptionSelected,
+    required this.checkpointVisible,
+    required this.checkpointPrompt,
+    required this.checkpointQuestion,
+    required this.checkpointQuestionIndex,
+    required this.checkpointTotalQuestions,
+    required this.checkpointSelectedOption,
+    required this.checkpointHasSubmittedCurrent,
+    required this.checkpointFeedback,
+    required this.checkpointScore,
+    required this.checkpointVerified,
+    required this.onStartCheckpoint,
+    required this.onCheckpointOptionSelected,
+    required this.onSubmitCheckpointAnswer,
+    required this.onNextCheckpointQuestion,
+    required this.onRestartCheckpoint,
   });
 
   final MirrorType mirrorType;
@@ -865,19 +837,21 @@ class _SphericalMirrorExperiment extends StatelessWidget {
   final SphericalMirrorResult result;
   final ValueChanged<MirrorType> onMirrorTypeChanged;
   final VoidCallback onCalculate;
-  final bool aiLoading;
-  final String? aiError;
-  final String? aiQuestion;
-  final String? aiFeedback;
-  final String? aiNextStep;
-  final List<String> aiOptions;
-  final int? selectedOption;
-  final bool? aiIsCorrect;
-  final String aiBotMood;
-  final String aiAnswerReview;
-  final Future<void> Function() onAskAi;
-  final Future<void> Function() onSubmitAnswer;
-  final ValueChanged<int> onOptionSelected;
+  final bool checkpointVisible;
+  final String checkpointPrompt;
+  final _Class7CheckpointQuestion checkpointQuestion;
+  final int checkpointQuestionIndex;
+  final int checkpointTotalQuestions;
+  final int? checkpointSelectedOption;
+  final bool checkpointHasSubmittedCurrent;
+  final String checkpointFeedback;
+  final int checkpointScore;
+  final bool checkpointVerified;
+  final VoidCallback onStartCheckpoint;
+  final ValueChanged<int> onCheckpointOptionSelected;
+  final VoidCallback onSubmitCheckpointAnswer;
+  final VoidCallback onNextCheckpointQuestion;
+  final VoidCallback onRestartCheckpoint;
 
   @override
   Widget build(BuildContext context) {
@@ -951,20 +925,22 @@ class _SphericalMirrorExperiment extends StatelessWidget {
         const SizedBox(height: 16),
         _ResultPanel(title: 'Output', body: _buildSphericalOutput(result)),
         const SizedBox(height: 20),
-        _AiTutorCard(
-          aiLoading: aiLoading,
-          aiError: aiError,
-          aiQuestion: aiQuestion,
-          aiFeedback: aiFeedback,
-          aiNextStep: aiNextStep,
-          aiOptions: aiOptions,
-          selectedOption: selectedOption,
-          aiIsCorrect: aiIsCorrect,
-          aiBotMood: aiBotMood,
-          aiAnswerReview: aiAnswerReview,
-          onAskAi: onAskAi,
-          onSubmitAnswer: onSubmitAnswer,
-          onOptionSelected: onOptionSelected,
+        _CheckpointCard(
+          active: checkpointVisible,
+          prompt: checkpointPrompt,
+          question: checkpointQuestion,
+          questionIndex: checkpointQuestionIndex,
+          totalQuestions: checkpointTotalQuestions,
+          selectedOption: checkpointSelectedOption,
+          hasSubmittedCurrent: checkpointHasSubmittedCurrent,
+          feedback: checkpointFeedback,
+          score: checkpointScore,
+          verified: checkpointVerified,
+          onStart: onStartCheckpoint,
+          onOptionSelected: onCheckpointOptionSelected,
+          onSubmitAnswer: onSubmitCheckpointAnswer,
+          onNextQuestion: onNextCheckpointQuestion,
+          onRestart: onRestartCheckpoint,
         ),
       ],
     );
@@ -1372,39 +1348,43 @@ class _NewtonsDiscExperiment extends StatelessWidget {
     required this.speedLevel,
     required this.controller,
     required this.maxLevel,
-    required this.aiLoading,
-    required this.aiError,
-    required this.aiQuestion,
-    required this.aiFeedback,
-    required this.aiNextStep,
-    required this.aiOptions,
-    required this.selectedOption,
-    required this.aiIsCorrect,
-    required this.aiBotMood,
-    required this.aiAnswerReview,
-    required this.onAskAi,
-    required this.onSubmitAnswer,
-    required this.onOptionSelected,
     required this.onSpeedLevelChanged,
+    required this.checkpointVisible,
+    required this.checkpointPrompt,
+    required this.checkpointQuestion,
+    required this.checkpointQuestionIndex,
+    required this.checkpointTotalQuestions,
+    required this.checkpointSelectedOption,
+    required this.checkpointHasSubmittedCurrent,
+    required this.checkpointFeedback,
+    required this.checkpointScore,
+    required this.checkpointVerified,
+    required this.onStartCheckpoint,
+    required this.onCheckpointOptionSelected,
+    required this.onSubmitCheckpointAnswer,
+    required this.onNextCheckpointQuestion,
+    required this.onRestartCheckpoint,
   });
 
   final double speedLevel;
   final AnimationController controller;
   final double maxLevel;
-  final bool aiLoading;
-  final String? aiError;
-  final String? aiQuestion;
-  final String? aiFeedback;
-  final String? aiNextStep;
-  final List<String> aiOptions;
-  final int? selectedOption;
-  final bool? aiIsCorrect;
-  final String aiBotMood;
-  final String aiAnswerReview;
-  final Future<void> Function() onAskAi;
-  final Future<void> Function() onSubmitAnswer;
-  final ValueChanged<int> onOptionSelected;
   final ValueChanged<double> onSpeedLevelChanged;
+  final bool checkpointVisible;
+  final String checkpointPrompt;
+  final _Class7CheckpointQuestion checkpointQuestion;
+  final int checkpointQuestionIndex;
+  final int checkpointTotalQuestions;
+  final int? checkpointSelectedOption;
+  final bool checkpointHasSubmittedCurrent;
+  final String checkpointFeedback;
+  final int checkpointScore;
+  final bool checkpointVerified;
+  final VoidCallback onStartCheckpoint;
+  final ValueChanged<int> onCheckpointOptionSelected;
+  final VoidCallback onSubmitCheckpointAnswer;
+  final VoidCallback onNextCheckpointQuestion;
+  final VoidCallback onRestartCheckpoint;
 
   @override
   Widget build(BuildContext context) {
@@ -1483,102 +1463,24 @@ class _NewtonsDiscExperiment extends StatelessWidget {
               'White blend opacity = ${whiteOpacity.toStringAsFixed(2)}\n'
               'As speed increases, colors merge visually toward white.',
         ),
-        if (aiQuestion != null) ...[
-          const SizedBox(height: 12),
-          Text(aiQuestion!, style: theme.textTheme.titleMedium),
-        ],
-        if (aiOptions.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          for (var i = 0; i < aiOptions.length; i++)
-            RadioListTile<int>(
-              value: i,
-              groupValue: selectedOption,
-              onChanged: aiLoading
-                  ? null
-                  : (value) {
-                      if (value != null) onOptionSelected(value);
-                    },
-              title: Text(aiOptions[i]),
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-        ],
         const SizedBox(height: 12),
-        Row(
-          children: [
-            FilledButton.icon(
-              onPressed: aiLoading ? null : onAskAi,
-              icon: const Icon(Icons.psychology_alt),
-              label: const Text('Ask AI'),
-            ),
-            const SizedBox(width: 10),
-            OutlinedButton.icon(
-              onPressed: aiLoading ? null : onSubmitAnswer,
-              icon: const Icon(Icons.edit_note),
-              label: const Text('Submit Answer'),
-            ),
-            if (aiLoading) ...[
-              const SizedBox(width: 12),
-              const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ],
-          ],
+        _CheckpointCard(
+          active: checkpointVisible,
+          prompt: checkpointPrompt,
+          question: checkpointQuestion,
+          questionIndex: checkpointQuestionIndex,
+          totalQuestions: checkpointTotalQuestions,
+          selectedOption: checkpointSelectedOption,
+          hasSubmittedCurrent: checkpointHasSubmittedCurrent,
+          feedback: checkpointFeedback,
+          score: checkpointScore,
+          verified: checkpointVerified,
+          onStart: onStartCheckpoint,
+          onOptionSelected: onCheckpointOptionSelected,
+          onSubmitAnswer: onSubmitCheckpointAnswer,
+          onNextQuestion: onNextCheckpointQuestion,
+          onRestart: onRestartCheckpoint,
         ),
-        if (aiError != null) ...[
-          const SizedBox(height: 10),
-          Text(
-            aiError!,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: const Color(0xFFB91C1C),
-            ),
-          ),
-        ],
-        if (aiQuestion != null || aiFeedback != null || aiNextStep != null) ...[
-          const SizedBox(height: 12),
-          _ResultPanel(
-            title: 'AI Tutor',
-            body:
-                'Question: ${aiQuestion ?? '-'}\n'
-                'Feedback: ${aiFeedback ?? '-'}\n'
-                'Next Step: ${aiNextStep ?? '-'}\n'
-                'Answer Review: ${aiAnswerReview.isEmpty ? '-' : aiAnswerReview}',
-          ),
-        ],
-        if (aiIsCorrect != null) ...[
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Builder(
-                builder: (context) {
-                  final happy = aiBotMood == 'happy';
-                  return CircleAvatar(
-                    backgroundColor: happy
-                        ? const Color(0xFFDCFCE7)
-                        : const Color(0xFFFEE2E2),
-                    child: Icon(
-                      happy ? Icons.smart_toy : Icons.smart_toy_outlined,
-                      color: happy
-                          ? const Color(0xFF15803D)
-                          : const Color(0xFFB91C1C),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  aiIsCorrect == true
-                      ? 'Yes your experiment is correct little scientist! ...\nYess! You got the correct answer!'
-                      : 'You have done a try... the correct way is to increase speed and observe blending toward white.',
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ),
-            ],
-          ),
-        ],
       ],
     );
   }
@@ -1673,47 +1575,53 @@ class _ResultPanel extends StatelessWidget {
   }
 }
 
-class _AiTutorCard extends StatelessWidget {
-  const _AiTutorCard({
-    required this.aiLoading,
-    required this.aiError,
-    required this.aiQuestion,
-    required this.aiFeedback,
-    required this.aiNextStep,
-    required this.aiOptions,
+class _CheckpointCard extends StatelessWidget {
+  const _CheckpointCard({
+    required this.active,
+    required this.prompt,
+    required this.question,
+    required this.questionIndex,
+    required this.totalQuestions,
     required this.selectedOption,
-    required this.aiIsCorrect,
-    required this.aiBotMood,
-    required this.aiAnswerReview,
-    required this.onAskAi,
-    required this.onSubmitAnswer,
+    required this.hasSubmittedCurrent,
+    required this.feedback,
+    required this.score,
+    required this.verified,
+    required this.onStart,
     required this.onOptionSelected,
+    required this.onSubmitAnswer,
+    required this.onNextQuestion,
+    required this.onRestart,
   });
 
-  final bool aiLoading;
-  final String? aiError;
-  final String? aiQuestion;
-  final String? aiFeedback;
-  final String? aiNextStep;
-  final List<String> aiOptions;
+  final bool active;
+  final String prompt;
+  final _Class7CheckpointQuestion question;
+  final int questionIndex;
+  final int totalQuestions;
   final int? selectedOption;
-  final bool? aiIsCorrect;
-  final String aiBotMood;
-  final String aiAnswerReview;
-  final Future<void> Function() onAskAi;
-  final Future<void> Function() onSubmitAnswer;
+  final bool hasSubmittedCurrent;
+  final String feedback;
+  final int score;
+  final bool verified;
+  final VoidCallback onStart;
   final ValueChanged<int> onOptionSelected;
+  final VoidCallback onSubmitAnswer;
+  final VoidCallback onNextQuestion;
+  final VoidCallback onRestart;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isLastQuestion = questionIndex >= totalQuestions - 1;
+    final completedAll = isLastQuestion && hasSubmittedCurrent;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
@@ -1722,117 +1630,130 @@ class _AiTutorCard extends StatelessWidget {
           Row(
             children: [
               const Icon(
-                Icons.psychology_alt,
+                Icons.quiz_outlined,
                 color: Color(0xFF0F766E),
-                size: 22,
+                size: 20,
               ),
               const SizedBox(width: 8),
-              Text('AI Tutor', style: theme.textTheme.titleMedium),
+              Text(
+                'Experiment Checkpoint',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 14),
-          if (aiQuestion != null) ...[
+          const SizedBox(height: 10),
+          Text(prompt, style: theme.textTheme.bodyMedium),
+          if (!active) ...[
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: onStart,
+              icon: const Icon(Icons.rocket_launch_outlined, size: 18),
+              label: const Text('Start Checkpoint'),
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
             Text(
-              'Question: ${aiQuestion!}',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
+              'Question ${questionIndex + 1} of $totalQuestions',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: const Color(0xFF0F766E),
               ),
             ),
-            const SizedBox(height: 12),
-          ],
-          if (aiOptions.isNotEmpty) ...[
-            ...List.generate(
-              aiOptions.length,
-              (i) => RadioListTile<int>(
+            const SizedBox(height: 8),
+            Text(
+              question.prompt,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (var i = 0; i < question.options.length; i++)
+              RadioListTile<int>(
                 value: i,
                 groupValue: selectedOption,
-                onChanged: aiLoading
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                onChanged: hasSubmittedCurrent
                     ? null
                     : (value) {
                         if (value != null) onOptionSelected(value);
                       },
-                title: Text(aiOptions[i], style: theme.textTheme.bodyMedium),
-                dense: true,
-                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  question.options[i],
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: hasSubmittedCurrent ? null : onSubmitAnswer,
+                  icon: const Icon(Icons.task_alt, size: 18),
+                  label: const Text('Submit Answer'),
+                ),
+                if (!isLastQuestion)
+                  FilledButton(
+                    onPressed: hasSubmittedCurrent ? onNextQuestion : null,
+                    child: const Text('Next Question'),
+                  ),
+              ],
+            ),
+          ],
+          if (feedback.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              feedback,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: feedback.startsWith('Correct')
+                    ? const Color(0xFF166534)
+                    : const Color(0xFF334155),
               ),
             ),
-            const SizedBox(height: 12),
           ],
-          Row(
-            children: [
-              FilledButton.icon(
-                onPressed: aiLoading ? null : onAskAi,
-                icon: const Icon(Icons.lightbulb_outline, size: 18),
-                label: const Text('Ask AI'),
-              ),
-              const SizedBox(width: 10),
-              OutlinedButton.icon(
-                onPressed: aiLoading ? null : onSubmitAnswer,
-                icon: const Icon(Icons.edit_note, size: 18),
-                label: const Text('Submit Answer'),
-              ),
-              if (aiLoading) ...[
-                const SizedBox(width: 12),
-                const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ],
-            ],
-          ),
-          if (aiError != null) ...[
+          if (active) ...[
             const SizedBox(height: 10),
             Text(
-              aiError!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: const Color(0xFFB91C1C),
+              'Score: $score / $totalQuestions',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: const Color(0xFF0F172A),
               ),
             ),
           ],
-          if (aiQuestion != null ||
-              aiFeedback != null ||
-              aiNextStep != null) ...[
-            const SizedBox(height: 12),
-            _ResultPanel(
-              title: 'AI Response',
-              body:
-                  'Question: ${aiQuestion ?? '-'}\n'
-                  'Feedback: ${aiFeedback ?? '-'}\n'
-                  'Next Step: ${aiNextStep ?? '-'}',
-            ),
-          ],
-          if (aiIsCorrect != null) ...[
+          if (completedAll) ...[
             const SizedBox(height: 10),
-            Row(
-              children: [
-                Builder(
-                  builder: (context) {
-                    final happy = aiBotMood == 'happy';
-                    return CircleAvatar(
-                      backgroundColor: happy
-                          ? const Color(0xFFDCFCE7)
-                          : const Color(0xFFFEE2E2),
-                      child: Icon(
-                        happy ? Icons.smart_toy : Icons.smart_toy_outlined,
-                        color: happy
-                            ? const Color(0xFF15803D)
-                            : const Color(0xFFB91C1C),
-                        size: 20,
-                      ),
-                    );
-                  },
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: verified
+                    ? const Color(0xFFDCFCE7)
+                    : const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: verified
+                      ? const Color(0xFF86EFAC)
+                      : const Color(0xFFFED7AA),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    aiIsCorrect == true
-                        ? 'Yes your experiment is correct! You got the right answer!'
-                        : 'Not quite right... ${aiAnswerReview.isNotEmpty ? aiAnswerReview : 'Try again and observe the mirror properties carefully.'}',
-                    style: theme.textTheme.bodyMedium,
-                  ),
+              ),
+              child: Text(
+                verified
+                    ? 'Experiment verified as done. Great work.'
+                    : 'Checkpoint finished. Score 4/5 or above is needed to verify this experiment.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: verified
+                      ? const Color(0xFF166534)
+                      : const Color(0xFF9A3412),
                 ),
-              ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: onRestart,
+              icon: const Icon(Icons.replay, size: 18),
+              label: const Text('Restart Checkpoint'),
             ),
           ],
         ],
