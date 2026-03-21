@@ -6,6 +6,20 @@ import '../domain/class9_kaleidoscope_calculator.dart';
 
 enum _Class9Experiment { lawsOfReflection, kaleidoscope }
 
+class _Class9CheckpointQuestion {
+  const _Class9CheckpointQuestion({
+    required this.prompt,
+    required this.options,
+    required this.correctIndex,
+    required this.explanation,
+  });
+
+  final String prompt;
+  final List<String> options;
+  final int correctIndex;
+  final String explanation;
+}
+
 class Class9LabScreen extends StatefulWidget {
   const Class9LabScreen({super.key});
 
@@ -15,6 +29,128 @@ class Class9LabScreen extends StatefulWidget {
 
 class _Class9LabScreenState extends State<Class9LabScreen>
     with SingleTickerProviderStateMixin {
+  static const String _checkpointPrompt =
+      'Do the experiment and answer the checkpoint questions.';
+  static const Map<_Class9Experiment, List<_Class9CheckpointQuestion>>
+  _checkpointQuestionBank = {
+    _Class9Experiment.lawsOfReflection: <_Class9CheckpointQuestion>[
+      _Class9CheckpointQuestion(
+        prompt:
+            'According to the first law of reflection, angle of incidence is:',
+        options: <String>[
+          'Equal to angle of reflection',
+          'Half of angle of reflection',
+          'Double angle of reflection',
+          'Always 90°',
+        ],
+        correctIndex: 0,
+        explanation: 'The first law states that θi = θr.',
+      ),
+      _Class9CheckpointQuestion(
+        prompt: 'Angles in reflection are measured between the ray and the:',
+        options: <String>[
+          'Normal to the mirror',
+          'Mirror surface only',
+          'Horizontal line only',
+          'Vertical line only',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Both incidence and reflection angles are measured from normal.',
+      ),
+      _Class9CheckpointQuestion(
+        prompt: 'If angle of incidence is 35°, the reflected angle is:',
+        options: <String>['20°', '35°', '55°', '70°'],
+        correctIndex: 1,
+        explanation: 'By law of reflection, reflected angle is also 35°.',
+      ),
+      _Class9CheckpointQuestion(
+        prompt:
+            'Incident ray, reflected ray, and normal at point of incidence lie in:',
+        options: <String>[
+          'The same plane',
+          'Different planes',
+          'Perpendicular planes only',
+          'Only a curved surface',
+        ],
+        correctIndex: 0,
+        explanation: 'The second law says all three lie in one common plane.',
+      ),
+      _Class9CheckpointQuestion(
+        prompt:
+            'When the incident angle increases on a plane mirror, reflected angle:',
+        options: <String>[
+          'Also increases by the same amount',
+          'Decreases',
+          'Stays zero',
+          'Becomes random',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Since θi = θr, both angles change equally for a plane mirror.',
+      ),
+    ],
+    _Class9Experiment.kaleidoscope: <_Class9CheckpointQuestion>[
+      _Class9CheckpointQuestion(
+        prompt:
+            'In a kaleidoscope, repeated patterns are formed mainly due to:',
+        options: <String>[
+          'Multiple reflections between mirrors',
+          'Refraction through water',
+          'Diffraction at edges',
+          'Magnetic field lines',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Kaleidoscope images are created by repeated mirror reflections.',
+      ),
+      _Class9CheckpointQuestion(
+        prompt:
+            'As the angle between two mirrors decreases, number of images generally:',
+        options: <String>[
+          'Increases',
+          'Decreases',
+          'Becomes zero',
+          'Stays exactly one',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Smaller mirror angle gives more sectors and therefore more images.',
+      ),
+      _Class9CheckpointQuestion(
+        prompt: 'If mirror angle is 60°, estimated sectors are close to:',
+        options: <String>['3', '6', '12', '60'],
+        correctIndex: 1,
+        explanation: 'Using 360° / θ, sectors are approximately 360/60 = 6.',
+      ),
+      _Class9CheckpointQuestion(
+        prompt: 'A basic kaleidoscope arrangement commonly uses:',
+        options: <String>[
+          'Two or more mirrors inclined to each other',
+          'One plane mirror only',
+          'A convex lens only',
+          'A prism without mirrors',
+        ],
+        correctIndex: 0,
+        explanation:
+            'At least two inclined mirrors are required for repeated reflections.',
+      ),
+      _Class9CheckpointQuestion(
+        prompt:
+            'For angle θ between mirrors, image multiplication trend follows:',
+        options: <String>[
+          'Roughly proportional to 360°/θ',
+          'Proportional to θ only',
+          'Independent of θ',
+          'Always fixed at 2 images',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Image repetition scales with sector count based on 360°/θ.',
+      ),
+    ],
+  };
+
   _Class9Experiment _active = _Class9Experiment.lawsOfReflection;
 
   double _incidentAngle = 30;
@@ -23,6 +159,18 @@ class _Class9LabScreenState extends State<Class9LabScreen>
   KaleidoscopeResult? _result;
 
   late final AnimationController _rayController;
+  final Map<_Class9Experiment, bool> _checkpointVisible =
+      <_Class9Experiment, bool>{};
+  final Map<_Class9Experiment, int> _checkpointIndex =
+      <_Class9Experiment, int>{};
+  final Map<_Class9Experiment, List<int?>> _checkpointAnswers =
+      <_Class9Experiment, List<int?>>{};
+  final Map<_Class9Experiment, List<bool>> _checkpointSubmitted =
+      <_Class9Experiment, List<bool>>{};
+  final Map<_Class9Experiment, String> _checkpointFeedback =
+      <_Class9Experiment, String>{};
+  final Map<_Class9Experiment, int> _checkpointScore =
+      <_Class9Experiment, int>{};
 
   String? _inputError;
 
@@ -33,6 +181,9 @@ class _Class9LabScreenState extends State<Class9LabScreen>
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat();
+    for (final experiment in _Class9Experiment.values) {
+      _resetCheckpoint(experiment);
+    }
     _calculate();
   }
 
@@ -53,9 +204,151 @@ class _Class9LabScreenState extends State<Class9LabScreen>
     });
   }
 
+  List<_Class9CheckpointQuestion> _activeQuestions() {
+    return _checkpointQuestionBank[_active] ??
+        const <_Class9CheckpointQuestion>[];
+  }
+
+  void _resetCheckpoint(_Class9Experiment experiment) {
+    final total = _checkpointQuestionBank[experiment]?.length ?? 0;
+    _checkpointVisible[experiment] = false;
+    _checkpointIndex[experiment] = 0;
+    _checkpointAnswers[experiment] = List<int?>.filled(total, null);
+    _checkpointSubmitted[experiment] = List<bool>.filled(total, false);
+    _checkpointFeedback[experiment] = '';
+    _checkpointScore[experiment] = 0;
+  }
+
+  bool _isExperimentVerified() {
+    final questions = _activeQuestions();
+    final submitted = _checkpointSubmitted[_active] ?? const <bool>[];
+    final allAnswered =
+        questions.isNotEmpty &&
+        submitted.length == questions.length &&
+        submitted.every((value) => value);
+    final score = _checkpointScore[_active] ?? 0;
+    return allAnswered && score >= 4;
+  }
+
+  void _startCheckpoint() {
+    final experiment = _active;
+    setState(() {
+      _checkpointVisible[experiment] = true;
+      _checkpointFeedback[experiment] = '';
+    });
+  }
+
+  void _selectCheckpointOption(int optionIndex) {
+    final experiment = _active;
+    final index = _checkpointIndex[experiment] ?? 0;
+    final answers = _checkpointAnswers[experiment];
+    final submitted = _checkpointSubmitted[experiment];
+    if (answers == null || submitted == null || submitted[index]) {
+      return;
+    }
+    setState(() {
+      answers[index] = optionIndex;
+      _checkpointFeedback[experiment] = '';
+    });
+  }
+
+  void _submitCheckpointAnswer() {
+    final experiment = _active;
+    final questions = _activeQuestions();
+    if (questions.isEmpty) return;
+    final index = (_checkpointIndex[experiment] ?? 0).clamp(
+      0,
+      questions.length - 1,
+    );
+    final answers = _checkpointAnswers[experiment];
+    final submitted = _checkpointSubmitted[experiment];
+    if (answers == null || submitted == null) return;
+
+    final selected = answers[index];
+    if (selected == null) {
+      setState(() {
+        _checkpointFeedback[experiment] = 'Select an option before submitting.';
+      });
+      return;
+    }
+    if (submitted[index]) {
+      setState(() {
+        _checkpointFeedback[experiment] =
+            'This question is already submitted. Use Next Question.';
+      });
+      return;
+    }
+
+    final question = questions[index];
+    final isCorrect = selected == question.correctIndex;
+
+    setState(() {
+      submitted[index] = true;
+      if (isCorrect) {
+        _checkpointScore[experiment] = (_checkpointScore[experiment] ?? 0) + 1;
+      }
+      _checkpointFeedback[experiment] = isCorrect
+          ? 'Correct. ${question.explanation}'
+          : 'Not correct. ${question.explanation}';
+    });
+  }
+
+  void _goToNextCheckpointQuestion() {
+    final experiment = _active;
+    final questions = _activeQuestions();
+    if (questions.isEmpty) return;
+    final index = (_checkpointIndex[experiment] ?? 0).clamp(
+      0,
+      questions.length - 1,
+    );
+    final submitted = _checkpointSubmitted[experiment] ?? const <bool>[];
+    if (!submitted[index]) {
+      setState(() {
+        _checkpointFeedback[experiment] =
+            'Submit this answer before moving to the next question.';
+      });
+      return;
+    }
+    if (index < questions.length - 1) {
+      setState(() {
+        _checkpointIndex[experiment] = index + 1;
+        _checkpointFeedback[experiment] = '';
+      });
+    }
+  }
+
+  void _restartCheckpoint() {
+    final experiment = _active;
+    setState(() {
+      _resetCheckpoint(experiment);
+      _checkpointVisible[experiment] = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final activeQuestions = _activeQuestions();
+    final activeQuestionIndex = activeQuestions.isEmpty
+        ? 0
+        : (_checkpointIndex[_active] ?? 0).clamp(0, activeQuestions.length - 1);
+    final activeAnswers = _checkpointAnswers[_active] ?? const <int?>[];
+    final activeSubmitted = _checkpointSubmitted[_active] ?? const <bool>[];
+    final activeQuestion = activeQuestions.isEmpty
+        ? const _Class9CheckpointQuestion(
+            prompt: '',
+            options: <String>[],
+            correctIndex: 0,
+            explanation: '',
+          )
+        : activeQuestions[activeQuestionIndex];
+    final selectedCheckpointOption = activeQuestionIndex < activeAnswers.length
+        ? activeAnswers[activeQuestionIndex]
+        : null;
+    final activeCheckpointSubmitted =
+        activeQuestionIndex < activeSubmitted.length
+        ? activeSubmitted[activeQuestionIndex]
+        : false;
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -124,6 +417,21 @@ class _Class9LabScreenState extends State<Class9LabScreen>
                   if (_active == _Class9Experiment.lawsOfReflection)
                     _LawsOfReflectionExperiment(
                       incidentAngle: _incidentAngle,
+                      isVerified: _isExperimentVerified(),
+                      checkpointPrompt: _checkpointPrompt,
+                      checkpointVisible: _checkpointVisible[_active] ?? false,
+                      checkpointQuestion: activeQuestion,
+                      checkpointQuestionIndex: activeQuestionIndex,
+                      checkpointTotalQuestions: activeQuestions.length,
+                      checkpointSelectedOption: selectedCheckpointOption,
+                      checkpointSubmitted: activeCheckpointSubmitted,
+                      checkpointFeedback: _checkpointFeedback[_active] ?? '',
+                      checkpointScore: _checkpointScore[_active] ?? 0,
+                      onStartCheckpoint: _startCheckpoint,
+                      onCheckpointOptionSelected: _selectCheckpointOption,
+                      onSubmitCheckpointAnswer: _submitCheckpointAnswer,
+                      onNextCheckpointQuestion: _goToNextCheckpointQuestion,
+                      onRestartCheckpoint: _restartCheckpoint,
                       onIncidentAngleChanged: (value) {
                         setState(() => _incidentAngle = value);
                       },
@@ -142,6 +450,21 @@ class _Class9LabScreenState extends State<Class9LabScreen>
                         _calculate();
                       },
                       rayController: _rayController,
+                      isVerified: _isExperimentVerified(),
+                      checkpointPrompt: _checkpointPrompt,
+                      checkpointVisible: _checkpointVisible[_active] ?? false,
+                      checkpointQuestion: activeQuestion,
+                      checkpointQuestionIndex: activeQuestionIndex,
+                      checkpointTotalQuestions: activeQuestions.length,
+                      checkpointSelectedOption: selectedCheckpointOption,
+                      checkpointSubmitted: activeCheckpointSubmitted,
+                      checkpointFeedback: _checkpointFeedback[_active] ?? '',
+                      checkpointScore: _checkpointScore[_active] ?? 0,
+                      onStartCheckpoint: _startCheckpoint,
+                      onCheckpointOptionSelected: _selectCheckpointOption,
+                      onSubmitCheckpointAnswer: _submitCheckpointAnswer,
+                      onNextCheckpointQuestion: _goToNextCheckpointQuestion,
+                      onRestartCheckpoint: _restartCheckpoint,
                     ),
                   const SizedBox(height: 32),
                   Text(
@@ -168,10 +491,40 @@ class _Class9LabScreenState extends State<Class9LabScreen>
 class _LawsOfReflectionExperiment extends StatelessWidget {
   const _LawsOfReflectionExperiment({
     required this.incidentAngle,
+    required this.isVerified,
+    required this.checkpointPrompt,
+    required this.checkpointVisible,
+    required this.checkpointQuestion,
+    required this.checkpointQuestionIndex,
+    required this.checkpointTotalQuestions,
+    required this.checkpointSelectedOption,
+    required this.checkpointSubmitted,
+    required this.checkpointFeedback,
+    required this.checkpointScore,
+    required this.onStartCheckpoint,
+    required this.onCheckpointOptionSelected,
+    required this.onSubmitCheckpointAnswer,
+    required this.onNextCheckpointQuestion,
+    required this.onRestartCheckpoint,
     required this.onIncidentAngleChanged,
   });
 
   final double incidentAngle;
+  final bool isVerified;
+  final String checkpointPrompt;
+  final bool checkpointVisible;
+  final _Class9CheckpointQuestion checkpointQuestion;
+  final int checkpointQuestionIndex;
+  final int checkpointTotalQuestions;
+  final int? checkpointSelectedOption;
+  final bool checkpointSubmitted;
+  final String checkpointFeedback;
+  final int checkpointScore;
+  final VoidCallback onStartCheckpoint;
+  final ValueChanged<int> onCheckpointOptionSelected;
+  final VoidCallback onSubmitCheckpointAnswer;
+  final VoidCallback onNextCheckpointQuestion;
+  final VoidCallback onRestartCheckpoint;
   final ValueChanged<double> onIncidentAngleChanged;
 
   @override
@@ -187,6 +540,8 @@ class _LawsOfReflectionExperiment extends StatelessWidget {
           style: theme.textTheme.bodyLarge,
         ),
         const SizedBox(height: 12),
+        Text('Inputs', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
         Row(
           children: [
             const Icon(Icons.straighten, size: 20),
@@ -209,7 +564,14 @@ class _LawsOfReflectionExperiment extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: const [Text('0°'), Text('45°'), Text('90°')],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
+        Text('Canvas', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+        AspectRatio(
+          aspectRatio: 16 / 8,
+          child: _ReflectionLawStage(incidentAngle: incidentAngle),
+        ),
+        const SizedBox(height: 16),
         _ResultPanel(
           title: 'Output',
           body:
@@ -218,9 +580,22 @@ class _LawsOfReflectionExperiment extends StatelessWidget {
               'θi = θr (Law of Reflection confirmed)',
         ),
         const SizedBox(height: 16),
-        AspectRatio(
-          aspectRatio: 16 / 8,
-          child: _ReflectionLawStage(incidentAngle: incidentAngle),
+        _CheckpointCard(
+          prompt: checkpointPrompt,
+          question: checkpointQuestion,
+          questionIndex: checkpointQuestionIndex,
+          totalQuestions: checkpointTotalQuestions,
+          selectedOption: checkpointSelectedOption,
+          isSubmitted: checkpointSubmitted,
+          feedback: checkpointFeedback,
+          score: checkpointScore,
+          isVerified: isVerified,
+          visible: checkpointVisible,
+          onStart: onStartCheckpoint,
+          onOptionSelected: onCheckpointOptionSelected,
+          onSubmitAnswer: onSubmitCheckpointAnswer,
+          onNextQuestion: onNextCheckpointQuestion,
+          onRestart: onRestartCheckpoint,
         ),
       ],
     );
@@ -424,6 +799,21 @@ class _KaleidoscopeExperiment extends StatelessWidget {
     required this.mirrorAngle,
     required this.numberOfMirrors,
     required this.result,
+    required this.isVerified,
+    required this.checkpointPrompt,
+    required this.checkpointVisible,
+    required this.checkpointQuestion,
+    required this.checkpointQuestionIndex,
+    required this.checkpointTotalQuestions,
+    required this.checkpointSelectedOption,
+    required this.checkpointSubmitted,
+    required this.checkpointFeedback,
+    required this.checkpointScore,
+    required this.onStartCheckpoint,
+    required this.onCheckpointOptionSelected,
+    required this.onSubmitCheckpointAnswer,
+    required this.onNextCheckpointQuestion,
+    required this.onRestartCheckpoint,
     required this.onMirrorAngleChanged,
     required this.onNumberOfMirrorsChanged,
     required this.rayController,
@@ -432,6 +822,21 @@ class _KaleidoscopeExperiment extends StatelessWidget {
   final double mirrorAngle;
   final int numberOfMirrors;
   final KaleidoscopeResult? result;
+  final bool isVerified;
+  final String checkpointPrompt;
+  final bool checkpointVisible;
+  final _Class9CheckpointQuestion checkpointQuestion;
+  final int checkpointQuestionIndex;
+  final int checkpointTotalQuestions;
+  final int? checkpointSelectedOption;
+  final bool checkpointSubmitted;
+  final String checkpointFeedback;
+  final int checkpointScore;
+  final VoidCallback onStartCheckpoint;
+  final ValueChanged<int> onCheckpointOptionSelected;
+  final VoidCallback onSubmitCheckpointAnswer;
+  final VoidCallback onNextCheckpointQuestion;
+  final VoidCallback onRestartCheckpoint;
   final ValueChanged<double> onMirrorAngleChanged;
   final ValueChanged<int> onNumberOfMirrorsChanged;
   final AnimationController rayController;
@@ -447,6 +852,8 @@ class _KaleidoscopeExperiment extends StatelessWidget {
           style: theme.textTheme.titleLarge,
         ),
         const SizedBox(height: 12),
+        Text('Inputs', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
@@ -490,16 +897,9 @@ class _KaleidoscopeExperiment extends StatelessWidget {
             ),
           ],
         ),
-        if (result != null)
-          _ResultPanel(
-            title: 'Output',
-            body:
-                'Mirror angle θ = ${result!.mirrorAngleDegrees.toStringAsFixed(0)}°\n'
-                'Number of sectors = ${result!.numberOfSectors}\n'
-                'Reflection count = ${result!.reflectionCount}\n'
-                'Total images visible = ${result!.imageCount}',
-          ),
         const SizedBox(height: 16),
+        Text('Canvas', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
         Center(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -523,6 +923,35 @@ class _KaleidoscopeExperiment extends StatelessWidget {
               );
             },
           ),
+        ),
+        if (result != null) ...[
+          const SizedBox(height: 16),
+          _ResultPanel(
+            title: 'Output',
+            body:
+                'Mirror angle θ = ${result!.mirrorAngleDegrees.toStringAsFixed(0)}°\n'
+                'Number of sectors = ${result!.numberOfSectors}\n'
+                'Reflection count = ${result!.reflectionCount}\n'
+                'Total images visible = ${result!.imageCount}',
+          ),
+        ],
+        const SizedBox(height: 16),
+        _CheckpointCard(
+          prompt: checkpointPrompt,
+          question: checkpointQuestion,
+          questionIndex: checkpointQuestionIndex,
+          totalQuestions: checkpointTotalQuestions,
+          selectedOption: checkpointSelectedOption,
+          isSubmitted: checkpointSubmitted,
+          feedback: checkpointFeedback,
+          score: checkpointScore,
+          isVerified: isVerified,
+          visible: checkpointVisible,
+          onStart: onStartCheckpoint,
+          onOptionSelected: onCheckpointOptionSelected,
+          onSubmitAnswer: onSubmitCheckpointAnswer,
+          onNextQuestion: onNextCheckpointQuestion,
+          onRestart: onRestartCheckpoint,
         ),
       ],
     );
@@ -723,6 +1152,148 @@ class _ResultPanel extends StatelessWidget {
               fontFamily: 'monospace',
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CheckpointCard extends StatelessWidget {
+  const _CheckpointCard({
+    required this.prompt,
+    required this.question,
+    required this.questionIndex,
+    required this.totalQuestions,
+    required this.selectedOption,
+    required this.isSubmitted,
+    required this.feedback,
+    required this.score,
+    required this.isVerified,
+    required this.visible,
+    required this.onStart,
+    required this.onOptionSelected,
+    required this.onSubmitAnswer,
+    required this.onNextQuestion,
+    required this.onRestart,
+  });
+
+  final String prompt;
+  final _Class9CheckpointQuestion question;
+  final int questionIndex;
+  final int totalQuestions;
+  final int? selectedOption;
+  final bool isSubmitted;
+  final String feedback;
+  final int score;
+  final bool isVerified;
+  final bool visible;
+  final VoidCallback onStart;
+  final ValueChanged<int> onOptionSelected;
+  final VoidCallback onSubmitAnswer;
+  final VoidCallback onNextQuestion;
+  final VoidCallback onRestart;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isLastQuestion = questionIndex >= totalQuestions - 1;
+    final allSubmitted = questionIndex == totalQuestions - 1 && isSubmitted;
+    final chipText = isVerified ? 'Verified' : 'Not Verified';
+    final chipColor = isVerified
+        ? const Color(0xFF166534)
+        : const Color(0xFF9A3412);
+    final chipBackground = isVerified
+        ? const Color(0xFFDCFCE7)
+        : const Color(0xFFFFEDD5);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Experiment Checkpoint', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 6),
+          Text(prompt, style: theme.textTheme.bodyMedium),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: chipBackground,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '$chipText • Score $score/$totalQuestions',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: chipColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          if (!visible) ...[
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: onStart,
+              child: const Text('Start Checkpoint'),
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            Text(
+              'Question ${questionIndex + 1} of $totalQuestions',
+              style: theme.textTheme.labelLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(question.prompt, style: theme.textTheme.bodyLarge),
+            const SizedBox(height: 12),
+            for (var i = 0; i < question.options.length; i++) ...[
+              RadioListTile<int>(
+                value: i,
+                groupValue: selectedOption,
+                onChanged: isSubmitted ? null : (value) => onOptionSelected(i),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(question.options[i]),
+              ),
+              if (i < question.options.length - 1) const SizedBox(height: 4),
+            ],
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                FilledButton(
+                  onPressed: isSubmitted ? null : onSubmitAnswer,
+                  child: const Text('Submit'),
+                ),
+                OutlinedButton(
+                  onPressed: isLastQuestion ? null : onNextQuestion,
+                  child: const Text('Next Question'),
+                ),
+                TextButton(
+                  onPressed: onRestart,
+                  child: const Text('Retry Checkpoint'),
+                ),
+              ],
+            ),
+            if (feedback.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(feedback, style: theme.textTheme.bodyMedium),
+            ],
+            if (allSubmitted) ...[
+              const SizedBox(height: 10),
+              Text(
+                isVerified
+                    ? 'Checkpoint finished. Experiment verified.'
+                    : 'Checkpoint finished. Score 4/5 or above is needed to verify this experiment.',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
+          ],
         ],
       ),
     );
