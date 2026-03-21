@@ -721,16 +721,16 @@ class _PlaneMirrorExperiment extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        AspectRatio(
+          aspectRatio: 16 / 8,
+          child: _PlaneMirrorStage(distanceCm: result.objectDistanceCm),
+        ),
         const SizedBox(height: 12),
         _ResultPanel(
           title: 'Output',
           body:
               'Object distance = ${result.objectDistanceCm.toStringAsFixed(1)} cm\nImage distance = ${result.imageDistanceCm.toStringAsFixed(1)} cm\nRule: d(object) = d(image)',
-        ),
-        const SizedBox(height: 16),
-        AspectRatio(
-          aspectRatio: 16 / 8,
-          child: _PlaneMirrorStage(distanceCm: result.objectDistanceCm),
         ),
         const SizedBox(height: 20),
         _AiTutorCard(
@@ -882,6 +882,8 @@ class _SphericalMirrorExperiment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final stageAspectRatio = isDesktop ? (16 / 8) : (11 / 10);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -942,20 +944,12 @@ class _SphericalMirrorExperiment extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        _ResultPanel(
-          title: 'Output',
-          body:
-              'Image distance v = ${result.imageDistanceCm == null ? '∞' : '${result.imageDistanceCm!.toStringAsFixed(2)} cm'}\n'
-              'Magnification m = ${result.magnification == null ? '-' : result.magnification!.toStringAsFixed(2)}\n'
-              'Nature = ${_natureLabel(result.nature)}\n'
-              'Orientation = ${_orientationLabel(result.orientation)}\n'
-              'Size = ${_sizeLabel(result.size)}',
-        ),
-        const SizedBox(height: 16),
         AspectRatio(
-          aspectRatio: 16 / 8,
+          aspectRatio: stageAspectRatio,
           child: _MirrorStage(result: result),
         ),
+        const SizedBox(height: 16),
+        _ResultPanel(title: 'Output', body: _buildSphericalOutput(result)),
         const SizedBox(height: 20),
         _AiTutorCard(
           aiLoading: aiLoading,
@@ -1012,6 +1006,28 @@ class _SphericalMirrorExperiment extends StatelessWidget {
         return '-';
     }
   }
+
+  String _buildSphericalOutput(SphericalMirrorResult result) {
+    final vText = result.imageDistanceCm == null
+        ? '∞'
+        : '${result.imageDistanceCm!.toStringAsFixed(2)} cm';
+    final mText = result.magnification == null
+        ? '-'
+        : result.magnification!.toStringAsFixed(2);
+    final sideText = result.imageDistanceCm == null
+        ? 'Image forms at infinity.'
+        : result.imageDistanceCm! < 0
+        ? 'Image is formed in front of the mirror (object side).'
+        : 'Image is formed behind the mirror.';
+
+    return 'Mirror Formula: 1/f = 1/v + 1/u\n'
+        'Image distance v = $vText\n'
+        'Magnification m = $mText\n'
+        'Nature = ${_natureLabel(result.nature)}\n'
+        'Orientation = ${_orientationLabel(result.orientation)}\n'
+        'Size = ${_sizeLabel(result.size)}\n'
+        '$sideText';
+  }
 }
 
 class _MirrorStage extends StatelessWidget {
@@ -1023,44 +1039,104 @@ class _MirrorStage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFF8FBFF), Color(0xFFF0F7FF)],
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFD6E4F2)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140F172A),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      child: CustomPaint(
-        painter: _MirrorPainter(result),
-        child: const SizedBox.expand(),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+        child: Column(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: ColoredBox(
+                  color: const Color(0xFFFFFFFF),
+                  child: CustomPaint(
+                    painter: _MirrorPainter(result: result),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                _LegendPill(color: Color(0xFF059669), text: 'Object'),
+                _LegendPill(color: Color(0xFFDC2626), text: 'Image'),
+                _LegendPill(color: Color(0xFFF59E0B), text: 'Principal Rays'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _MirrorPainter extends CustomPainter {
-  _MirrorPainter(this.result);
+  _MirrorPainter({required this.result});
 
   final SphericalMirrorResult result;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cy = size.height * 0.62;
+    final axisY = size.height * 0.62;
     final mirrorX = size.width * 0.72;
+    const pxPerCm = 6.0;
+    final objectHeightPx = (size.height * 0.22).clamp(56.0, 95.0);
+    final leftBound = 8.0;
+
+    final gridPaint = Paint()..color = const Color(0xFFEAF2FB);
+    for (double x = 0; x < size.width; x += 28) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+    for (double y = 0; y < size.height; y += 28) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    final signedFocal = result.type == MirrorType.concave
+        ? -result.focalLengthCm
+        : result.focalLengthCm;
+    final focusX = (mirrorX + signedFocal * pxPerCm)
+        .clamp(18.0, size.width - 18.0)
+        .toDouble();
+    final centerX = (mirrorX + 2 * signedFocal * pxPerCm)
+        .clamp(18.0, size.width - 18.0)
+        .toDouble();
+
+    // Principal axis
     canvas.drawLine(
-      Offset(0, cy),
-      Offset(size.width, cy),
+      Offset(0, axisY),
+      Offset(size.width, axisY),
       Paint()
-        ..color = const Color(0xFF94A3B8)
-        ..strokeWidth = 2,
+        ..color = const Color(0xFF64748B)
+        ..strokeWidth = 2.2,
     );
 
+    // Mirror profile
     final mirrorPath = Path();
-    final mirrorTop = Offset(mirrorX, cy - size.height * 0.33);
-    final mirrorBottom = Offset(mirrorX, cy + size.height * 0.22);
+    final mirrorTop = Offset(mirrorX, axisY - size.height * 0.35);
+    final mirrorBottom = Offset(mirrorX, axisY + size.height * 0.24);
     if (result.type == MirrorType.concave) {
       mirrorPath
         ..moveTo(mirrorTop.dx, mirrorTop.dy)
         ..quadraticBezierTo(
           mirrorX + 42,
-          cy - 12,
+          axisY - 12,
           mirrorBottom.dx,
           mirrorBottom.dy,
         );
@@ -1069,7 +1145,7 @@ class _MirrorPainter extends CustomPainter {
         ..moveTo(mirrorTop.dx, mirrorTop.dy)
         ..quadraticBezierTo(
           mirrorX - 42,
-          cy - 12,
+          axisY - 12,
           mirrorBottom.dx,
           mirrorBottom.dy,
         );
@@ -1078,25 +1154,163 @@ class _MirrorPainter extends CustomPainter {
       mirrorPath,
       Paint()
         ..color = const Color(0xFF2563EB)
-        ..strokeWidth = 4
+        ..strokeWidth = 4.5
         ..style = PaintingStyle.stroke,
     );
+    canvas.drawPath(
+      mirrorPath,
+      Paint()
+        ..color = const Color(0x882563EB)
+        ..strokeWidth = 9
+        ..style = PaintingStyle.stroke
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
 
-    final objectX = (mirrorX - result.objectDistanceCm * 6)
+    // Object
+    final objectX = (mirrorX - result.objectDistanceCm * pxPerCm)
         .clamp(30.0, mirrorX - 20)
         .toDouble();
-    final objectBase = Offset(objectX, cy);
-    final objectTip = Offset(objectX, cy - 80);
+    final objectBase = Offset(objectX, axisY);
+    final objectTip = Offset(objectX, axisY - objectHeightPx);
     _arrow(canvas, objectBase, objectTip, const Color(0xFF059669));
+    _plainLabel(
+      canvas,
+      size,
+      'Object',
+      Offset(objectTip.dx - 62, objectTip.dy - 24),
+    );
 
+    // C and F markers
+    _axisMarker(canvas, Offset(centerX, axisY), const Color(0xFF0EA5A4));
+    _axisMarker(canvas, Offset(focusX, axisY), const Color(0xFF7C3AED));
+    _plainLabel(canvas, size, 'C', Offset(centerX - 7, axisY + 10));
+    _plainLabel(canvas, size, 'F', Offset(focusX - 6, axisY + 10));
+
+    Offset? imageTip;
+    Offset? imageBase;
     if (result.imageDistanceCm != null && result.magnification != null) {
-      final imageX = (mirrorX + result.imageDistanceCm! * 6)
+      final imageX = (mirrorX + result.imageDistanceCm! * pxPerCm)
           .clamp(20.0, size.width - 20)
           .toDouble();
-      final imageHeight = -80 * result.magnification!;
-      final imageBase = Offset(imageX, cy);
-      final imageTip = Offset(imageX, cy - imageHeight);
+      final imageHeight = -objectHeightPx * result.magnification!;
+      imageBase = Offset(imageX, axisY);
+      imageTip = Offset(imageX, axisY + imageHeight);
       _arrow(canvas, imageBase, imageTip, const Color(0xFFDC2626));
+      final imageLabelDx = imageTip.dx >= mirrorX ? 8.0 : -44.0;
+      final imageLabelDy = imageTip.dy < axisY ? -22.0 : 8.0;
+      _plainLabel(
+        canvas,
+        size,
+        'Image',
+        Offset(imageTip.dx + imageLabelDx, imageTip.dy + imageLabelDy),
+      );
+    }
+
+    // Principal rays
+    final mirrorHit1 = Offset(mirrorX, objectTip.dy);
+    final rayPaint = Paint()
+      ..color = const Color(0xFFF59E0B)
+      ..strokeWidth = 2.2;
+    canvas.drawLine(objectTip, mirrorHit1, rayPaint);
+
+    final focusPoint = Offset(focusX, axisY);
+    final mirrorHit2Raw = _pointOnRayToX(
+      start: objectTip,
+      through: focusPoint,
+      targetX: mirrorX,
+      fallbackY: axisY - objectHeightPx * 0.30,
+    );
+    final mirrorHit2 = Offset(
+      mirrorX,
+      mirrorHit2Raw.dy.clamp(mirrorTop.dy + 8, mirrorBottom.dy - 8).toDouble(),
+    );
+    canvas.drawLine(objectTip, mirrorHit2, rayPaint);
+
+    if (imageTip != null) {
+      final imageIsReal = imageTip.dx < mirrorX;
+
+      if (imageIsReal) {
+        canvas.drawLine(mirrorHit1, imageTip, rayPaint);
+        canvas.drawLine(mirrorHit2, imageTip, rayPaint);
+      } else {
+        final r1 = _pointOnRayToX(
+          start: mirrorHit1,
+          through: imageTip,
+          targetX: leftBound,
+          fallbackY: mirrorHit1.dy,
+        );
+        final r2 = _pointOnRayToX(
+          start: mirrorHit2,
+          through: imageTip,
+          targetX: leftBound,
+          fallbackY: mirrorHit2.dy,
+        );
+        canvas.drawLine(mirrorHit1, r1, rayPaint);
+        canvas.drawLine(mirrorHit2, r2, rayPaint);
+        _dashedLine(canvas, mirrorHit1, imageTip, const Color(0xFFF59E0B));
+        _dashedLine(canvas, mirrorHit2, imageTip, const Color(0xFFF59E0B));
+      }
+    } else {
+      final out1 = Offset(leftBound, objectTip.dy);
+      final out2 = Offset(6, mirrorHit2.dy - 8);
+      canvas.drawLine(mirrorHit1, out1, rayPaint);
+      canvas.drawLine(mirrorHit2, out2, rayPaint);
+      _plainLabel(canvas, size, 'Image at ∞', Offset(mirrorX + 10, axisY - 46));
+    }
+
+    // Pole marker for cleaner geometry reading.
+    _axisMarker(canvas, Offset(mirrorX, axisY), const Color(0xFF334155));
+  }
+
+  Offset _pointOnRayToX({
+    required Offset start,
+    required Offset through,
+    required double targetX,
+    required double fallbackY,
+  }) {
+    final dx = through.dx - start.dx;
+    final dy = through.dy - start.dy;
+    if (dx.abs() < 0.001) return Offset(targetX, fallbackY);
+    final t = (targetX - start.dx) / dx;
+    return Offset(targetX, start.dy + dy * t);
+  }
+
+  void _axisMarker(Canvas canvas, Offset point, Color color) {
+    canvas.drawCircle(point, 4.5, Paint()..color = color);
+  }
+
+  void _plainLabel(Canvas canvas, Size size, String text, Offset origin) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(
+          color: Color(0xFF0F172A),
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final x = origin.dx.clamp(4.0, size.width - tp.width - 4.0).toDouble();
+    final y = origin.dy.clamp(4.0, size.height - tp.height - 4.0).toDouble();
+    tp.paint(canvas, Offset(x, y));
+  }
+
+  void _dashedLine(Canvas canvas, Offset from, Offset to, Color color) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.85)
+      ..strokeWidth = 1.8;
+    final total = (to - from).distance;
+    if (total <= 0.1) return;
+    final direction = (to - from) / total;
+    const dash = 8.0;
+    const gap = 5.0;
+    var travelled = 0.0;
+    while (travelled < total) {
+      final start = from + direction * travelled;
+      final end = from + direction * math.min(travelled + dash, total);
+      canvas.drawLine(start, end, paint);
+      travelled += dash + gap;
     }
   }
 
@@ -1113,6 +1327,44 @@ class _MirrorPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _MirrorPainter oldDelegate) =>
       oldDelegate.result != result;
+}
+
+class _LegendPill extends StatelessWidget {
+  const _LegendPill({required this.color, required this.text});
+
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFDCE7F4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF334155),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _NewtonsDiscExperiment extends StatelessWidget {
@@ -1188,6 +1440,41 @@ class _NewtonsDiscExperiment extends StatelessWidget {
             Text('High'),
             Text('Very High'),
           ],
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: SizedBox(
+            width: 340,
+            height: 340,
+            child: AnimatedBuilder(
+              animation: controller,
+              builder: (context, child) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Transform.rotate(
+                      angle: controller.value * 2 * math.pi,
+                      child: CustomPaint(
+                        size: const Size(320, 320),
+                        painter: _NewtonDiscPainter(),
+                      ),
+                    ),
+                    Opacity(
+                      opacity: whiteOpacity,
+                      child: Container(
+                        width: 260,
+                        height: 260,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         _ResultPanel(
@@ -1292,41 +1579,6 @@ class _NewtonsDiscExperiment extends StatelessWidget {
             ],
           ),
         ],
-        const SizedBox(height: 16),
-        Center(
-          child: SizedBox(
-            width: 340,
-            height: 340,
-            child: AnimatedBuilder(
-              animation: controller,
-              builder: (context, child) {
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Transform.rotate(
-                      angle: controller.value * 2 * math.pi,
-                      child: CustomPaint(
-                        size: const Size(320, 320),
-                        painter: _NewtonDiscPainter(),
-                      ),
-                    ),
-                    Opacity(
-                      opacity: whiteOpacity,
-                      child: Container(
-                        width: 260,
-                        height: 260,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ),
       ],
     );
   }
