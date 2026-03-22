@@ -1536,116 +1536,109 @@ class _ExperimentPainter extends CustomPainter {
 
   void _drawTir(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
+    final boundaryY = size.height * 0.56;
+    final hit = Offset(size.width * 0.5, boundaryY);
+    final rayLength = math.min(size.width * 0.32, size.height * 0.34);
+
     canvas.drawRect(
       rect,
       Paint()
         ..shader = const LinearGradient(
-          colors: [Color(0xFFF8FBFF), Color(0xFFF7F0E6)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: <Color>[
+            Color(0xFFEAF3FF),
+            Color(0xFFE0F2FE),
+            Color(0xFF0D9488),
+          ],
+          stops: <double>[0, 0.55, 1],
         ).createShader(rect),
     );
 
-    final boundaryY = size.height * 0.5;
-    final hit = Offset(size.width * 0.55, boundaryY);
-
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, boundaryY),
-      Paint()..color = const Color(0xFFEAF3FF),
-    );
     canvas.drawRect(
       Rect.fromLTWH(0, boundaryY, size.width, size.height - boundaryY),
-      Paint()..color = const Color(0xFF0F766E).withValues(alpha: 0.45),
+      Paint()..color = const Color(0xFF0F766E).withValues(alpha: 0.35),
     );
+
     canvas.drawLine(
       Offset(0, boundaryY),
       Offset(size.width, boundaryY),
       Paint()
         ..color = Colors.white
-        ..strokeWidth = 3,
-    );
-    canvas.drawLine(
-      Offset(hit.dx, 0),
-      Offset(hit.dx, size.height),
-      Paint()
-        ..color = const Color(0xFF94A3B8)
-        ..strokeWidth = 2,
-    );
-    _drawLabel(
-      canvas,
-      'Normal',
-      Offset(hit.dx + 8, 18),
-      color: const Color(0xFF334155),
+        ..strokeWidth = 3.2,
     );
     _drawLabel(
       canvas,
       'Interface',
-      Offset(14, boundaryY - 24),
+      Offset(12, boundaryY - 26),
       color: const Color(0xFF334155),
+      bounds: size,
     );
     _drawLabel(
       canvas,
       'Rarer medium (air)',
-      const Offset(14, 14),
+      const Offset(12, 10),
       color: const Color(0xFF1E3A8A),
+      bounds: size,
     );
     _drawLabel(
       canvas,
       'Denser medium (glass/water)',
-      Offset(14, boundaryY + 10),
-      color: const Color(0xFF064E3B),
+      Offset(12, boundaryY + 10),
+      color: const Color(0xFF065F46),
+      bounds: size,
     );
-    if (tirResult.criticalAngleDeg.isFinite) {
-      final icRad = tirResult.criticalAngleDeg * math.pi / 180;
-      final icEnd = Offset(
-        hit.dx - math.sin(icRad) * 90,
-        hit.dy + math.cos(icRad) * 90,
-      );
-      _drawDashedLine(
-        canvas,
-        start: hit,
-        end: icEnd,
-        color: const Color(0xFF0F766E),
-        strokeWidth: 2,
-      );
-      _drawLabel(
-        canvas,
-        'ic',
-        Offset(hit.dx - 50, hit.dy + 36),
-        color: const Color(0xFF0F766E),
-        fontSize: 13,
-      );
-    }
+
+    _drawDashedLine(
+      canvas,
+      start: Offset(hit.dx, 8),
+      end: Offset(hit.dx, size.height - 8),
+      color: const Color(0xFF64748B),
+      strokeWidth: 2,
+    );
+    _drawLabel(
+      canvas,
+      'Normal',
+      Offset(hit.dx + 8, 14),
+      color: const Color(0xFF334155),
+      bounds: size,
+    );
 
     final iRad = tirResult.incidentAngleDeg * math.pi / 180;
-    final source = Offset(
-      hit.dx - math.sin(iRad) * 220,
-      hit.dy + math.cos(iRad) * 220,
+    final incidentStart = Offset(
+      hit.dx - math.sin(iRad) * rayLength,
+      hit.dy + math.cos(iRad) * rayLength,
     );
-    canvas.drawLine(
-      source,
-      hit,
-      Paint()
-        ..color = const Color(0xFFF97316)
-        ..strokeWidth = 4,
+    _drawDirectionalRay(
+      canvas,
+      from: incidentStart,
+      to: hit,
+      color: const Color(0xFFF97316),
+      strokeWidth: 4,
     );
     _drawLabel(
       canvas,
       'Incident ray',
-      Offset((source.dx + hit.dx) / 2 - 70, (source.dy + hit.dy) / 2 + 12),
+      Offset(
+        (incidentStart.dx + hit.dx) / 2 - 52,
+        (incidentStart.dy + hit.dy) / 2 + 10,
+      ),
       color: const Color(0xFF9A3412),
+      bounds: size,
     );
 
     final incidentDirection = math.atan2(
-      source.dy - hit.dy,
-      source.dx - hit.dx,
+      incidentStart.dy - hit.dy,
+      incidentStart.dx - hit.dx,
     );
     canvas.drawArc(
       Rect.fromCircle(center: hit, radius: 34),
       math.pi / 2,
-      incidentDirection - (math.pi / 2),
+      incidentDirection - math.pi / 2,
       false,
       Paint()
         ..color = const Color(0xFFF97316)
-        ..strokeWidth = 2
+        ..strokeWidth = 2.2
         ..style = PaintingStyle.stroke,
     );
     _drawLabel(
@@ -1654,30 +1647,55 @@ class _ExperimentPainter extends CustomPainter {
       Offset(hit.dx - 26, hit.dy + 24),
       color: const Color(0xFFF97316),
       fontSize: 13,
+      bounds: size,
     );
+
+    if (tirResult.criticalAngleDeg.isFinite) {
+      final icRad = tirResult.criticalAngleDeg * math.pi / 180;
+      final criticalEnd = Offset(
+        hit.dx - math.sin(icRad) * (rayLength * 0.58),
+        hit.dy + math.cos(icRad) * (rayLength * 0.58),
+      );
+      _drawDashedLine(
+        canvas,
+        start: hit,
+        end: criticalEnd,
+        color: const Color(0xFF0F766E),
+        strokeWidth: 1.8,
+      );
+      _drawLabel(
+        canvas,
+        'ic',
+        Offset(criticalEnd.dx - 18, criticalEnd.dy + 4),
+        color: const Color(0xFF0F766E),
+        fontSize: 12,
+        bounds: size,
+      );
+    }
 
     if (tirResult.state == TirState.refraction &&
         tirResult.refractionAngleDeg != null) {
       final rRad = tirResult.refractionAngleDeg! * math.pi / 180;
       final refractedEnd = Offset(
-        hit.dx + math.sin(rRad) * 220,
-        hit.dy - math.cos(rRad) * 220,
+        hit.dx + math.sin(rRad) * rayLength,
+        hit.dy - math.cos(rRad) * rayLength,
       );
-      canvas.drawLine(
-        hit,
-        refractedEnd,
-        Paint()
-          ..color = const Color(0xFF2563EB)
-          ..strokeWidth = 4,
+      _drawDirectionalRay(
+        canvas,
+        from: hit,
+        to: refractedEnd,
+        color: const Color(0xFF2563EB),
+        strokeWidth: 4,
       );
       _drawLabel(
         canvas,
         'Refracted ray',
         Offset(
-          (hit.dx + refractedEnd.dx) / 2 - 54,
+          (hit.dx + refractedEnd.dx) / 2 - 48,
           (hit.dy + refractedEnd.dy) / 2 - 24,
         ),
         color: const Color(0xFF1D4ED8),
+        bounds: size,
       );
       final refractedDirection = math.atan2(
         refractedEnd.dy - hit.dy,
@@ -1686,66 +1704,167 @@ class _ExperimentPainter extends CustomPainter {
       canvas.drawArc(
         Rect.fromCircle(center: hit, radius: 34),
         -math.pi / 2,
-        refractedDirection - (-math.pi / 2),
+        refractedDirection + math.pi / 2,
         false,
         Paint()
           ..color = const Color(0xFF2563EB)
-          ..strokeWidth = 2
+          ..strokeWidth = 2.2
           ..style = PaintingStyle.stroke,
       );
       _drawLabel(
         canvas,
         'r',
-        Offset(hit.dx + 10, hit.dy - 32),
+        Offset(hit.dx + 12, hit.dy - 32),
         color: const Color(0xFF2563EB),
         fontSize: 13,
+        bounds: size,
       );
-    }
-    if (tirResult.state == TirState.critical) {
-      final grazingEnd = Offset(size.width - 20, boundaryY - 1);
-      canvas.drawLine(
-        hit,
-        grazingEnd,
-        Paint()
-          ..color = const Color(0xFF2563EB)
-          ..strokeWidth = 4,
+    } else if (tirResult.state == TirState.critical) {
+      final grazingEnd = Offset(size.width - 16, boundaryY - 1);
+      _drawDirectionalRay(
+        canvas,
+        from: hit,
+        to: grazingEnd,
+        color: const Color(0xFF2563EB),
+        strokeWidth: 4,
       );
       _drawLabel(
         canvas,
         'Refracted ray (r = 90°)',
-        Offset(hit.dx + 24, boundaryY - 24),
+        Offset(hit.dx + 20, boundaryY - 28),
         color: const Color(0xFF1D4ED8),
+        bounds: size,
       );
     }
+
     if (tirResult.state != TirState.refraction) {
       final reflectedEnd = Offset(
-        hit.dx + math.sin(iRad) * 220,
-        hit.dy + math.cos(iRad) * 220,
+        hit.dx + math.sin(iRad) * rayLength,
+        hit.dy + math.cos(iRad) * rayLength,
       );
-      canvas.drawLine(
-        hit,
-        reflectedEnd,
-        Paint()
-          ..color = const Color(0xFFFDE047)
-          ..strokeWidth = 4,
+      _drawDirectionalRay(
+        canvas,
+        from: hit,
+        to: reflectedEnd,
+        color: const Color(0xFFFDE047),
+        strokeWidth: 4,
       );
       _drawLabel(
         canvas,
         'Reflected ray',
         Offset(
-          (hit.dx + reflectedEnd.dx) / 2 - 46,
-          (hit.dy + reflectedEnd.dy) / 2 - 18,
+          (hit.dx + reflectedEnd.dx) / 2 - 44,
+          (hit.dy + reflectedEnd.dy) / 2 - 16,
         ),
         color: const Color(0xFFA16207),
+        bounds: size,
       );
     }
+
     canvas.drawCircle(hit, 5, Paint()..color = Colors.white);
     _drawLabel(
       canvas,
       'Point of incidence',
       Offset(hit.dx + 8, hit.dy + 6),
       color: const Color(0xFF334155),
+      bounds: size,
     );
+
+    _drawTirReadoutPanel(canvas, size);
+  }
+
+  void _drawDirectionalRay(
+    Canvas canvas, {
+    required Offset from,
+    required Offset to,
+    required Color color,
+    double strokeWidth = 3,
+  }) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(from, to, paint);
+    final direction = to - from;
+    final len = direction.distance;
+    if (len < 1) return;
+    final unit = direction / len;
+    final perp = Offset(-unit.dy, unit.dx);
+    const arrowLen = 11.0;
+    const arrowWidth = 5.0;
+    final base = to - unit * arrowLen;
+    final p1 = base + perp * arrowWidth;
+    final p2 = base - perp * arrowWidth;
+    final path = Path()
+      ..moveTo(to.dx, to.dy)
+      ..lineTo(p1.dx, p1.dy)
+      ..lineTo(p2.dx, p2.dy)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  void _drawTirReadoutPanel(Canvas canvas, Size size) {
+    final panelWidth = math.min(size.width * 0.34, 260.0);
+    final panelRect = Rect.fromLTWH(
+      size.width - panelWidth - 14,
+      12,
+      panelWidth,
+      114,
+    );
+    final panelRRect = RRect.fromRectAndRadius(
+      panelRect,
+      const Radius.circular(12),
+    );
+    canvas.drawRRect(
+      panelRRect,
+      Paint()..color = const Color(0xFF0F172A).withValues(alpha: 0.84),
+    );
+    canvas.drawRRect(
+      panelRRect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..color = const Color(0xFF93C5FD).withValues(alpha: 0.6),
+    );
+
+    final critical = tirResult.criticalAngleDeg.isFinite
+        ? '${tirResult.criticalAngleDeg.toStringAsFixed(1)}°'
+        : '-';
+    final refracted = tirResult.refractionAngleDeg == null
+        ? '-'
+        : '${tirResult.refractionAngleDeg!.toStringAsFixed(1)}°';
+    final lines = <String>[
+      'i: ${tirResult.incidentAngleDeg.toStringAsFixed(1)}°',
+      'ic: $critical',
+      'r: $refracted',
+      'State: ${_tirStateLabelText(tirResult.state)}',
+    ];
+    final painter = TextPainter(
+      text: TextSpan(
+        text: lines.join('\n'),
+        style: const TextStyle(
+          color: Color(0xFFBFDBFE),
+          fontSize: 11.5,
+          height: 1.35,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: panelWidth - 16);
+    painter.paint(canvas, Offset(panelRect.left + 8, panelRect.top + 8));
+  }
+
+  String _tirStateLabelText(TirState state) {
+    switch (state) {
+      case TirState.refraction:
+        return 'Refraction';
+      case TirState.critical:
+        return 'Critical angle';
+      case TirState.totalInternalReflection:
+        return 'TIR';
+      case TirState.invalid:
+        return 'Invalid';
+    }
   }
 
   void _drawPrism(Canvas canvas, Size size) {
