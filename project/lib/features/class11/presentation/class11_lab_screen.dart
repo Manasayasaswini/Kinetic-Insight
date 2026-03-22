@@ -5,6 +5,20 @@ import 'package:flutter/material.dart';
 import '../domain/class11_experiment.dart';
 import '../domain/class11_optics_calculator.dart';
 
+class _Class11CheckpointQuestion {
+  const _Class11CheckpointQuestion({
+    required this.prompt,
+    required this.options,
+    required this.correctIndex,
+    required this.explanation,
+  });
+
+  final String prompt;
+  final List<String> options;
+  final int correctIndex;
+  final String explanation;
+}
+
 class Class11LabScreen extends StatefulWidget {
   const Class11LabScreen({super.key});
 
@@ -13,10 +27,12 @@ class Class11LabScreen extends StatefulWidget {
 }
 
 class _Class11LabScreenState extends State<Class11LabScreen> {
+  static const String _checkpointPrompt =
+      'Do the experiment and answer the checkpoint questions.';
   static const _experiments = <Class11Experiment>[
     Class11Experiment(
       id: 'tir',
-      title: 'Experiment 1: Critical Angle & TIR',
+      title: 'Critical Angle & TIR',
       subtitle:
           'Input refractive index and incident angle, then verify critical-angle behavior.',
       observation:
@@ -27,7 +43,7 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
     ),
     Class11Experiment(
       id: 'prism',
-      title: 'Experiment 2: Prism Formula',
+      title: 'Prism Formula',
       subtitle:
           'Use apex angle A and minimum deviation δ to calculate prism refractive index.',
       observation:
@@ -38,7 +54,7 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
     ),
     Class11Experiment(
       id: 'lens',
-      title: 'Experiment 3: Lens Image Formation',
+      title: 'Lens Image Formation',
       subtitle:
           'Input object distance and focal length to compute image distance and magnification.',
       observation:
@@ -47,6 +63,179 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
       accent: Color(0xFFC97D10),
     ),
   ];
+  static const Map<String, List<_Class11CheckpointQuestion>>
+  _checkpointQuestionBank = {
+    'tir': <_Class11CheckpointQuestion>[
+      _Class11CheckpointQuestion(
+        prompt: 'Total internal reflection is possible when light travels:',
+        options: <String>[
+          'From denser to rarer medium',
+          'From rarer to denser medium only',
+          'Only in vacuum',
+          'Only through a lens',
+        ],
+        correctIndex: 0,
+        explanation:
+            'TIR requires light to go from optically denser to rarer medium.',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'Critical angle ic is defined when angle of refraction is:',
+        options: <String>['0°', '45°', '90°', '180°'],
+        correctIndex: 2,
+        explanation:
+            'At critical angle, refracted ray grazes interface (r=90°).',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'For TIR, incident angle i must be:',
+        options: <String>[
+          'Less than ic',
+          'Equal to ic only',
+          'Greater than ic',
+          'Always 0°',
+        ],
+        correctIndex: 2,
+        explanation: 'TIR occurs only for i > ic.',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'In this experiment, critical angle formula used is:',
+        options: <String>[
+          'ic = sin⁻¹(1/n1)',
+          'ic = cos⁻¹(1/n1)',
+          'ic = tan⁻¹(1/n1)',
+          'ic = n1 × 90',
+        ],
+        correctIndex: 0,
+        explanation: 'With rarer medium air (n2=1), ic = sin⁻¹(1/n1).',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'Optical fiber communication mainly uses:',
+        options: <String>[
+          'Total internal reflection',
+          'Only diffraction',
+          'Only dispersion',
+          'Only absorption',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Fibers guide light by repeated total internal reflection.',
+      ),
+    ],
+    'prism': <_Class11CheckpointQuestion>[
+      _Class11CheckpointQuestion(
+        prompt: 'At minimum deviation, refractive index of prism is:',
+        options: <String>[
+          'n = sin((A+δ)/2) / sin(A/2)',
+          'n = (A+δ)/A',
+          'n = sin(A+δ) / sin(A)',
+          'n = A/δ',
+        ],
+        correctIndex: 0,
+        explanation: 'This is the standard minimum-deviation prism formula.',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'A in prism formula denotes:',
+        options: <String>[
+          'Apex angle of prism',
+          'Angle of incidence',
+          'Critical angle',
+          'Angle of reflection',
+        ],
+        correctIndex: 0,
+        explanation: 'A is the prism apex angle.',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'δ in this experiment represents:',
+        options: <String>[
+          'Minimum deviation angle',
+          'Scattering angle',
+          'Brewster angle',
+          'Diffraction angle',
+        ],
+        correctIndex: 0,
+        explanation: 'δ is the minimum deviation through prism.',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'If computed refractive index n < 1 for glass, it is:',
+        options: <String>[
+          'Non-physical for this setup',
+          'Always correct',
+          'Proof of TIR',
+          'A sign of zero deviation',
+        ],
+        correctIndex: 0,
+        explanation:
+            'For ordinary glass prism in air, n should be greater than 1.',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'As deviation increases (A fixed), computed n generally:',
+        options: <String>[
+          'Increases',
+          'Decreases to zero always',
+          'Stays exactly constant',
+          'Becomes negative',
+        ],
+        correctIndex: 0,
+        explanation:
+            'From the formula, larger δ tends to increase numerator and n.',
+      ),
+    ],
+    'lens': <_Class11CheckpointQuestion>[
+      _Class11CheckpointQuestion(
+        prompt: 'Thin lens relation used here is:',
+        options: <String>[
+          '1/f = 1/v - 1/u',
+          '1/f = 1/v + 1/u',
+          'f = u + v',
+          'm = f/u only',
+        ],
+        correctIndex: 0,
+        explanation:
+            'The calculator uses Cartesian sign convention: 1/f=1/v-1/u.',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'Magnification for lens is:',
+        options: <String>['m = v/u', 'm = u/v', 'm = f/v', 'm = v-f'],
+        correctIndex: 0,
+        explanation: 'By definition in this setup, magnification m = v/u.',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'For convex lens with object beyond focus, image is usually:',
+        options: <String>[
+          'Real and inverted',
+          'Virtual and upright',
+          'Always at infinity',
+          'Always same size',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Convex lens generally forms real inverted image for u > f.',
+      ),
+      _Class11CheckpointQuestion(
+        prompt: 'A concave lens usually forms image that is:',
+        options: <String>[
+          'Virtual, upright, diminished',
+          'Real, inverted, magnified',
+          'Real, upright',
+          'At infinity only',
+        ],
+        correctIndex: 0,
+        explanation:
+            'Concave lens typically gives virtual, upright, diminished images.',
+      ),
+      _Class11CheckpointQuestion(
+        prompt:
+            'If denominator in lens calculation tends to zero, image forms:',
+        options: <String>[
+          'At infinity',
+          'At lens center',
+          'At object position',
+          'At focal point always',
+        ],
+        correctIndex: 0,
+        explanation: 'When denominator is near zero, v tends to infinity.',
+      ),
+    ],
+  };
 
   late Class11Experiment _activeExperiment = _experiments.first;
 
@@ -72,8 +261,22 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
     objectDistanceCm: 60,
     focalLengthCm: 20,
   );
+  final Map<String, bool> _checkpointVisible = <String, bool>{};
+  final Map<String, int> _checkpointIndex = <String, int>{};
+  final Map<String, List<int?>> _checkpointAnswers = <String, List<int?>>{};
+  final Map<String, List<bool>> _checkpointSubmitted = <String, List<bool>>{};
+  final Map<String, String> _checkpointFeedback = <String, String>{};
+  final Map<String, int> _checkpointScore = <String, int>{};
 
   String? _inputError;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final experiment in _experiments) {
+      _resetCheckpoint(experiment.id);
+    }
+  }
 
   @override
   void dispose() {
@@ -90,6 +293,120 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
     setState(() {
       _activeExperiment = experiment;
       _inputError = null;
+    });
+  }
+
+  List<_Class11CheckpointQuestion> _activeQuestions() {
+    return _checkpointQuestionBank[_activeExperiment.id] ??
+        const <_Class11CheckpointQuestion>[];
+  }
+
+  void _resetCheckpoint(String experimentId) {
+    final total = _checkpointQuestionBank[experimentId]?.length ?? 0;
+    _checkpointVisible[experimentId] = false;
+    _checkpointIndex[experimentId] = 0;
+    _checkpointAnswers[experimentId] = List<int?>.filled(total, null);
+    _checkpointSubmitted[experimentId] = List<bool>.filled(total, false);
+    _checkpointFeedback[experimentId] = '';
+    _checkpointScore[experimentId] = 0;
+  }
+
+  bool _isExperimentVerified(String experimentId) {
+    final questions = _checkpointQuestionBank[experimentId] ?? const [];
+    final submitted = _checkpointSubmitted[experimentId] ?? const <bool>[];
+    final allAnswered =
+        questions.isNotEmpty &&
+        submitted.length == questions.length &&
+        submitted.every((value) => value);
+    final score = _checkpointScore[experimentId] ?? 0;
+    return allAnswered && score >= 4;
+  }
+
+  void _startCheckpoint() {
+    final id = _activeExperiment.id;
+    setState(() {
+      _checkpointVisible[id] = true;
+      _checkpointFeedback[id] = '';
+    });
+  }
+
+  void _selectCheckpointOption(int optionIndex) {
+    final id = _activeExperiment.id;
+    final index = _checkpointIndex[id] ?? 0;
+    final answers = _checkpointAnswers[id];
+    final submitted = _checkpointSubmitted[id];
+    if (answers == null || submitted == null || submitted[index]) {
+      return;
+    }
+    setState(() {
+      answers[index] = optionIndex;
+      _checkpointFeedback[id] = '';
+    });
+  }
+
+  void _submitCheckpointAnswer() {
+    final id = _activeExperiment.id;
+    final questions = _activeQuestions();
+    if (questions.isEmpty) return;
+    final index = (_checkpointIndex[id] ?? 0).clamp(0, questions.length - 1);
+    final answers = _checkpointAnswers[id];
+    final submitted = _checkpointSubmitted[id];
+    if (answers == null || submitted == null) return;
+
+    final selected = answers[index];
+    if (selected == null) {
+      setState(() {
+        _checkpointFeedback[id] = 'Select an option before submitting.';
+      });
+      return;
+    }
+    if (submitted[index]) {
+      setState(() {
+        _checkpointFeedback[id] =
+            'This question is already submitted. Use Next Question.';
+      });
+      return;
+    }
+
+    final question = questions[index];
+    final isCorrect = selected == question.correctIndex;
+    setState(() {
+      submitted[index] = true;
+      if (isCorrect) {
+        _checkpointScore[id] = (_checkpointScore[id] ?? 0) + 1;
+      }
+      _checkpointFeedback[id] = isCorrect
+          ? 'Correct. ${question.explanation}'
+          : 'Not correct. ${question.explanation}';
+    });
+  }
+
+  void _goToNextCheckpointQuestion() {
+    final id = _activeExperiment.id;
+    final questions = _activeQuestions();
+    if (questions.isEmpty) return;
+    final index = (_checkpointIndex[id] ?? 0).clamp(0, questions.length - 1);
+    final submitted = _checkpointSubmitted[id] ?? const <bool>[];
+    if (!submitted[index]) {
+      setState(() {
+        _checkpointFeedback[id] =
+            'Submit this answer before moving to the next question.';
+      });
+      return;
+    }
+    if (index < questions.length - 1) {
+      setState(() {
+        _checkpointIndex[id] = index + 1;
+        _checkpointFeedback[id] = '';
+      });
+    }
+  }
+
+  void _restartCheckpoint() {
+    final id = _activeExperiment.id;
+    setState(() {
+      _resetCheckpoint(id);
+      _checkpointVisible[id] = true;
     });
   }
 
@@ -175,6 +492,33 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final activeQuestions = _activeQuestions();
+    final activeQuestionIndex = activeQuestions.isEmpty
+        ? 0
+        : (_checkpointIndex[_activeExperiment.id] ?? 0).clamp(
+            0,
+            activeQuestions.length - 1,
+          );
+    final activeAnswers =
+        _checkpointAnswers[_activeExperiment.id] ?? const <int?>[];
+    final activeSubmitted =
+        _checkpointSubmitted[_activeExperiment.id] ?? const <bool>[];
+    final activeQuestion = activeQuestions.isEmpty
+        ? const _Class11CheckpointQuestion(
+            prompt: '',
+            options: <String>[],
+            correctIndex: 0,
+            explanation: '',
+          )
+        : activeQuestions[activeQuestionIndex];
+    final selectedCheckpointOption = activeQuestionIndex < activeAnswers.length
+        ? activeAnswers[activeQuestionIndex]
+        : null;
+    final activeCheckpointSubmitted =
+        activeQuestionIndex < activeSubmitted.length
+        ? activeSubmitted[activeQuestionIndex]
+        : false;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 1040;
@@ -187,44 +531,59 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
             ),
           ),
           child: compact
-              ? SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _ControlRail(
-                        experiments: _experiments,
-                        activeExperiment: _activeExperiment,
-                        inputError: _inputError,
-                        tirIndexController: _tirIndexController,
-                        tirIncidentController: _tirIncidentController,
-                        prismAController: _prismAController,
-                        prismDeviationController: _prismDeviationController,
-                        lensObjectDistanceController:
-                            _lensObjectDistanceController,
-                        lensFocalLengthController: _lensFocalLengthController,
-                        lensType: _lensType,
-                        tirResult: _tirResult,
-                        prismResult: _prismResult,
-                        lensResult: _lensResult,
-                        onExperimentSelected: _setExperiment,
-                        onLensTypeChanged: (value) =>
-                            setState(() => _lensType = value),
-                        onCalculateTir: _calculateTir,
-                        onResetTir: _resetTir,
-                        onCalculatePrism: _calculatePrism,
-                        onResetPrism: _resetPrism,
-                        onCalculateLens: _calculateLens,
-                        onResetLens: _resetLens,
-                      ),
-                      SizedBox(
-                        height: constraints.maxWidth < 480 ? 580 : 660,
-                        child: _StageArea(
-                          experiment: _activeExperiment,
-                          tirResult: _tirResult,
-                          prismResult: _prismResult,
-                          lensResult: _lensResult,
-                        ),
-                      ),
-                    ],
+              ? _ControlRail(
+                  experiments: _experiments,
+                  activeExperiment: _activeExperiment,
+                  inputError: _inputError,
+                  tirIndexController: _tirIndexController,
+                  tirIncidentController: _tirIncidentController,
+                  prismAController: _prismAController,
+                  prismDeviationController: _prismDeviationController,
+                  lensObjectDistanceController: _lensObjectDistanceController,
+                  lensFocalLengthController: _lensFocalLengthController,
+                  lensType: _lensType,
+                  tirResult: _tirResult,
+                  prismResult: _prismResult,
+                  lensResult: _lensResult,
+                  onExperimentSelected: _setExperiment,
+                  onLensTypeChanged: (value) =>
+                      setState(() => _lensType = value),
+                  onCalculateTir: _calculateTir,
+                  onResetTir: _resetTir,
+                  onCalculatePrism: _calculatePrism,
+                  onResetPrism: _resetPrism,
+                  onCalculateLens: _calculateLens,
+                  onResetLens: _resetLens,
+                  checkpointPrompt: _checkpointPrompt,
+                  checkpointVisible:
+                      _checkpointVisible[_activeExperiment.id] ?? false,
+                  checkpointQuestion: activeQuestion,
+                  checkpointQuestionIndex: activeQuestionIndex,
+                  checkpointTotalQuestions: activeQuestions.length,
+                  checkpointSelectedOption: selectedCheckpointOption,
+                  checkpointSubmitted: activeCheckpointSubmitted,
+                  checkpointFeedback:
+                      _checkpointFeedback[_activeExperiment.id] ?? '',
+                  checkpointScore: _checkpointScore[_activeExperiment.id] ?? 0,
+                  experimentVerified: _isExperimentVerified(
+                    _activeExperiment.id,
+                  ),
+                  onStartCheckpoint: _startCheckpoint,
+                  onCheckpointOptionSelected: _selectCheckpointOption,
+                  onSubmitCheckpointAnswer: _submitCheckpointAnswer,
+                  onNextCheckpointQuestion: _goToNextCheckpointQuestion,
+                  onRestartCheckpoint: _restartCheckpoint,
+                  includePhysicsAndObservation: true,
+                  canvasSection: SizedBox(
+                    height: constraints.maxWidth < 480 ? 400 : 500,
+                    child: _StageArea(
+                      experiment: _activeExperiment,
+                      tirResult: _tirResult,
+                      prismResult: _prismResult,
+                      lensResult: _lensResult,
+                      showOverlays: false,
+                      showHeading: false,
+                    ),
                   ),
                 )
               : Row(
@@ -255,6 +614,27 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                         onResetPrism: _resetPrism,
                         onCalculateLens: _calculateLens,
                         onResetLens: _resetLens,
+                        checkpointPrompt: _checkpointPrompt,
+                        checkpointVisible:
+                            _checkpointVisible[_activeExperiment.id] ?? false,
+                        checkpointQuestion: activeQuestion,
+                        checkpointQuestionIndex: activeQuestionIndex,
+                        checkpointTotalQuestions: activeQuestions.length,
+                        checkpointSelectedOption: selectedCheckpointOption,
+                        checkpointSubmitted: activeCheckpointSubmitted,
+                        checkpointFeedback:
+                            _checkpointFeedback[_activeExperiment.id] ?? '',
+                        checkpointScore:
+                            _checkpointScore[_activeExperiment.id] ?? 0,
+                        experimentVerified: _isExperimentVerified(
+                          _activeExperiment.id,
+                        ),
+                        onStartCheckpoint: _startCheckpoint,
+                        onCheckpointOptionSelected: _selectCheckpointOption,
+                        onSubmitCheckpointAnswer: _submitCheckpointAnswer,
+                        onNextCheckpointQuestion: _goToNextCheckpointQuestion,
+                        onRestartCheckpoint: _restartCheckpoint,
+                        includePhysicsAndObservation: false,
                       ),
                     ),
                     Expanded(
@@ -263,6 +643,8 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                         tirResult: _tirResult,
                         prismResult: _prismResult,
                         lensResult: _lensResult,
+                        showOverlays: true,
+                        showHeading: true,
                       ),
                     ),
                   ],
@@ -296,6 +678,23 @@ class _ControlRail extends StatelessWidget {
     required this.onResetPrism,
     required this.onCalculateLens,
     required this.onResetLens,
+    required this.checkpointPrompt,
+    required this.checkpointVisible,
+    required this.checkpointQuestion,
+    required this.checkpointQuestionIndex,
+    required this.checkpointTotalQuestions,
+    required this.checkpointSelectedOption,
+    required this.checkpointSubmitted,
+    required this.checkpointFeedback,
+    required this.checkpointScore,
+    required this.experimentVerified,
+    required this.onStartCheckpoint,
+    required this.onCheckpointOptionSelected,
+    required this.onSubmitCheckpointAnswer,
+    required this.onNextCheckpointQuestion,
+    required this.onRestartCheckpoint,
+    this.includePhysicsAndObservation = false,
+    this.canvasSection,
   });
 
   final List<Class11Experiment> experiments;
@@ -319,6 +718,23 @@ class _ControlRail extends StatelessWidget {
   final VoidCallback onResetPrism;
   final VoidCallback onCalculateLens;
   final VoidCallback onResetLens;
+  final String checkpointPrompt;
+  final bool checkpointVisible;
+  final _Class11CheckpointQuestion checkpointQuestion;
+  final int checkpointQuestionIndex;
+  final int checkpointTotalQuestions;
+  final int? checkpointSelectedOption;
+  final bool checkpointSubmitted;
+  final String checkpointFeedback;
+  final int checkpointScore;
+  final bool experimentVerified;
+  final VoidCallback onStartCheckpoint;
+  final ValueChanged<int> onCheckpointOptionSelected;
+  final VoidCallback onSubmitCheckpointAnswer;
+  final VoidCallback onNextCheckpointQuestion;
+  final VoidCallback onRestartCheckpoint;
+  final bool includePhysicsAndObservation;
+  final Widget? canvasSection;
 
   String get _studentGuide {
     switch (activeExperiment.id) {
@@ -337,6 +753,22 @@ class _ControlRail extends StatelessWidget {
       default:
         return activeExperiment.observation;
     }
+  }
+
+  String _equationText() {
+    if (activeExperiment.id == 'tir') {
+      return 'n1 sin i = n2 sin r\nic = sin⁻¹(n2 / n1), n2 = 1 (air)';
+    }
+    if (activeExperiment.id == 'prism') {
+      return 'At minimum deviation:\nn = sin((A + δ)/2) / sin(A/2)';
+    }
+    return 'Thin lens formula:\n1/f = 1/v - 1/u\nMagnification m = v/u';
+  }
+
+  String _observationText() {
+    if (activeExperiment.id == 'tir') return tirResult.message;
+    if (activeExperiment.id == 'prism') return prismResult.message;
+    return lensResult.message;
   }
 
   @override
@@ -360,15 +792,22 @@ class _ControlRail extends StatelessWidget {
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
-            for (final exp in experiments) ...[
-              _ExperimentTile(
-                experiment: exp,
-                active: activeExperiment.id == exp.id,
-                onTap: () => onExperimentSelected(exp),
-              ),
-              const SizedBox(height: 12),
-            ],
-            const SizedBox(height: 16),
+            Text('Choose Experiment', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final exp in experiments)
+                  _ExperimentHeadingChip(
+                    title: exp.title,
+                    active: activeExperiment.id == exp.id,
+                    accent: exp.accent,
+                    onTap: () => onExperimentSelected(exp),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
             if (inputError != null)
               Container(
                 width: double.infinity,
@@ -385,8 +824,20 @@ class _ControlRail extends StatelessWidget {
                   ),
                 ),
               ),
-            if (activeExperiment.id == 'tir') ...[
+            if (includePhysicsAndObservation) ...[
               const SizedBox(height: 20),
+              Text('Physics (Formula)', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
+              _PlainInfoCard(
+                title: 'Physics',
+                body: _equationText(),
+                accent: activeExperiment.accent,
+              ),
+            ],
+            const SizedBox(height: 20),
+            Text('Inputs', style: theme.textTheme.titleMedium),
+            if (activeExperiment.id == 'tir') ...[
+              const SizedBox(height: 12),
               _NumberInput(
                 controller: tirIndexController,
                 label: 'Medium refractive index (n1)',
@@ -400,7 +851,15 @@ class _ControlRail extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _ActionRow(onCalculate: onCalculateTir, onReset: onResetTir),
+              if (canvasSection != null) ...[
+                const SizedBox(height: 16),
+                Text('Canvas', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
+                canvasSection!,
+              ],
               const SizedBox(height: 12),
+              Text('Output', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
               _ResultCard(
                 title: 'Output',
                 body:
@@ -408,7 +867,7 @@ class _ControlRail extends StatelessWidget {
               ),
             ],
             if (activeExperiment.id == 'prism') ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               _NumberInput(
                 controller: prismAController,
                 label: 'Apex angle A (degrees)',
@@ -422,7 +881,15 @@ class _ControlRail extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _ActionRow(onCalculate: onCalculatePrism, onReset: onResetPrism),
+              if (canvasSection != null) ...[
+                const SizedBox(height: 16),
+                Text('Canvas', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
+                canvasSection!,
+              ],
               const SizedBox(height: 12),
+              Text('Output', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
               _ResultCard(
                 title: 'Output',
                 body:
@@ -430,7 +897,7 @@ class _ControlRail extends StatelessWidget {
               ),
             ],
             if (activeExperiment.id == 'lens') ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               Text('Lens type', style: theme.textTheme.titleSmall),
               const SizedBox(height: 8),
               SingleChildScrollView(
@@ -464,39 +931,48 @@ class _ControlRail extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _ActionRow(onCalculate: onCalculateLens, onReset: onResetLens),
+              if (canvasSection != null) ...[
+                const SizedBox(height: 16),
+                Text('Canvas', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
+                canvasSection!,
+              ],
               const SizedBox(height: 12),
+              Text('Output', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
               _ResultCard(
                 title: 'Output',
                 body:
                     'Image distance v = ${lensResult.imageDistanceCm == null ? '∞' : '${_fmt(lensResult.imageDistanceCm!)} cm'}\nMagnification m = ${lensResult.magnification == null ? '-' : _fmt(lensResult.magnification!, decimals: 2)}\nNature = ${_lensNatureLabel(lensResult.imageNature)}\nOrientation = ${_lensOrientationLabel(lensResult.orientation)}\nSize = ${_lensSizeLabel(lensResult.size)}',
               ),
             ],
+            if (includePhysicsAndObservation) ...[
+              const SizedBox(height: 16),
+              Text('Observation', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
+              _PlainInfoCard(
+                title: 'Observation',
+                body: _observationText(),
+                accent: activeExperiment.accent,
+              ),
+            ],
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: activeExperiment.accent.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: activeExperiment.accent.withValues(alpha: 0.16),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Lab Note',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: activeExperiment.accent,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    activeExperiment.observation,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ],
-              ),
+            _CheckpointCard(
+              prompt: checkpointPrompt,
+              question: checkpointQuestion,
+              questionIndex: checkpointQuestionIndex,
+              totalQuestions: checkpointTotalQuestions,
+              selectedOption: checkpointSelectedOption,
+              isSubmitted: checkpointSubmitted,
+              feedback: checkpointFeedback,
+              score: checkpointScore,
+              isVerified: experimentVerified,
+              visible: checkpointVisible,
+              onStart: onStartCheckpoint,
+              onOptionSelected: onCheckpointOptionSelected,
+              onSubmitAnswer: onSubmitCheckpointAnswer,
+              onNextQuestion: onNextCheckpointQuestion,
+              onRestart: onRestartCheckpoint,
             ),
             const SizedBox(height: 16),
             Container(
@@ -670,43 +1146,219 @@ class _ResultCard extends StatelessWidget {
   }
 }
 
-class _ExperimentTile extends StatelessWidget {
-  const _ExperimentTile({
-    required this.experiment,
+class _PlainInfoCard extends StatelessWidget {
+  const _PlainInfoCard({
+    required this.title,
+    required this.body,
+    required this.accent,
+  });
+
+  final String title;
+  final String body;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: 0.20)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.labelMedium?.copyWith(color: accent),
+          ),
+          const SizedBox(height: 6),
+          Text(body, style: theme.textTheme.bodyMedium),
+        ],
+      ),
+    );
+  }
+}
+
+class _CheckpointCard extends StatelessWidget {
+  const _CheckpointCard({
+    required this.prompt,
+    required this.question,
+    required this.questionIndex,
+    required this.totalQuestions,
+    required this.selectedOption,
+    required this.isSubmitted,
+    required this.feedback,
+    required this.score,
+    required this.isVerified,
+    required this.visible,
+    required this.onStart,
+    required this.onOptionSelected,
+    required this.onSubmitAnswer,
+    required this.onNextQuestion,
+    required this.onRestart,
+  });
+
+  final String prompt;
+  final _Class11CheckpointQuestion question;
+  final int questionIndex;
+  final int totalQuestions;
+  final int? selectedOption;
+  final bool isSubmitted;
+  final String feedback;
+  final int score;
+  final bool isVerified;
+  final bool visible;
+  final VoidCallback onStart;
+  final ValueChanged<int> onOptionSelected;
+  final VoidCallback onSubmitAnswer;
+  final VoidCallback onNextQuestion;
+  final VoidCallback onRestart;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isLastQuestion = questionIndex >= totalQuestions - 1;
+    final allSubmitted = questionIndex == totalQuestions - 1 && isSubmitted;
+    final chipText = isVerified ? 'Verified' : 'Not Verified';
+    final chipColor = isVerified
+        ? const Color(0xFF166534)
+        : const Color(0xFF9A3412);
+    final chipBackground = isVerified
+        ? const Color(0xFFDCFCE7)
+        : const Color(0xFFFFEDD5);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Experiment Checkpoint', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 6),
+          Text(prompt, style: theme.textTheme.bodyMedium),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: chipBackground,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '$chipText • Score $score/$totalQuestions',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: chipColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          if (!visible) ...[
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: onStart,
+              child: const Text('Start Checkpoint'),
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            Text(
+              'Question ${questionIndex + 1} of $totalQuestions',
+              style: theme.textTheme.labelLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(question.prompt, style: theme.textTheme.bodyLarge),
+            const SizedBox(height: 12),
+            for (var i = 0; i < question.options.length; i++) ...[
+              RadioListTile<int>(
+                value: i,
+                groupValue: selectedOption,
+                onChanged: isSubmitted ? null : (value) => onOptionSelected(i),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(question.options[i]),
+              ),
+              if (i < question.options.length - 1) const SizedBox(height: 4),
+            ],
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                FilledButton(
+                  onPressed: isSubmitted ? null : onSubmitAnswer,
+                  child: const Text('Submit'),
+                ),
+                OutlinedButton(
+                  onPressed: isLastQuestion ? null : onNextQuestion,
+                  child: const Text('Next Question'),
+                ),
+                TextButton(
+                  onPressed: onRestart,
+                  child: const Text('Retry Checkpoint'),
+                ),
+              ],
+            ),
+            if (feedback.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(feedback, style: theme.textTheme.bodyMedium),
+            ],
+            if (allSubmitted) ...[
+              const SizedBox(height: 10),
+              Text(
+                isVerified
+                    ? 'Checkpoint finished. Experiment verified.'
+                    : 'Checkpoint finished. Score 4/5 or above is needed to verify this experiment.',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ExperimentHeadingChip extends StatelessWidget {
+  const _ExperimentHeadingChip({
+    required this.title,
     required this.active,
+    required this.accent,
     required this.onTap,
   });
 
-  final Class11Experiment experiment;
+  final String title;
   final bool active;
+  final Color accent;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(22),
+    return GestureDetector(
       onTap: onTap,
-      child: Ink(
-        padding: const EdgeInsets.all(18),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          color: active
-              ? experiment.accent.withValues(alpha: 0.12)
-              : const Color(0xFFF8F5EE),
-          borderRadius: BorderRadius.circular(22),
+          color: active ? accent : accent.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: active
-                ? experiment.accent.withValues(alpha: 0.32)
-                : const Color(0xFFE8DECF),
+            color: active ? accent : accent.withValues(alpha: 0.30),
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(experiment.title, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(experiment.subtitle, style: theme.textTheme.bodyMedium),
-          ],
+        child: Text(
+          title,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: active ? Colors.white : accent,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -719,18 +1371,22 @@ class _StageArea extends StatelessWidget {
     required this.tirResult,
     required this.prismResult,
     required this.lensResult,
+    this.showOverlays = true,
+    this.showHeading = true,
   });
 
   final Class11Experiment experiment;
   final TirResult tirResult;
   final PrismResult prismResult;
   final LensResult lensResult;
+  final bool showOverlays;
+  final bool showHeading;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 700;
         final compact = constraints.maxWidth < 860;
 
         final canvasPainter = CustomPaint(
@@ -743,87 +1399,52 @@ class _StageArea extends StatelessWidget {
           child: const SizedBox.expand(),
         );
 
-        if (isMobile) {
-          return Column(
-            children: [
-              // Canvas takes available space
-              Expanded(child: canvasPainter),
-              // Info strip below — clean, no overlap
-              Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFFCF7),
-                  border: Border(top: BorderSide(color: Color(0xFFE8DECF))),
-                ),
-                child: Column(
-                  children: [
-                    _MobileInfoTile(
-                      title: 'Physics',
-                      body: _equationText(),
-                      accent: experiment.accent,
-                      icon: Icons.functions_outlined,
+        final stageContent = showOverlays
+            ? Stack(
+                children: [
+                  Positioned.fill(child: canvasPainter),
+                  Positioned(
+                    top: 24,
+                    left: 24,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: compact ? 240 : 360,
+                      ),
+                      child: _OverlayCard(
+                        title: 'Physics',
+                        accent: experiment.accent,
+                        body: _equationText(),
+                      ),
                     ),
-                    Divider(height: 1, color: const Color(0xFFE8DECF)),
-                    _MobileInfoTile(
-                      title: 'Readout',
-                      body: _readoutText(),
-                      accent: experiment.accent,
-                      icon: Icons.analytics_outlined,
+                  ),
+                  Positioned(
+                    bottom: 24,
+                    left: 24,
+                    right: 24,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: compact ? 500 : 600,
+                      ),
+                      child: _OverlayCard(
+                        title: 'Observation',
+                        accent: experiment.accent,
+                        body: _observationText(),
+                      ),
                     ),
-                    Divider(height: 1, color: const Color(0xFFE8DECF)),
-                    _MobileInfoTile(
-                      title: 'Observation',
-                      body: _observationText(),
-                      accent: experiment.accent,
-                      icon: Icons.visibility_outlined,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        }
+                  ),
+                ],
+              )
+            : canvasPainter;
 
-        // Desktop — floating overlay cards
-        return Stack(
+        if (!showHeading) return stageContent;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Positioned.fill(child: canvasPainter),
-            Positioned(
-              top: 24,
-              left: 24,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: compact ? 240 : 360),
-                child: _OverlayCard(
-                  title: 'Physics',
-                  accent: experiment.accent,
-                  body: _equationText(),
-                ),
-              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Text('Canvas', style: theme.textTheme.titleMedium),
             ),
-            Positioned(
-              top: 24,
-              right: 24,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: compact ? 240 : 340),
-                child: _OverlayCard(
-                  title: 'Readout',
-                  accent: experiment.accent,
-                  body: _readoutText(),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 24,
-              left: 24,
-              right: 24,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: compact ? 500 : 600),
-                child: _OverlayCard(
-                  title: 'Observation',
-                  accent: experiment.accent,
-                  body: _observationText(),
-                ),
-              ),
-            ),
+            Expanded(child: stageContent),
           ],
         );
       },
@@ -840,85 +1461,10 @@ class _StageArea extends StatelessWidget {
     return 'Thin lens formula:\n1/f = 1/v - 1/u\nMagnification m = v/u';
   }
 
-  String _readoutText() {
-    if (experiment.id == 'tir') {
-      final critical = tirResult.criticalAngleDeg.isNaN
-          ? '-'
-          : '${tirResult.criticalAngleDeg.toStringAsFixed(2)}°';
-      final refracted = tirResult.refractionAngleDeg == null
-          ? '-'
-          : '${tirResult.refractionAngleDeg!.toStringAsFixed(2)}°';
-      return 'i = ${tirResult.incidentAngleDeg.toStringAsFixed(2)}°\nic = $critical\nr = $refracted\nState = ${tirResult.state.name}';
-    }
-    if (experiment.id == 'prism') {
-      final n = prismResult.refractiveIndex.isNaN
-          ? '-'
-          : prismResult.refractiveIndex.toStringAsFixed(3);
-      return 'A = ${prismResult.apexAngleDeg.toStringAsFixed(2)}°\nδ = ${prismResult.deviationAngleDeg.toStringAsFixed(2)}°\nn = $n';
-    }
-    final imageDist = lensResult.imageDistanceCm == null
-        ? '∞'
-        : '${lensResult.imageDistanceCm!.toStringAsFixed(2)} cm';
-    final magnification = lensResult.magnification == null
-        ? '-'
-        : lensResult.magnification!.toStringAsFixed(2);
-    return 'Lens = ${lensResult.type.name}\nv = $imageDist\nm = $magnification\nNature = ${lensResult.imageNature.name}';
-  }
-
   String _observationText() {
     if (experiment.id == 'tir') return tirResult.message;
     if (experiment.id == 'prism') return prismResult.message;
     return lensResult.message;
-  }
-}
-
-class _MobileInfoTile extends StatelessWidget {
-  const _MobileInfoTile({
-    required this.title,
-    required this.body,
-    required this.accent,
-    required this.icon,
-  });
-
-  final String title;
-  final String body;
-  final Color accent;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 2),
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 16, color: accent),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.labelMedium?.copyWith(color: accent),
-                ),
-                const SizedBox(height: 4),
-                Text(body, style: theme.textTheme.bodyMedium),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
