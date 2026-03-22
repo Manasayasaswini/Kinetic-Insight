@@ -630,163 +630,216 @@ class _ReflectionLawPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cx = size.width * 0.4;
-    final cy = size.height * 0.5;
-    final mirrorLength = size.width * 0.7;
-    final rayLength = size.width * 0.3;
-
-    canvas.drawLine(
-      Offset(cx - mirrorLength / 2, cy),
-      Offset(cx + mirrorLength / 2, cy),
-      Paint()
-        ..color = const Color(0xFF64748B)
-        ..strokeWidth = 3,
-    );
-
-    canvas.drawLine(
-      Offset(cx, cy - rayLength),
-      Offset(cx, cy + rayLength),
-      Paint()
-        ..color = const Color(0xFF94A3B8)
-        ..strokeWidth = 1.5
-        ..style = PaintingStyle.stroke,
-    );
-
+    final center = Offset(size.width * 0.5, size.height * 0.58);
+    final margin = math.min(size.width, size.height) * 0.08;
+    final mirrorHalf = (size.width * 0.40).clamp(120.0, 260.0);
+    final rayLength = (size.height * 0.38).clamp(85.0, 170.0);
+    final arcRadius = (rayLength * 0.48).clamp(38.0, 72.0);
     final incidentRad = incidentAngle * math.pi / 180;
-    final incidentEndX = cx - rayLength * math.sin(incidentRad);
-    final incidentEndY = cy - rayLength * math.cos(incidentRad);
 
-    canvas.drawLine(
-      Offset(cx, cy),
-      Offset(incidentEndX, incidentEndY),
-      Paint()
-        ..color = const Color(0xFF059669)
-        ..strokeWidth = 3,
+    final incidentStart = Offset(
+      center.dx - rayLength * math.sin(incidentRad),
+      center.dy - rayLength * math.cos(incidentRad),
+    );
+    final reflectedEnd = Offset(
+      center.dx + rayLength * math.sin(incidentRad),
+      center.dy - rayLength * math.cos(incidentRad),
     );
 
-    final reflectedEndX = cx + rayLength * math.sin(incidentRad);
-    final reflectedEndY = cy - rayLength * math.cos(incidentRad);
-
-    canvas.drawLine(
-      Offset(cx, cy),
-      Offset(reflectedEndX, reflectedEndY),
-      Paint()
-        ..color = const Color(0xFFDC2626)
-        ..strokeWidth = 3,
-    );
-
-    final arcRadius = rayLength * 0.4;
-
-    final arcPaint = Paint()
-      ..color = const Color(0xFF059669)
+    final mirrorPaint = Paint()
+      ..color = const Color(0xFF475569)
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+    final mirrorAccentPaint = Paint()
+      ..color = const Color(0xFF94A3B8)
+      ..strokeWidth = 1.5;
+    final normalPaint = Paint()
+      ..color = const Color(0xFF64748B)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
+    final incidentPaint = Paint()
+      ..color = const Color(0xFF0F766E)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    final reflectedPaint = Paint()
+      ..color = const Color(0xFFB91C1C)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
 
+    final leftMirror = Offset(center.dx - mirrorHalf, center.dy);
+    final rightMirror = Offset(center.dx + mirrorHalf, center.dy);
+    canvas.drawLine(leftMirror, rightMirror, mirrorPaint);
+    for (var i = 0; i <= 28; i++) {
+      final t = i / 28;
+      final x = leftMirror.dx + (rightMirror.dx - leftMirror.dx) * t;
+      canvas.drawLine(
+        Offset(x - 8, center.dy + 7),
+        Offset(x, center.dy),
+        mirrorAccentPaint,
+      );
+    }
+
+    _drawDashedLine(
+      canvas: canvas,
+      start: Offset(center.dx, margin),
+      end: Offset(center.dx, size.height - margin * 0.65),
+      dashLength: 8,
+      gapLength: 6,
+      paint: normalPaint,
+    );
+
+    canvas.drawLine(incidentStart, center, incidentPaint);
+    canvas.drawLine(center, reflectedEnd, reflectedPaint);
+    _drawArrowHead(
+      canvas: canvas,
+      tip: center,
+      tail: incidentStart,
+      color: const Color(0xFF0F766E),
+    );
+    _drawArrowHead(
+      canvas: canvas,
+      tip: reflectedEnd,
+      tail: center,
+      color: const Color(0xFFB91C1C),
+    );
+
+    final incidentArcPaint = Paint()
+      ..color = const Color(0xFF0F766E)
+      ..strokeWidth = 2.4
+      ..style = PaintingStyle.stroke;
+    final reflectedArcPaint = Paint()
+      ..color = const Color(0xFFB91C1C)
+      ..strokeWidth = 2.4
+      ..style = PaintingStyle.stroke;
+
+    final arcRect = Rect.fromCircle(center: center, radius: arcRadius);
     canvas.drawArc(
-      Rect.fromCircle(center: Offset(cx, cy), radius: arcRadius),
+      arcRect,
       -math.pi / 2 - incidentRad,
       incidentRad,
       false,
-      arcPaint,
+      incidentArcPaint,
     );
-
-    canvas.drawLine(
-      Offset(
-        cx + arcRadius * math.sin(-math.pi / 2 - incidentRad),
-        cy + arcRadius * math.cos(-math.pi / 2 - incidentRad),
-      ),
-      Offset(
-        cx + (arcRadius - 8) * math.sin(-math.pi / 2 - incidentRad),
-        cy + (arcRadius - 8) * math.cos(-math.pi / 2 - incidentRad),
-      ),
-      arcPaint,
-    );
-    canvas.drawLine(
-      Offset(
-        cx + arcRadius * math.sin(-math.pi / 2),
-        cy + arcRadius * math.cos(-math.pi / 2),
-      ),
-      Offset(
-        cx + (arcRadius - 8) * math.sin(-math.pi / 2),
-        cy + (arcRadius - 8) * math.cos(-math.pi / 2),
-      ),
-      arcPaint,
-    );
-
-    final thetaIPainter = TextPainter(
-      text: TextSpan(
-        text: 'θi = ${incidentAngle.toStringAsFixed(0)}°',
-        style: const TextStyle(
-          color: Color(0xFF059669),
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    thetaIPainter.paint(canvas, Offset(cx + 12, cy - arcRadius - 20));
-
-    final arcPaint2 = Paint()
-      ..color = const Color(0xFFDC2626)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
     canvas.drawArc(
-      Rect.fromCircle(center: Offset(cx, cy), radius: arcRadius),
+      arcRect,
       -math.pi / 2,
       incidentRad,
       false,
-      arcPaint2,
+      reflectedArcPaint,
     );
 
-    canvas.drawLine(
-      Offset(
-        cx + arcRadius * math.sin(-math.pi / 2),
-        cy + arcRadius * math.cos(-math.pi / 2),
-      ),
-      Offset(
-        cx + (arcRadius - 8) * math.sin(-math.pi / 2),
-        cy + (arcRadius - 8) * math.cos(-math.pi / 2),
-      ),
-      arcPaint2,
+    _paintLabel(
+      canvas,
+      'Incident ray',
+      incidentStart + const Offset(-8, -18),
+      const Color(0xFF0F766E),
+      bold: true,
     );
-    canvas.drawLine(
-      Offset(
-        cx + arcRadius * math.sin(-math.pi / 2 + incidentRad),
-        cy + arcRadius * math.cos(-math.pi / 2 + incidentRad),
-      ),
-      Offset(
-        cx + (arcRadius - 8) * math.sin(-math.pi / 2 + incidentRad),
-        cy + (arcRadius - 8) * math.cos(-math.pi / 2 + incidentRad),
-      ),
-      arcPaint2,
+    _paintLabel(
+      canvas,
+      'Reflected ray',
+      reflectedEnd + const Offset(-18, -20),
+      const Color(0xFFB91C1C),
+      bold: true,
     );
+    _paintLabel(
+      canvas,
+      'Normal',
+      Offset(center.dx + 10, center.dy + 12),
+      const Color(0xFF64748B),
+      italic: true,
+    );
+    _paintLabel(
+      canvas,
+      'Mirror',
+      Offset(rightMirror.dx - 54, center.dy + 12),
+      const Color(0xFF475569),
+    );
+    _paintLabel(
+      canvas,
+      'θi = ${incidentAngle.toStringAsFixed(0)}°',
+      Offset(center.dx - arcRadius - 54, center.dy - arcRadius - 10),
+      const Color(0xFF0F766E),
+      bold: true,
+    );
+    _paintLabel(
+      canvas,
+      'θr = ${incidentAngle.toStringAsFixed(0)}°',
+      Offset(center.dx + 10, center.dy - arcRadius - 10),
+      const Color(0xFFB91C1C),
+      bold: true,
+    );
+  }
 
-    final thetaRPainter = TextPainter(
+  void _drawDashedLine({
+    required Canvas canvas,
+    required Offset start,
+    required Offset end,
+    required double dashLength,
+    required double gapLength,
+    required Paint paint,
+  }) {
+    final distance = (end - start).distance;
+    final direction = (end - start) / distance;
+    double covered = 0;
+    while (covered < distance) {
+      final from = start + direction * covered;
+      final to = start + direction * math.min(covered + dashLength, distance);
+      canvas.drawLine(from, to, paint);
+      covered += dashLength + gapLength;
+    }
+  }
+
+  void _drawArrowHead({
+    required Canvas canvas,
+    required Offset tip,
+    required Offset tail,
+    required Color color,
+  }) {
+    final direction = (tip - tail);
+    final length = direction.distance;
+    if (length < 0.1) return;
+    final unit = direction / length;
+    final perp = Offset(-unit.dy, unit.dx);
+    const arrowLength = 12.0;
+    const arrowWidth = 6.0;
+    final base = tip - unit * arrowLength;
+    final p1 = base + perp * arrowWidth;
+    final p2 = base - perp * arrowWidth;
+    final path = Path()
+      ..moveTo(tip.dx, tip.dy)
+      ..lineTo(p1.dx, p1.dy)
+      ..lineTo(p2.dx, p2.dy)
+      ..close();
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.fill,
+    );
+  }
+
+  void _paintLabel(
+    Canvas canvas,
+    String text,
+    Offset offset,
+    Color color, {
+    bool bold = false,
+    bool italic = false,
+  }) {
+    final painter = TextPainter(
       text: TextSpan(
-        text: 'θr = ${incidentAngle.toStringAsFixed(0)}°',
-        style: const TextStyle(
-          color: Color(0xFFDC2626),
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    thetaRPainter.paint(canvas, Offset(cx + 12, cy - arcRadius - 35));
-
-    final normalLabelPainter = TextPainter(
-      text: const TextSpan(
-        text: 'Normal',
+        text: text,
         style: TextStyle(
-          color: Color(0xFF94A3B8),
+          color: color,
           fontSize: 12,
-          fontStyle: FontStyle.italic,
+          fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+          fontStyle: italic ? FontStyle.italic : FontStyle.normal,
         ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    normalLabelPainter.paint(canvas, Offset(cx + 8, cy + 10));
+    painter.paint(canvas, offset);
   }
 
   @override
