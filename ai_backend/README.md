@@ -34,4 +34,6 @@ export SARVAM_API_KEY="your_key_here"
 - Phase-1 uses in-memory TTL caches for scripts and audio metadata.
 - Static/generated audio files are served from `/static/audio/...`.
 - On cache miss, backend attempts Sarvam TTS generation and stores audio locally.
-- If TTS generation fails, response returns `status: generating` and `audioUrl: null`.
+- If TTS generation fails, response returns `status: failed` and `audioUrl: null` with `audioError`.
+- Browser cache headers are enabled for `/static/audio/*` (`max-age=31536000`, `immutable`).
+- Script bank now includes Class 6/7/9/11 experiment IDs in English and Telugu.

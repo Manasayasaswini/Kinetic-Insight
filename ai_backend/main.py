@@ -8,9 +8,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
 import requests
 
@@ -31,6 +32,17 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+
+class _StaticCacheControlMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
+        response = await call_next(request)
+        if request.url.path.startswith('/static/audio/'):
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        return response
+
+
+app.add_middleware(_StaticCacheControlMiddleware)
 app.mount('/static', StaticFiles(directory='static', check_dir=False), name='static')
 
 SCRIPT_TTL_SECONDS = 60 * 60 * 24 * 30  # 30 days
@@ -206,6 +218,191 @@ def _script_bank() -> Dict[Tuple[str, str, str], str]:
             'మారితే image nature కూడా మారుతుంది. Concave lens సాధారణంగా virtual, upright, '
             'diminished image ఇస్తుంది. Formula output ను canvas rays తో compare చేస్తే '
             'concept చాలా clear అవుతుంది.'
+        ),
+        (
+            '9',
+            'lawsOfReflection',
+            'en',
+        ): (
+            'In this experiment, you change the incident angle and observe the reflected ray. '
+            'The key law is simple: angle of incidence equals angle of reflection. '
+            'Both angles are measured from the normal, not from the mirror surface. '
+            'As you move the slider, both angles change equally. This is why mirrors form '
+            'predictable paths of light. Try low, medium, and high angles and confirm that '
+            'theta i and theta r always match.'
+        ),
+        (
+            '9',
+            'lawsOfReflection',
+            'te',
+        ): (
+            'ఈ ప్రయోగంలో incident angle మార్చితే reflected ray ఎలా మారుతుందో చూస్తాం. '
+            'ప్రధాన నియమం: angle of incidence = angle of reflection. ఈ రెండు కోణాలు '
+            'mirror surface నుండి కాదు, normal నుండి కొలుస్తాం. Slider మార్చినప్పుడల్లా '
+            'రెండు కోణాలు సమానంగా మారుతాయి. అందుకే mirror లో light path predict చేయగలం. '
+            'తక్కువ, మధ్య, ఎక్కువ కోణాలతో ప్రయత్నించి theta i మరియు theta r ఎప్పుడూ సమానమని గమనించండి.'
+        ),
+        (
+            '9',
+            'kaleidoscope',
+            'en',
+        ): (
+            'This kaleidoscope experiment shows multiple reflections between inclined mirrors. '
+            'When the mirror angle decreases, repeated image sectors increase and patterns become richer. '
+            'You can also vary number of mirrors and compare symmetry. '
+            'Use the idea of 360 divided by mirror angle to estimate sector count. '
+            'Observe how geometric repetition creates decorative patterns from simple rays.'
+        ),
+        (
+            '9',
+            'kaleidoscope',
+            'te',
+        ): (
+            'ఈ kaleidoscope ప్రయోగంలో కోణంలో ఉన్న mirrors మధ్య multiple reflections జరుగుతాయి. '
+            'Mirror angle తగ్గితే image sectors పెరుగుతాయి, pattern ఇంకా అందంగా కనిపిస్తుంది. '
+            'Mirrors సంఖ్యను కూడా మార్చి symmetry ఎలా మారుతుందో చూడండి. '
+            '360 ని mirror angle తో భాగిస్తే sectors trend అర్థమవుతుంది. '
+            'సాధారణ rays ఎలా పునరావృతమై అందమైన pattern ఇస్తాయో గమనించండి.'
+        ),
+        (
+            '7',
+            'planeMirror',
+            'en',
+        ): (
+            'In plane mirror activity, object distance and image distance are equal. '
+            'The image is virtual, erect, and same size. '
+            'As object moves closer or farther, image shifts equally behind the mirror. '
+            'This experiment helps you understand lateral inversion and mirror symmetry.'
+        ),
+        (
+            '7',
+            'planeMirror',
+            'te',
+        ): (
+            'Plane mirror ప్రయోగంలో object distance ఎంతైతే image distance కూడా అంతే ఉంటుంది. '
+            'Image virtual, erect, మరియు objectకి same size లో ఉంటుంది. '
+            'Object ను దగ్గరకి లేదా దూరంగా తీస్తే image కూడా mirror వెనుక సమానంగా మారుతుంది. '
+            'ఈ ప్రయోగం lateral inversion మరియు mirror symmetry అర్థం చేసుకోవడంలో సహాయపడుతుంది.'
+        ),
+        (
+            '7',
+            'sphericalMirror',
+            'en',
+        ): (
+            'Here you compare concave and convex spherical mirrors. '
+            'By changing object distance and focal length, you can see real or virtual image conditions. '
+            'The mirror formula one by f equals one by v plus one by u connects all cases. '
+            'Watch how image size and orientation depend on object position.'
+        ),
+        (
+            '7',
+            'sphericalMirror',
+            'te',
+        ): (
+            'ఈ ప్రయోగంలో concave మరియు convex spherical mirrors ను పోల్చి చూస్తాం. '
+            'Object distance మరియు focal length మార్చితే image real లేదా virtual ఎలా మారుతుందో గమనించండి. '
+            'Mirror formula 1/f = 1/v + 1/u అన్ని పరిస్థితులను కలుపుతుంది. '
+            'Object స్థానాన్ని బట్టి image size మరియు orientation మార్పు స్పష్టంగా కనిపిస్తుంది.'
+        ),
+        (
+            '7',
+            'newtonDisc',
+            'en',
+        ): (
+            'Newton disc demonstrates color recombination. '
+            'At low speed, individual VIBGYOR sectors are visible. '
+            'As speed increases, persistence of vision blends colors toward white. '
+            'This links rotational motion with how our eyes perceive rapid color changes.'
+        ),
+        (
+            '7',
+            'newtonDisc',
+            'te',
+        ): (
+            'Newton disc ప్రయోగం color recombination ని చూపిస్తుంది. '
+            'తక్కువ వేగంలో VIBGYOR రంగులు విడిగా కనిపిస్తాయి. '
+            'వేగం పెరిగేకొద్దీ persistence of vision వల్ల రంగులు కలసి తెలుపు రంగుకు దగ్గరగా కనిపిస్తాయి. '
+            'Rotation మరియు మన కళ్ల perception మధ్య సంబంధాన్ని ఇది చక్కగా చూపిస్తుంది.'
+        ),
+        (
+            '6',
+            'transparency',
+            'en',
+        ): (
+            'This experiment compares transparent, translucent, and opaque materials. '
+            'Transparent objects pass most light, translucent pass some, and opaque block light. '
+            'By changing material, observe clarity and shadow formation. '
+            'This is the foundation for understanding how light interacts with matter.'
+        ),
+        (
+            '6',
+            'transparency',
+            'te',
+        ): (
+            'ఈ ప్రయోగం transparent, translucent, opaque పదార్థాల తేడాను చూపిస్తుంది. '
+            'Transparent పదార్థాలు ఎక్కువ కాంతి దాటనిస్తాయి, translucent కొంత మాత్రమే, opaque కాంతిని అడ్డుకుంటాయి. '
+            'Material మార్చి clarity మరియు shadow ఎలా మారుతుందో చూడండి. '
+            'కాంతి పదార్థాలతో ఎలా ప్రవర్తిస్తుందో అర్థం చేసుకోవడానికి ఇది ప్రాథమికం.'
+        ),
+        (
+            '6',
+            'shadow',
+            'en',
+        ): (
+            'In shadow experiment, sun position changes shadow length and direction. '
+            'When the light source is high, shadow is short. '
+            'When light source is low, shadow becomes long. '
+            'Observe how geometry of light and object creates daily shadow variation.'
+        ),
+        (
+            '6',
+            'shadow',
+            'te',
+        ): (
+            'Shadow ప్రయోగంలో కాంతి మూలం స్థానాన్ని బట్టి నీడ పొడవు మరియు దిశ మారుతుంది. '
+            'కాంతి పైకి ఉన్నప్పుడు నీడ చిన్నగా ఉంటుంది. '
+            'కాంతి తక్కువ కోణంలో ఉన్నప్పుడు నీడ పొడవుగా ఉంటుంది. '
+            'Light మరియు object geometry వల్ల రోజంతా నీడ ఎలా మారుతుందో గమనించండి.'
+        ),
+        (
+            '6',
+            'pinhole',
+            'en',
+        ): (
+            'Pinhole camera shows that light travels in straight lines. '
+            'A small hole forms an inverted image on the screen. '
+            'As object distance changes, image size changes too. '
+            'This is a simple but powerful model for image formation.'
+        ),
+        (
+            '6',
+            'pinhole',
+            'te',
+        ): (
+            'Pinhole camera ప్రయోగం light straight line లో ప్రయాణిస్తుందని చూపిస్తుంది. '
+            'చిన్న రంధ్రం వల్ల screen పై inverted image ఏర్పడుతుంది. '
+            'Object distance మారితే image size కూడా మారుతుంది. '
+            'Image formation అర్థం చేసుకోవడానికి ఇది చాలా సరళమైన కానీ ముఖ్యమైన మోడల్.'
+        ),
+        (
+            '6',
+            'refraction',
+            'en',
+        ): (
+            'This experiment explains refraction, the bending of light at medium boundary. '
+            'When light enters water from air, speed changes and ray bends. '
+            'That is why a pencil in water appears bent or shifted. '
+            'Track how apparent position differs from real position.'
+        ),
+        (
+            '6',
+            'refraction',
+            'te',
+        ): (
+            'ఈ ప్రయోగం refraction ని వివరిస్తుంది. అంటే medium boundary వద్ద కాంతి వంగడం. '
+            'Air నుండి water లోకి వెళ్తే కాంతి వేగం మారి ray దిశ మారుతుంది. '
+            'అందుకే నీటిలో పెట్టిన పెన్సిల్ వంగినట్టు కనిపిస్తుంది. '
+            'Actual position మరియు apparent position మధ్య తేడాను గమనించండి.'
         ),
     }
 
