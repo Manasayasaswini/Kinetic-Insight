@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import time
+import base64
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
@@ -10,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+import requests
 
 app = FastAPI(title='Kinetic Insight AI Backend', version='0.1.0')
 
@@ -75,6 +78,7 @@ class McpExplanationResponse(BaseModel):
     audioId: Optional[str] = None
     audioUrl: Optional[str] = None
     audioCached: bool = False
+    audioError: Optional[str] = None
 
 
 class McpExplanationScriptRequest(BaseModel):
@@ -254,8 +258,7 @@ def _resolve_audio_meta(
     if cached is not None:
         return {**cached, 'cached': True}
 
-    # MCP/TTS integration point:
-    # For now, if static audio exists we mark ready. Otherwise generating.
+    # Static cache check first.
     relative_path = f'audio/{class_id}/{experiment_id}/{language}/{version}.{fmt}'
     local_path = Path(__file__).parent / 'static' / relative_path
     audio_id = f'aud_{class_id}_{experiment_id}_{language}_{version}'
@@ -267,14 +270,116 @@ def _resolve_audio_meta(
             'cached': False,
         }
     else:
-        payload = {
-            'audioId': audio_id,
-            'audioUrl': None,
-            'status': 'generating',
-            'cached': False,
-        }
+        generated, error_message = _generate_audio_with_sarvam(
+            text=script,
+            language=language,
+            voice_profile=voice_profile,
+            fmt=fmt,
+            output_path=local_path,
+        )
+        if generated:
+            payload = {
+                'audioId': audio_id,
+                'audioUrl': f'/static/{relative_path}',
+                'status': 'ready',
+                'cached': False,
+                'audioError': None,
+            }
+        else:
+            payload = {
+                'audioId': audio_id,
+                'audioUrl': None,
+                'status': 'failed',
+                'cached': False,
+                'audioError': error_message,
+            }
     _audio_meta_cache.set(key, payload, AUDIO_META_TTL_SECONDS)
     return payload
+
+
+def _pick_speaker(language: str, voice_profile: str) -> str:
+    normalized = voice_profile.strip()
+    if normalized and normalized not in {'teacher_warm_v1', 'default'}:
+        # Allow explicit speaker override when caller passes valid Sarvam speaker.
+        return normalized
+    return 'kavitha' if language == 'te' else 'shubh'
+
+
+def _pick_lang_code(language: str) -> str:
+    return 'te-IN' if language == 'te' else 'en-IN'
+
+
+def _generate_audio_with_sarvam(
+    *,
+    text: str,
+    language: str,
+    voice_profile: str,
+    fmt: str,
+    output_path: Path,
+) -> Tuple[bool, Optional[str]]:
+    api_key = os.getenv('SARVAM_API_KEY', '').strip()
+    if not api_key:
+        return False, 'SARVAM_API_KEY is not set in backend environment.'
+
+    endpoints = [
+        'https://api.sarvam.ai/text-to-speech',
+        'https://api.sarvam.ai/text-to-speech/convert',
+    ]
+    speaker = _pick_speaker(language, voice_profile)
+    base_payload: Dict[str, Any] = {
+        'text': text,
+        'target_language_code': _pick_lang_code(language),
+        'speaker': speaker,
+        'model': 'bulbul:v3',
+        'pace': 1.0,
+    }
+    payload_variants = [
+        {
+            **base_payload,
+            'output_audio_codec': fmt,
+            'temperature': 0.6,
+        },
+        base_payload,
+    ]
+    headers = {
+        'api-subscription-key': api_key,
+        'Content-Type': 'application/json',
+    }
+
+    last_error: Optional[str] = None
+    try:
+        for endpoint in endpoints:
+            for payload in payload_variants:
+                response = requests.post(
+                    endpoint,
+                    headers=headers,
+                    json=payload,
+                    timeout=45,
+                )
+                if response.status_code < 200 or response.status_code >= 300:
+                    last_error = (
+                        f'Sarvam HTTP {response.status_code} at {endpoint}: '
+                        f'{response.text[:220]}'
+                    )
+                    continue
+                data = response.json()
+                audios = data.get('audios') if isinstance(data, dict) else None
+                if not isinstance(audios, list) or not audios:
+                    last_error = (
+                        f'Sarvam response missing audios at {endpoint}: {str(data)[:220]}'
+                    )
+                    continue
+                first_audio = audios[0]
+                if not isinstance(first_audio, str) or not first_audio:
+                    last_error = 'Sarvam audio payload is empty.'
+                    continue
+                audio_bytes = base64.b64decode(first_audio)
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output_path.write_bytes(audio_bytes)
+                return True, None
+    except Exception:
+        last_error = 'Sarvam request raised exception.'
+    return False, last_error
 
 
 @app.get('/')
@@ -318,6 +423,7 @@ def get_explanation(
         audioId=audio_data['audioId'],
         audioUrl=audio_data['audioUrl'],
         audioCached=bool(audio_data.get('cached', False)),
+        audioError=audio_data.get('audioError'),
     )
 
 

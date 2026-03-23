@@ -15,6 +15,12 @@ pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+## Sarvam TTS Setup
+
+```bash
+export SARVAM_API_KEY="your_key_here"
+```
+
 ## Endpoints
 
 - `GET /` -> backend status message
@@ -26,5 +32,6 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ## Notes
 
 - Phase-1 uses in-memory TTL caches for scripts and audio metadata.
-- Static audio files (if present) are served from `/static/audio/...`.
-- For now, missing audio returns `status: generating` and `audioUrl: null`.
+- Static/generated audio files are served from `/static/audio/...`.
+- On cache miss, backend attempts Sarvam TTS generation and stores audio locally.
+- If TTS generation fails, response returns `status: generating` and `audioUrl: null`.

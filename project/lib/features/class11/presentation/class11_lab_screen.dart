@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 
+import '../../ai/data/ai_tutor_models.dart';
+import '../../ai/data/ai_tutor_service.dart';
 import '../domain/class11_experiment.dart';
 import '../domain/class11_optics_calculator.dart';
 
@@ -267,6 +271,20 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
   final Map<String, List<bool>> _checkpointSubmitted = <String, List<bool>>{};
   final Map<String, String> _checkpointFeedback = <String, String>{};
   final Map<String, int> _checkpointScore = <String, int>{};
+  final AiTutorService _aiTutorService = AiTutorService();
+  final Map<String, Map<String, McpExplanationResponse>>
+  _explanationsByExperiment = <String, Map<String, McpExplanationResponse>>{};
+  bool _isExplanationLoading = false;
+  String _activeExplanationLanguage = 'en';
+  String? _explanationError;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  StreamSubscription<PlayerState>? _playerStateSub;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration?>? _durationSub;
+  bool _isAudioPlaying = false;
+  Duration _audioPosition = Duration.zero;
+  Duration _audioDuration = Duration.zero;
+  String? _activeAudioUrl;
 
   String? _inputError;
 
@@ -276,10 +294,32 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
     for (final experiment in _experiments) {
       _resetCheckpoint(experiment.id);
     }
+    _playerStateSub = _audioPlayer.playerStateStream.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        _isAudioPlaying = state.playing;
+      });
+    });
+    _positionSub = _audioPlayer.positionStream.listen((position) {
+      if (!mounted) return;
+      setState(() {
+        _audioPosition = position;
+      });
+    });
+    _durationSub = _audioPlayer.durationStream.listen((duration) {
+      if (!mounted) return;
+      setState(() {
+        _audioDuration = duration ?? Duration.zero;
+      });
+    });
   }
 
   @override
   void dispose() {
+    _playerStateSub?.cancel();
+    _positionSub?.cancel();
+    _durationSub?.cancel();
+    _audioPlayer.dispose();
     _tirIndexController.dispose();
     _tirIncidentController.dispose();
     _prismAController.dispose();
@@ -293,7 +333,79 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
     setState(() {
       _activeExperiment = experiment;
       _inputError = null;
+      _explanationError = null;
     });
+    unawaited(_stopExplanationAudio());
+  }
+
+  Future<void> _playExplanationAudio(String url) async {
+    try {
+      if (_activeAudioUrl != url) {
+        await _audioPlayer.setUrl(url);
+        _activeAudioUrl = url;
+      }
+      await _audioPlayer.play();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _explanationError = 'Audio playback failed: $error';
+      });
+    }
+  }
+
+  Future<void> _pauseExplanationAudio() async {
+    await _audioPlayer.pause();
+  }
+
+  Future<void> _stopExplanationAudio() async {
+    await _audioPlayer.stop();
+    if (!mounted) return;
+    setState(() {
+      _audioPosition = Duration.zero;
+      _audioDuration = Duration.zero;
+      _isAudioPlaying = false;
+      _activeAudioUrl = null;
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    final totalSeconds = duration.inSeconds;
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  Future<void> _fetchExplanation(String language) async {
+    setState(() {
+      _isExplanationLoading = true;
+      _activeExplanationLanguage = language;
+      _explanationError = null;
+    });
+    try {
+      final response = await _aiTutorService.getExperimentExplanation(
+        classId: '11',
+        experimentId: _activeExperiment.id,
+        language: language,
+      );
+      if (!mounted) return;
+      setState(() {
+        final experimentBucket =
+            _explanationsByExperiment[_activeExperiment.id] ??
+            <String, McpExplanationResponse>{};
+        experimentBucket[language] = response;
+        _explanationsByExperiment[_activeExperiment.id] = experimentBucket;
+        _isExplanationLoading = false;
+      });
+      if (response.audioUrl != null && response.status == 'ready') {
+        await _playExplanationAudio(response.audioUrl!);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isExplanationLoading = false;
+        _explanationError = error.toString();
+      });
+    }
   }
 
   List<_Class11CheckpointQuestion> _activeQuestions() {
@@ -574,6 +686,21 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                   onNextCheckpointQuestion: _goToNextCheckpointQuestion,
                   onRestartCheckpoint: _restartCheckpoint,
                   includePhysicsAndObservation: true,
+                  explanationLoading: _isExplanationLoading,
+                  explanationLanguage: _activeExplanationLanguage,
+                  explanationError: _explanationError,
+                  explanation:
+                      _explanationsByExperiment[_activeExperiment
+                          .id]?[_activeExplanationLanguage],
+                  onFetchEnglishExplanation: () => _fetchExplanation('en'),
+                  onFetchTeluguExplanation: () => _fetchExplanation('te'),
+                  isAudioPlaying: _isAudioPlaying,
+                  audioPositionText: _formatDuration(_audioPosition),
+                  audioDurationText: _formatDuration(_audioDuration),
+                  activeAudioUrl: _activeAudioUrl,
+                  onPlayExplanationAudio: _playExplanationAudio,
+                  onPauseExplanationAudio: _pauseExplanationAudio,
+                  onStopExplanationAudio: _stopExplanationAudio,
                   canvasSection: SizedBox(
                     height: constraints.maxWidth < 480 ? 400 : 500,
                     child: _StageArea(
@@ -635,6 +762,22 @@ class _Class11LabScreenState extends State<Class11LabScreen> {
                         onNextCheckpointQuestion: _goToNextCheckpointQuestion,
                         onRestartCheckpoint: _restartCheckpoint,
                         includePhysicsAndObservation: false,
+                        explanationLoading: _isExplanationLoading,
+                        explanationLanguage: _activeExplanationLanguage,
+                        explanationError: _explanationError,
+                        explanation:
+                            _explanationsByExperiment[_activeExperiment
+                                .id]?[_activeExplanationLanguage],
+                        onFetchEnglishExplanation: () =>
+                            _fetchExplanation('en'),
+                        onFetchTeluguExplanation: () => _fetchExplanation('te'),
+                        isAudioPlaying: _isAudioPlaying,
+                        audioPositionText: _formatDuration(_audioPosition),
+                        audioDurationText: _formatDuration(_audioDuration),
+                        activeAudioUrl: _activeAudioUrl,
+                        onPlayExplanationAudio: _playExplanationAudio,
+                        onPauseExplanationAudio: _pauseExplanationAudio,
+                        onStopExplanationAudio: _stopExplanationAudio,
                       ),
                     ),
                     Expanded(
@@ -693,6 +836,19 @@ class _ControlRail extends StatelessWidget {
     required this.onSubmitCheckpointAnswer,
     required this.onNextCheckpointQuestion,
     required this.onRestartCheckpoint,
+    required this.explanationLoading,
+    required this.explanationLanguage,
+    required this.explanationError,
+    required this.explanation,
+    required this.onFetchEnglishExplanation,
+    required this.onFetchTeluguExplanation,
+    required this.isAudioPlaying,
+    required this.audioPositionText,
+    required this.audioDurationText,
+    required this.activeAudioUrl,
+    required this.onPlayExplanationAudio,
+    required this.onPauseExplanationAudio,
+    required this.onStopExplanationAudio,
     this.includePhysicsAndObservation = false,
     this.canvasSection,
   });
@@ -733,6 +889,19 @@ class _ControlRail extends StatelessWidget {
   final VoidCallback onSubmitCheckpointAnswer;
   final VoidCallback onNextCheckpointQuestion;
   final VoidCallback onRestartCheckpoint;
+  final bool explanationLoading;
+  final String explanationLanguage;
+  final String? explanationError;
+  final McpExplanationResponse? explanation;
+  final VoidCallback onFetchEnglishExplanation;
+  final VoidCallback onFetchTeluguExplanation;
+  final bool isAudioPlaying;
+  final String audioPositionText;
+  final String audioDurationText;
+  final String? activeAudioUrl;
+  final Future<void> Function(String url) onPlayExplanationAudio;
+  final Future<void> Function() onPauseExplanationAudio;
+  final Future<void> Function() onStopExplanationAudio;
   final bool includePhysicsAndObservation;
   final Widget? canvasSection;
 
@@ -993,6 +1162,140 @@ class _ControlRail extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(_studentGuide, style: theme.textTheme.bodyMedium),
+                  const SizedBox(height: 14),
+                  Text(
+                    'AI Audio Explanation',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: activeExperiment.accent,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: explanationLoading
+                            ? null
+                            : onFetchEnglishExplanation,
+                        icon: const Icon(Icons.volume_up_outlined, size: 18),
+                        label: const Text('Listen in English'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: explanationLoading
+                            ? null
+                            : onFetchTeluguExplanation,
+                        icon: const Icon(Icons.record_voice_over, size: 18),
+                        label: const Text('తెలుగులో వినండి'),
+                      ),
+                    ],
+                  ),
+                  if (explanationLoading) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Fetching AI explanation...',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (explanationError != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      explanationError!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFFB91C1C),
+                      ),
+                    ),
+                  ],
+                  if (explanation != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      'Language: ${explanationLanguage == 'te' ? 'Telugu' : 'English'}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Audio status: ${explanation!.status}${explanation!.audioUrl == null ? '' : ' (URL available)'}',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    if (explanation!.audioError != null) ...[
+                      const SizedBox(height: 4),
+                      SelectableText(
+                        'Audio error: ${explanation!.audioError}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFFB91C1C),
+                        ),
+                      ),
+                    ],
+                    if (explanation!.audioUrl != null) ...[
+                      const SizedBox(height: 4),
+                      SelectableText(
+                        'Audio URL: ${explanation!.audioUrl}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF1D4ED8),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          FilledButton.tonalIcon(
+                            onPressed: () =>
+                                onPlayExplanationAudio(explanation!.audioUrl!),
+                            icon: const Icon(Icons.play_arrow),
+                            label: const Text('Play'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: isAudioPlaying
+                                ? onPauseExplanationAudio
+                                : null,
+                            icon: const Icon(Icons.pause),
+                            label: const Text('Pause'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: activeAudioUrl != null
+                                ? onStopExplanationAudio
+                                : null,
+                            icon: const Icon(Icons.stop),
+                            label: const Text('Stop'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Playback: $audioPositionText / $audioDurationText',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF334155),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'Transcript',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: const Color(0xFF334155),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    SelectableText(
+                      explanation!.script,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
                 ],
               ),
             ),
