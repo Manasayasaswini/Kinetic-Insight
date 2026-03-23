@@ -14,6 +14,9 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
 import requests
+import boto3
+from botocore.client import BaseClient
+from botocore.exceptions import BotoCoreError, ClientError
 
 app = FastAPI(title='Kinetic Insight AI Backend', version='0.1.0')
 
@@ -77,6 +80,7 @@ class _TtlCache:
 
 _script_cache = _TtlCache()
 _audio_meta_cache = _TtlCache()
+_s3_client_singleton: Optional[BaseClient] = None
 
 
 class McpExplanationResponse(BaseModel):
@@ -440,6 +444,101 @@ def _resolve_script(
     return payload
 
 
+def _s3_configured() -> bool:
+    return bool(
+        os.getenv('S3_BUCKET', '').strip()
+        and os.getenv('S3_ACCESS_KEY_ID', '').strip()
+        and os.getenv('S3_SECRET_ACCESS_KEY', '').strip()
+    )
+
+
+def _s3_client() -> Optional[BaseClient]:
+    global _s3_client_singleton
+    if not _s3_configured():
+        return None
+    if _s3_client_singleton is not None:
+        return _s3_client_singleton
+    _s3_client_singleton = boto3.client(
+        's3',
+        endpoint_url=os.getenv('S3_ENDPOINT_URL') or None,
+        region_name=os.getenv('S3_REGION') or None,
+        aws_access_key_id=os.getenv('S3_ACCESS_KEY_ID') or None,
+        aws_secret_access_key=os.getenv('S3_SECRET_ACCESS_KEY') or None,
+    )
+    return _s3_client_singleton
+
+
+def _s3_bucket() -> str:
+    return os.getenv('S3_BUCKET', '').strip()
+
+
+def _s3_prefix() -> str:
+    return os.getenv('S3_KEY_PREFIX', 'audio').strip().strip('/')
+
+
+def _s3_key(
+    class_id: str,
+    experiment_id: str,
+    language: str,
+    version: str,
+    fmt: str,
+) -> str:
+    return f'{_s3_prefix()}/{class_id}/{experiment_id}/{language}/{version}.{fmt}'
+
+
+def _s3_exists(key: str) -> bool:
+    client = _s3_client()
+    if client is None:
+        return False
+    try:
+        client.head_object(Bucket=_s3_bucket(), Key=key)
+        return True
+    except ClientError:
+        return False
+
+
+def _s3_put_audio(key: str, audio_bytes: bytes, fmt: str) -> bool:
+    client = _s3_client()
+    if client is None:
+        return False
+    content_type = 'audio/mpeg' if fmt.lower() == 'mp3' else 'audio/wav'
+    try:
+        client.put_object(
+            Bucket=_s3_bucket(),
+            Key=key,
+            Body=audio_bytes,
+            ContentType=content_type,
+            CacheControl='public, max-age=31536000, immutable',
+        )
+        return True
+    except (ClientError, BotoCoreError):
+        return False
+
+
+def _s3_url(key: str) -> Optional[str]:
+    client = _s3_client()
+    if client is None:
+        return None
+    public_base = os.getenv('S3_PUBLIC_BASE_URL', '').strip().rstrip('/')
+    if public_base:
+        return f'{public_base}/{key}'
+    use_presigned = os.getenv('S3_USE_PRESIGNED_URL', 'true').strip().lower()
+    if use_presigned in {'1', 'true', 'yes'}:
+        expires = int(os.getenv('S3_PRESIGNED_EXPIRES', '604800'))
+        try:
+            return client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': _s3_bucket(), 'Key': key},
+                ExpiresIn=expires,
+            )
+        except (ClientError, BotoCoreError):
+            return None
+    endpoint = os.getenv('S3_ENDPOINT_URL', '').strip().rstrip('/')
+    if endpoint:
+        return f'{endpoint}/{_s3_bucket()}/{key}'
+    return None
+
+
 def _resolve_audio_meta(
     class_id: str,
     experiment_id: str,
@@ -455,10 +554,51 @@ def _resolve_audio_meta(
     if cached is not None:
         return {**cached, 'cached': True}
 
-    # Static cache check first.
+    # Prefer durable object storage when configured.
+    s3_key = _s3_key(class_id, experiment_id, language, version, fmt)
+    audio_id = f'aud_{class_id}_{experiment_id}_{language}_{version}'
+    if _s3_configured():
+        if _s3_exists(s3_key):
+            s3_audio_url = _s3_url(s3_key)
+            payload = {
+                'audioId': audio_id,
+                'audioUrl': s3_audio_url,
+                'status': 'ready' if s3_audio_url else 'failed',
+                'cached': False,
+                'audioError': None if s3_audio_url else 'S3 object exists but URL resolution failed.',
+            }
+            _audio_meta_cache.set(key, payload, AUDIO_META_TTL_SECONDS)
+            return payload
+
+        generated, audio_bytes, error_message = _generate_audio_with_sarvam(
+            text=script,
+            language=language,
+            voice_profile=voice_profile,
+            fmt=fmt,
+        )
+        if generated and audio_bytes is not None and _s3_put_audio(s3_key, audio_bytes, fmt):
+            s3_audio_url = _s3_url(s3_key)
+            payload = {
+                'audioId': audio_id,
+                'audioUrl': s3_audio_url,
+                'status': 'ready' if s3_audio_url else 'failed',
+                'cached': False,
+                'audioError': None if s3_audio_url else 'S3 upload succeeded but URL resolution failed.',
+            }
+        else:
+            payload = {
+                'audioId': audio_id,
+                'audioUrl': None,
+                'status': 'failed',
+                'cached': False,
+                'audioError': error_message or 'S3 upload failed after audio generation.',
+            }
+        _audio_meta_cache.set(key, payload, AUDIO_META_TTL_SECONDS)
+        return payload
+
+    # Local static fallback (non-durable).
     relative_path = f'audio/{class_id}/{experiment_id}/{language}/{version}.{fmt}'
     local_path = Path(__file__).parent / 'static' / relative_path
-    audio_id = f'aud_{class_id}_{experiment_id}_{language}_{version}'
     if local_path.exists():
         payload = {
             'audioId': audio_id,
@@ -467,14 +607,15 @@ def _resolve_audio_meta(
             'cached': False,
         }
     else:
-        generated, error_message = _generate_audio_with_sarvam(
+        generated, audio_bytes, error_message = _generate_audio_with_sarvam(
             text=script,
             language=language,
             voice_profile=voice_profile,
             fmt=fmt,
-            output_path=local_path,
         )
-        if generated:
+        if generated and audio_bytes is not None:
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            local_path.write_bytes(audio_bytes)
             payload = {
                 'audioId': audio_id,
                 'audioUrl': f'/static/{relative_path}',
@@ -512,11 +653,10 @@ def _generate_audio_with_sarvam(
     language: str,
     voice_profile: str,
     fmt: str,
-    output_path: Path,
-) -> Tuple[bool, Optional[str]]:
+) -> Tuple[bool, Optional[bytes], Optional[str]]:
     api_key = os.getenv('SARVAM_API_KEY', '').strip()
     if not api_key:
-        return False, 'SARVAM_API_KEY is not set in backend environment.'
+        return False, None, 'SARVAM_API_KEY is not set in backend environment.'
 
     endpoints = [
         'https://api.sarvam.ai/text-to-speech',
@@ -571,12 +711,10 @@ def _generate_audio_with_sarvam(
                     last_error = 'Sarvam audio payload is empty.'
                     continue
                 audio_bytes = base64.b64decode(first_audio)
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                output_path.write_bytes(audio_bytes)
-                return True, None
+                return True, audio_bytes, None
     except Exception:
         last_error = 'Sarvam request raised exception.'
-    return False, last_error
+    return False, None, last_error
 
 
 @app.get('/')

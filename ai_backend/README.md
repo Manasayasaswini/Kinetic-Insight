@@ -21,6 +21,27 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 export SARVAM_API_KEY="your_key_here"
 ```
 
+## Durable Audio Storage (S3 / R2)
+
+Set these in your deployment environment:
+
+```bash
+S3_BUCKET=your-bucket-name
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+S3_REGION=auto
+S3_ENDPOINT_URL=https://<account-id>.r2.cloudflarestorage.com
+S3_KEY_PREFIX=audio
+S3_PUBLIC_BASE_URL=https://cdn.yourdomain.com
+S3_USE_PRESIGNED_URL=true
+S3_PRESIGNED_EXPIRES=604800
+```
+
+Notes:
+- If `S3_PUBLIC_BASE_URL` is set, backend returns public CDN URL.
+- If not set, backend returns presigned URL when `S3_USE_PRESIGNED_URL=true`.
+- If S3 vars are absent, backend falls back to local `static/audio` storage.
+
 ## Endpoints
 
 - `GET /` -> backend status message
